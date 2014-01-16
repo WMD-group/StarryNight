@@ -59,22 +59,25 @@ int main(void)
         for (k=0;k<Y;k++)
             printf(" %f",lattice[i][k].angle);
 */
-    outputlattice_ppm_hsv("initial.pnm");
+    outputlattice_ppm_hsv("initial.png");
 
     for (i=0;i<200;i++)
     {
-         sprintf(name,"MC_step_%.4d.pnm",i);
+        sprintf(name,"MC-PNG_step_%.4d.png",i);
         outputlattice_ppm_hsv(name);
-        
+
+        sprintf(name,"MC-SVG_step_%.4d.svg",i);
+        outputlattice_svg(name);
+
         fprintf(stderr,".");
 
-        for (k=0;k<1e5;k++)
+        for (k=0;k<1e3;k++)
             MC_move();
     }
 
     fprintf(stderr,"\n");
 
-    outputlattice_ppm_hsv("final.pnm");
+    outputlattice_ppm_hsv("final.png");
     outputlattice_svg("final.svg");
 
     fprintf(stderr,"ACCEPT: %lu REJECT: %lu ratio: %f",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
