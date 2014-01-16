@@ -9,6 +9,7 @@
 
 #include <math.h>
 #include <limits.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "mt19937ar-cok.c"
@@ -41,7 +42,8 @@ int main(void)
     fprintf(stderr,"Starry Night - Monte Carlo brushstrokes.\n");
 
     //Fire up the twister!
-    init_genrand(0);
+    //init_genrand(0);  // reproducible
+    init_genrand(time(NULL)); // seeded with current time
 
     //Random initial lattice
      for (i=0;i<X;i++)
@@ -65,7 +67,7 @@ int main(void)
         
         fprintf(stderr,".");
 
-        for (k=0;k<1e6;k++)
+        for (k=0;k<1e5;k++)
             MC_move();
     }
 
@@ -73,7 +75,7 @@ int main(void)
 
     outputlattice_ppm_hsv("final.pnm");
 
-    fprintf(stderr,"ACCEPT: %lu REJECT: %lu ratio: %f",ACCEPT,REJECT,(float)ACCEPT/(float)REJECT);
+    fprintf(stderr,"ACCEPT: %lu REJECT: %lu ratio: %f",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
 
     return 0;
 }
@@ -105,7 +107,7 @@ void MC_move()
             if (dx==0 && dy==0)
                 break; //no infinities / self interactions please!
 
-            d=sqrt(dx*dx + dy*dy); //that old chestnut
+            d=sqrt((float) dx*dx + dy*dy); //that old chestnut
 
             testangle=lattice[(x+dx)%X][(y+dy)%Y].angle;
 
@@ -170,7 +172,6 @@ void outputlattice_ppm_hsv(char * filename)
     for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
         {
-
             h=lattice[i][k].angle;
 
             // http://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
