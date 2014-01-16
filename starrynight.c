@@ -32,6 +32,7 @@ int rand_int(int SPAN);
 void MC_move();
 void outputlattice_pnm(char * filename);
 void outputlattice_ppm_hsv(char * filename);
+void outputlattice_svg(char * filename);
 
 int main(void)
 {
@@ -74,6 +75,7 @@ int main(void)
     fprintf(stderr,"\n");
 
     outputlattice_ppm_hsv("final.pnm");
+    outputlattice_svg("final.svg");
 
     fprintf(stderr,"ACCEPT: %lu REJECT: %lu ratio: %f",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
 
@@ -194,3 +196,30 @@ void outputlattice_ppm_hsv(char * filename)
         }
     fclose(fo); //don't forget :^)
 }
+
+void outputlattice_svg(char * filename)
+{
+    int i,k;
+
+    FILE *fo;
+    fo=fopen(filename,"w");
+
+    fprintf(fo,"<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n");
+
+    //our arrow marker...
+    fprintf(fo," <marker id=\"triangle\" viewBox=\"0 0 10 10\" refX=\"0\" refY=\"5\" markerUnits=\"strokeWidth\" markerWidth=\"4\" markerHeight=\"3\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" /></marker>\n");
+
+     for (i=0;i<X;i++)
+        for (k=0;k<Y;k++)
+            fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(0,0,0);stroke-width:2.0\" marker-end=\"url(#triangle)\"/>\n",
+                    (double) 10.0*i, (double) 10.0*k,
+                    10.0*(i+0.9*sin(lattice[i][k].angle)),
+                    10.0*(k+0.9*cos(lattice[i][k].angle))
+                   );
+    
+    fprintf(fo,"</svg>\n");
+
+    fclose(fo);
+}
+
+
