@@ -1,7 +1,7 @@
 starrynight: starrynight.c
-	gcc -O3 -lm -o starrynight starrynight.c
+	gcc -O4 -lm -o starrynight starrynight.c
 
 all: starrynight
 
 clean:
-	rm starrynight
+	rm starrynight *.pnm *.jpg *.gif *.avi

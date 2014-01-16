@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include "mt19937ar-cok.c"
 
-#define X 20  // Malloc is for losers.
-#define Y 20
+#define X 100  // Malloc is for losers.
+#define Y 100
 
 struct dipole
 {
@@ -36,6 +36,8 @@ int main(void)
 {
     int i,j,k; //for loop iterators
 
+    char name[50]; //for output filenames
+
     fprintf(stderr,"Starry Night - Monte Carlo brushstrokes.\n");
 
     //Fire up the twister!
@@ -44,23 +46,32 @@ int main(void)
     //Random initial lattice
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-            lattice[i][k].angle=2*M_PI*genrand_real2();
+            lattice[i][k].angle=2*M_PI*genrand_real2(); // randomised initial orientation of dipoles
+//           lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); // continous set
+//           of dipole orientations to test colour output (should appear as
+//           spectrum)
 
     //Print lattice
 /*    for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
             printf(" %f",lattice[i][k].angle);
 */
-    outputlattice_ppm_hsv("initial.ppm");
+    outputlattice_ppm_hsv("initial.pnm");
 
-    for (i=0;i<20;i++)
+    for (i=0;i<200;i++)
     {
+         sprintf(name,"MC_step_%.4d.pnm",i);
+        outputlattice_ppm_hsv(name);
+        
         fprintf(stderr,".");
+
         for (k=0;k<1e6;k++)
             MC_move();
     }
 
-    outputlattice_ppm_hsv("final.ppm");
+    fprintf(stderr,"\n");
+
+    outputlattice_ppm_hsv("final.pnm");
 
     fprintf(stderr,"ACCEPT: %lu REJECT: %lu ratio: %f",ACCEPT,REJECT,(float)ACCEPT/(float)REJECT);
 
@@ -143,8 +154,9 @@ void outputlattice_ppm_hsv(char * filename)
     int i,k;
     float angle;
 
-    float r,g,b;
-    float h,s,v,c,x;
+    float r,g,b; // RGB
+    float h,s,v; // HSV
+    float p,t,q,f; // intemediates for HSV->RGB conversion
     int hp;
     
     FILE *fo;
@@ -162,20 +174,22 @@ void outputlattice_ppm_hsv(char * filename)
             h=lattice[i][k].angle;
 
             // http://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
-            c=v*s;
-            hp=(int)(h/(M_PI/3)); //radians, woo
-            x=c*(1.0-fabs(hp%2-1));
+            hp=(int)floor(h/(M_PI/3.0))%6; //radians, woo
+            f=h/(M_PI/3.0)-floor(h/(M_PI/3.0));
+            p=v*(1.0-s);
+            q=v*(1.0-f*s);
+            t=v*(1.0-(1.0-f)*s);
             
             switch (hp){
-                case 0: r=c; g=x; b=0.0; break;
-                case 1: r=x; g=c; b=0.0; break;
-                case 2: r=0.0; g=c; b=x; break;
-                case 3: r=0; g=x; b=c; break;
-                case 4: r=x; g=0.0; b=c; break;
-                case 5: r=c; g=0.0; b=x; break;
+                case 0: r=v; g=t; b=p; break;
+                case 1: r=q; g=v; b=p; break;
+                case 2: r=p; g=v; b=t; break;
+                case 3: r=p; g=q; b=v; break;
+                case 4: r=t; g=p; b=v; break;
+                case 5: r=v; g=p; b=q; break;
             }
 
-            fprintf(fo,"%c%c%c",(char)(255.0*r),(char)(255.0*g),(char)(255.0*b));
+            fprintf(fo,"%c%c%c",(char)(254.0*r),(char)(254.0*g),(char)(254.0*b));
         }
- 
+    fclose(fo); //don't forget :^)
 }
