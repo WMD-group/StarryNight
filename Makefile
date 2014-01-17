@@ -4,4 +4,4 @@ starrynight: starrynight.c
 all: starrynight
 
 clean:
-	rm starrynight *.pnm *.jpg *.gif *.avi
+	rm starrynight *.pnm *.jpg *.gif *.avi *.svg *.png

@@ -51,7 +51,8 @@ int main(void)
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
             lattice[i][k].angle=2*M_PI*genrand_real2(); // randomised initial orientation of dipoles
-//           lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); // continous set
+//            lattice[i][k].angle=M_PI/2;
+//            lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); // continous set
 //           of dipole orientations to test colour output (should appear as
 //           spectrum)
 
@@ -60,27 +61,31 @@ int main(void)
         for (k=0;k<Y;k++)
             printf(" %f",lattice[i][k].angle);
 */
-    outputlattice_ppm_hsv("initial.pnm");
+    outputlattice_ppm_hsv("initial.png");
 
     for (i=0;i<1000;i++)
     {
-         sprintf(name,"MC_step_%.4d.pnm",i);
+        sprintf(name,"MC-PNG_step_%.4d.png",i);
         outputlattice_ppm_hsv(name);
-        
+
+        sprintf(name,"MC-SVG_step_%.4d.svg",i);
+        outputlattice_svg(name);
+
         fprintf(stderr,".");
 
         if (i%200==0) Efield=0.0-Efield;
 
-        for (k=0;k<1e5;k++)
+        for (k=0;k<10*X*Y;k++)
             MC_move();
     }
 
     fprintf(stderr,"\n");
 
-    outputlattice_ppm_hsv("final.pnm");
+    outputlattice_ppm_hsv("final.png");
     outputlattice_svg("final.svg");
 
-    fprintf(stderr,"ACCEPT: %lu REJECT: %lu ratio: %f",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
+    fprintf(stderr,"ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
+    fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\b");
 
     return 0;
 }
@@ -106,15 +111,16 @@ void MC_move()
     newangle=2*M_PI*genrand_real2();
     oldangle=lattice[x][y].angle;
 
-
     // Sum over near neighbours for dipole-dipole interaction
     for (dx=-2;dx<=2;dx++)
         for (dy=-2;dy<=2;dy++)
         {
             if (dx==0 && dy==0)
-                break; //no infinities / self interactions please!
+                continue; //no infinities / self interactions please!
 
             d=sqrt((float) dx*dx + dy*dy); //that old chestnut
+
+            if (d>2.0) continue; // Cutoff in d
 
             testangle=lattice[(x+dx)%X][(y+dy)%Y].angle;
 
@@ -182,14 +188,15 @@ void outputlattice_ppm_hsv(char * filename)
 
     fprintf (fo,"P6\n%d %d\n255\n", X, Y);
 
-    for (i=0;i<X;i++)
+    for (i=0;i<X;i++) //force same ordering as SVG...
         for (k=0;k<Y;k++)
         {
-            h=lattice[i][k].angle;
+            h=fmod(lattice[i][k].angle,M_PI*2.0);
 
             // http://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
             hp=(int)floor(h/(M_PI/3.0))%6; //radians, woo
             f=h/(M_PI/3.0)-floor(h/(M_PI/3.0));
+            
             p=v*(1.0-s);
             q=v*(1.0-f*s);
             t=v*(1.0-(1.0-f)*s);
@@ -203,6 +210,8 @@ void outputlattice_ppm_hsv(char * filename)
                 case 5: r=v; g=p; b=q; break;
             }
 
+//            fprintf(stderr,"h: %f r: %f g: %f b: %f\n",h,r,g,b);
+
             fprintf(fo,"%c%c%c",(char)(254.0*r),(char)(254.0*g),(char)(254.0*b));
         }
     fclose(fo); //don't forget :^)
@@ -215,17 +224,20 @@ void outputlattice_svg(char * filename)
     FILE *fo;
     fo=fopen(filename,"w");
 
-    fprintf(fo,"<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n");
+    fprintf(fo,"<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" height=\"%d\" width=\"%d\">\n",X,Y);
 
     //our arrow marker...
     fprintf(fo," <marker id=\"triangle\" viewBox=\"0 0 10 10\" refX=\"0\" refY=\"5\" markerUnits=\"strokeWidth\" markerWidth=\"4\" markerHeight=\"3\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" /></marker>\n");
 
+    //No markers...  marker-end=\"url(#triangle)\"
+
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-            fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(0,0,0);stroke-width:2.0\" marker-end=\"url(#triangle)\"/>\n",
-                    (double) 10.0*i, (double) 10.0*k,
-                    10.0*(i+0.9*sin(lattice[i][k].angle)),
-                    10.0*(k+0.9*cos(lattice[i][k].angle))
+            fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(0,0,0);stroke-width:0.1\" marker-end=\"url(#triangle)\"  />\n",
+                    i+0.5 - 0.4*sin(lattice[k][i].angle), 
+                    k+0.5 - 0.4*cos(lattice[k][i].angle),
+                    i+0.5 + 0.4*sin(lattice[k][i].angle),
+                    k+0.5 + 0.9*cos(lattice[k][i].angle)
                    );
     
     fprintf(fo,"</svg>\n");
