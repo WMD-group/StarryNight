@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include "mt19937ar-cok.c"
 
-#define X 100  // Malloc is for losers.
-#define Y 100
+#define X 500  // Malloc is for losers.
+#define Y 500
 
 struct dipole
 {
@@ -23,6 +23,7 @@ struct dipole
 } lattice[X][Y];
 
 float beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
+float Efield=1.0;
 
 unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
@@ -61,12 +62,14 @@ int main(void)
 */
     outputlattice_ppm_hsv("initial.pnm");
 
-    for (i=0;i<200;i++)
+    for (i=0;i<1000;i++)
     {
          sprintf(name,"MC_step_%.4d.pnm",i);
         outputlattice_ppm_hsv(name);
         
         fprintf(stderr,".");
+
+        if (i%200==0) Efield=0.0-Efield;
 
         for (k=0;k<1e5;k++)
             MC_move();
@@ -103,8 +106,10 @@ void MC_move()
     newangle=2*M_PI*genrand_real2();
     oldangle=lattice[x][y].angle;
 
-    for (dx=-1;dx<=1;dx++)
-        for (dy=-1;dy<=1;dy++)
+
+    // Sum over near neighbours for dipole-dipole interaction
+    for (dx=-2;dx<=2;dx++)
+        for (dy=-2;dy<=2;dy++)
         {
             if (dx==0 && dy==0)
                 break; //no infinities / self interactions please!
@@ -113,9 +118,15 @@ void MC_move()
 
             testangle=lattice[(x+dx)%X][(y+dy)%Y].angle;
 
+            //it goes without saying that the following line is the single
+            //most important in the program... Energy calculation!
             dE+=  + cos(newangle-testangle)/(d*d*d)
                   - cos(oldangle-testangle)/(d*d*d);
         }
+
+    // Interaction of dipole with (unshielded) E-field
+    dE+= + Efield*cos(newangle)
+         - Efield*cos(oldangle);
 
     if (dE > 0.0 || exp(dE * beta) > genrand_real2() )
     {
