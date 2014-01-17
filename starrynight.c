@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include "mt19937ar-cok.c"
 
-#define X 50  // Malloc is for losers.
-#define Y 50
+#define X 500  // Malloc is for losers.
+#define Y 500
 
 struct dipole
 {
@@ -65,18 +65,18 @@ int main(void)
 */
     outputlattice_ppm_hsv("initial.png");
 
-    for (i=0;i<200;i++)
+    for (i=0;i<400;i++)
     {
         sprintf(name,"MC-PNG_step_%.4d.png",i);
         outputlattice_ppm_hsv(name);
 
-        sprintf(name,"MC-SVG_step_%.4d.svg",i);
-        outputlattice_svg(name);
+//        sprintf(name,"MC-SVG_step_%.4d.svg",i);
+//        outputlattice_svg(name);
 
         fprintf(stderr,".");
 
-        if (i==70)  { Efield=0.2; Eangle=M_PI/2;}
-        if (i==140) { Efield=0.2; Eangle=M_PI;}
+        if (i==100)  { Efield=0.1; Eangle=M_PI/2;}
+        if (i==200) { Efield=0.2; Eangle=M_PI;}
 
         for (k=0;k<10*X*Y;k++)
             MC_move();

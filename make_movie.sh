@@ -4,5 +4,5 @@ do
     convert -scale 500x500 "${file}" "${file%.*}.jpg" #Nb: scale = no interpolation between pixels
 done
 
-mplayer mf://MC-PNG_step*.jpg
+mplayer -fps 10 mf://MC-PNG_step*.jpg
 #mencoder -ovc lavc mf://MC-PNG_step*.jpg -o movie.avi
