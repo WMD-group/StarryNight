@@ -1,7 +1,9 @@
+echo "WARNING: hard coded to size of lattice!"
+
 for i 
 do
- inkscape --export-area-drawing     \
+ inkscape --export-area=0:0:100:100    \
  --export-png=${i%.*}.png  \
- --export-width=500                \
- --export-height=500 ${i} 
+ --export-width=1000                \
+ --export-height=1000 ${i} 
 done
