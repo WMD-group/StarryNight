@@ -108,13 +108,15 @@ void MC_move()
     newangle=2*M_PI*genrand_real2();
     oldangle=lattice[x][y].angle;
 
-    for (dx=-1;dx<=1;dx++)
-        for (dy=-1;dy<=1;dy++)
+    for (dx=-2;dx<=2;dx++)
+        for (dy=-2;dy<=2;dy++)
         {
             if (dx==0 && dy==0)
-                break; //no infinities / self interactions please!
+                continue; //no infinities / self interactions please!
 
             d=sqrt((float) dx*dx + dy*dy); //that old chestnut
+
+            if (d>2.0) continue; // Cutoff in d
 
             testangle=lattice[(x+dx)%X][(y+dy)%Y].angle;
 
