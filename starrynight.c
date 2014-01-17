@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include "mt19937ar-cok.c"
 
-#define X 500  // Malloc is for losers.
-#define Y 500
+#define X 50  // Malloc is for losers.
+#define Y 50
 
 struct dipole
 {
@@ -23,7 +23,9 @@ struct dipole
 } lattice[X][Y];
 
 float beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
-float Efield=1.0;
+
+float Efield=0.0;
+float Eangle=0.0;
 
 unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
@@ -63,7 +65,7 @@ int main(void)
 */
     outputlattice_ppm_hsv("initial.png");
 
-    for (i=0;i<1000;i++)
+    for (i=0;i<200;i++)
     {
         sprintf(name,"MC-PNG_step_%.4d.png",i);
         outputlattice_ppm_hsv(name);
@@ -73,7 +75,8 @@ int main(void)
 
         fprintf(stderr,".");
 
-        if (i%200==0) Efield=0.0-Efield;
+        if (i==70)  { Efield=0.2; Eangle=M_PI/2;}
+        if (i==140) { Efield=0.2; Eangle=M_PI;}
 
         for (k=0;k<10*X*Y;k++)
             MC_move();
@@ -122,7 +125,7 @@ void MC_move()
 
             if (d>2.0) continue; // Cutoff in d
 
-            testangle=lattice[(x+dx)%X][(y+dy)%Y].angle;
+            testangle=lattice[(X+x+dx)%X][(Y+y+dy)%Y].angle;
 
             //it goes without saying that the following line is the single
             //most important in the program... Energy calculation!
@@ -131,8 +134,8 @@ void MC_move()
         }
 
     // Interaction of dipole with (unshielded) E-field
-    dE+= + Efield*cos(newangle)
-         - Efield*cos(oldangle);
+    dE+= + Efield*cos(newangle-Eangle)
+         - Efield*cos(oldangle-Eangle);
 
     if (dE > 0.0 || exp(dE * beta) > genrand_real2() )
     {
@@ -227,13 +230,13 @@ void outputlattice_svg(char * filename)
     fprintf(fo,"<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" height=\"%d\" width=\"%d\">\n",X,Y);
 
     //our arrow marker...
-    fprintf(fo," <marker id=\"triangle\" viewBox=\"0 0 10 10\" refX=\"0\" refY=\"5\" markerUnits=\"strokeWidth\" markerWidth=\"4\" markerHeight=\"3\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" /></marker>\n");
+//    fprintf(fo," <marker id=\"triangle\" viewBox=\"0 0 10 10\" refX=\"0\" refY=\"5\" markerUnits=\"strokeWidth\" markerWidth=\"4\" markerHeight=\"3\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" /></marker>\n");
 
     //No markers...  marker-end=\"url(#triangle)\"
 
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-            fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(0,0,0);stroke-width:0.1\" marker-end=\"url(#triangle)\"  />\n",
+            fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(0,0,0);stroke-width:0.1\"  />\n",
                     i+0.5 - 0.4*sin(lattice[k][i].angle), 
                     k+0.5 - 0.4*cos(lattice[k][i].angle),
                     i+0.5 + 0.4*sin(lattice[k][i].angle),
