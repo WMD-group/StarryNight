@@ -22,12 +22,14 @@ struct dipole
     float angle;
 } lattice[X][Y];
 
-float beta=2.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
+float beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
 
-float Efield=0.0;
+float Efield=0.01; // units k_B.T per lattice unit
 float Eangle=0.0;
 
-float K=2.0; //elastic coupling constant for dipole moving within cage
+float K=1.0; //elastic coupling constant for dipole moving within cage
+
+float Dipole=1.0; //units of k_B.T for spacing = 1
 
 unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
@@ -133,11 +135,11 @@ double site_energy(int x, int y, double newangle, double oldangle)
             //most important in the program... Energy calculation!
 
             // Anti-ferroelectric (dipole like)
-//            dE+=  + cos(newangle-testangle)/(d*d*d)
-//                  - cos(oldangle-testangle)/(d*d*d);
+//            dE+=  + Dipole * cos(newangle-testangle)/(d*d*d)
+//                  - Dipole * cos(oldangle-testangle)/(d*d*d);
             // Ferroelectric / Potts model
-            dE+=  - cos(newangle-testangle)/(d*d*d)
-                  + cos(oldangle-testangle)/(d*d*d);
+            dE+=  - Dipole * cos(newangle-testangle)/(d*d*d)
+                  + Dipole * cos(oldangle-testangle)/(d*d*d);
  
         }
 
@@ -268,7 +270,7 @@ void outputlattice_ppm_hsv(char * filename)
     fo=fopen(filename,"w");
 
 //Set Saturation + Value, vary hue
-    s=0.4; v=0.8;
+    s=0.6; v=0.8;
 
     fprintf (fo,"P6\n%d %d\n255\n", X, Y);
 
