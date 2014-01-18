@@ -32,6 +32,7 @@ unsigned long REJECT=0;
 
 // Prototypes...
 int rand_int(int SPAN);
+double site_energy(int x, int y, double newangle, double oldangle);
 void MC_move();
 double lattice_energy();
 void outputlattice_pnm(char * filename);
@@ -106,21 +107,12 @@ int rand_int(int SPAN)
     return((int)( (unsigned long) genrand_int32() % (unsigned long)SPAN));
 }
 
-void MC_move()
+double site_energy(int x, int y, double newangle, double oldangle)
 {
-    int x, y;
-    int dx, dy;
-    float newangle,oldangle,testangle,d;
-    float dE=0.0;
-
-    // Choose random dipole / lattice location
-
-    x=rand_int(X);
-    y=rand_int(Y);
-
-    // random new orientation
-    newangle=2*M_PI*genrand_real2();
-    oldangle=lattice[x][y].angle;
+    int dx,dy;
+    float d;
+    double dE=0.0;
+    double testangle;
 
     // Sum over near neighbours for dipole-dipole interaction
     for (dx=-2;dx<=2;dx++)
@@ -144,6 +136,33 @@ void MC_move()
     // Interaction of dipole with (unshielded) E-field
     dE+= - Efield*cos(newangle-Eangle)
          + Efield*cos(oldangle-Eangle);
+
+    return(dE); 
+}
+
+void MC_move()
+{
+    int x, y;
+    int dx, dy;
+    float newangle,oldangle,testangle,d;
+    float dE=0.0;
+
+    // Choose random dipole / lattice location
+
+    x=rand_int(X);
+    y=rand_int(Y);
+
+    // random new orientation. 
+    // Nb: this is the definition of a MC move - might want to consider
+    // alternative / global / less disruptive moves as well
+    newangle=2*M_PI*genrand_real2();
+
+    // comparison point for the dE - the present configuration
+    oldangle=lattice[x][y].angle;
+
+    //calc site energy
+    //double site_energy(int x, int y, double newangle, double oldangle);
+    dE=site_energy(x,y,newangle,oldangle);
 
     if (dE > 0.0 || exp(dE * beta) > genrand_real2() )
     {
@@ -176,7 +195,8 @@ double lattice_energy()
 // NB: just copied + pasted this code :| - should probably generalise to
 // a function, otherwise variations in cutoff / Hamiltonian will have to be in
 // two places, ugh.
-
+        oldangle=lattice[x][y].angle;
+        
             // Sum over near neighbours for dipole-dipole interaction
             for (dx=-2;dx<=2;dx++)
                 for (dy=-2;dy<=2;dy++)
