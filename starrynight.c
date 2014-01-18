@@ -27,6 +27,8 @@ float beta=2.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
 float Efield=0.0;
 float Eangle=0.0;
 
+float K=50.0; //elastic coupling constant for dipole moving within cage
+
 unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
 
@@ -136,6 +138,11 @@ double site_energy(int x, int y, double newangle, double oldangle)
     // Interaction of dipole with (unshielded) E-field
     dE+= + Efield*cos(newangle-Eangle)
          - Efield*cos(oldangle-Eangle);
+
+    // interaction with strain of cage
+    dE += + K*sin(2*newangle)*sin(2*newangle)
+          - K*sin(2*oldangle)*sin(2*oldangle);
+
 
     return(dE); 
 }
@@ -308,7 +315,7 @@ void outputlattice_svg(char * filename)
                     i+0.5 - 0.4*sin(lattice[k][i].angle), 
                     k+0.5 - 0.4*cos(lattice[k][i].angle),
                     i+0.5 + 0.4*sin(lattice[k][i].angle),
-                    k+0.5 + 0.9*cos(lattice[k][i].angle)
+                    k+0.5 + 0.4*cos(lattice[k][i].angle)
                    );
     
     fprintf(fo,"</svg>\n");
