@@ -27,7 +27,7 @@ float beta=2.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
 float Efield=0.0;
 float Eangle=0.0;
 
-float K=50.0; //elastic coupling constant for dipole moving within cage
+float K=2.0; //elastic coupling constant for dipole moving within cage
 
 unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
@@ -305,17 +305,17 @@ void outputlattice_svg(char * filename)
     fprintf(fo,"<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" height=\"%d\" width=\"%d\">\n",X,Y);
 
     //our arrow marker...
-    fprintf(fo," <marker id=\"triangle\" viewBox=\"0 0 10 10\" refX=\"10\" refY=\"5\" markerUnits=\"strokeWidth\" markerWidth=\"4\" markerHeight=\"3\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" /></marker>\n");
+    fprintf(fo," <marker id=\"triangle\" viewBox=\"0 0 10 10\" refX=\"7\" refY=\"5\" markerUnits=\"strokeWidth\" markerWidth=\"4\" markerHeight=\"3\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" /></marker>\n");
 
     //No markers...  marker-end=\"url(#triangle)\"
 
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-            fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(0,0,0);stroke-width:0.1\" marker-end=\"url(#triangle)\" />\n",
-                    i+0.5 - 0.5*sin(lattice[k][i].angle), 
-                    k+0.5 - 0.5*cos(lattice[k][i].angle),
-                    i+0.5 + 0.5*sin(lattice[k][i].angle),
-                    k+0.5 + 0.5*cos(lattice[k][i].angle)
+            fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(0,0,0);stroke-width:0.17\" marker-end=\"url(#triangle)\" />\n",
+                    i+0.5 - 0.4*sin(lattice[k][i].angle), 
+                    k+0.5 - 0.4*cos(lattice[k][i].angle),
+                    i+0.5 + 0.4*sin(lattice[k][i].angle),
+                    k+0.5 + 0.4*cos(lattice[k][i].angle)
                    );
     
     fprintf(fo,"</svg>\n");
