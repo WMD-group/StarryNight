@@ -131,8 +131,14 @@ double site_energy(int x, int y, double newangle, double oldangle)
 
             //it goes without saying that the following line is the single
             //most important in the program... Energy calculation!
-            dE+=  + cos(newangle-testangle)/(d*d*d)
-                  - cos(oldangle-testangle)/(d*d*d);
+
+            // Anti-ferroelectric (dipole like)
+//            dE+=  + cos(newangle-testangle)/(d*d*d)
+//                  - cos(oldangle-testangle)/(d*d*d);
+            // Ferroelectric / Potts model
+            dE+=  - cos(newangle-testangle)/(d*d*d)
+                  + cos(oldangle-testangle)/(d*d*d);
+ 
         }
 
     // Interaction of dipole with (unshielded) E-field
