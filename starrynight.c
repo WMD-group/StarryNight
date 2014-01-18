@@ -129,13 +129,13 @@ double site_energy(int x, int y, double newangle, double oldangle)
 
             //it goes without saying that the following line is the single
             //most important in the program... Energy calculation!
-            dE+=  - cos(newangle-testangle)/(d*d*d)
-                  + cos(oldangle-testangle)/(d*d*d);
+            dE+=  + cos(newangle-testangle)/(d*d*d)
+                  - cos(oldangle-testangle)/(d*d*d);
         }
 
     // Interaction of dipole with (unshielded) E-field
-    dE+= - Efield*cos(newangle-Eangle)
-         + Efield*cos(oldangle-Eangle);
+    dE+= + Efield*cos(newangle-Eangle)
+         - Efield*cos(oldangle-Eangle);
 
     return(dE); 
 }
@@ -164,7 +164,7 @@ void MC_move()
     //double site_energy(int x, int y, double newangle, double oldangle);
     dE=site_energy(x,y,newangle,oldangle);
 
-    if (dE > 0.0 || exp(dE * beta) > genrand_real2() )
+    if (dE < 0.0 || exp(-dE * beta) > genrand_real2() )
     {
         lattice[x][y].angle=newangle;
         ACCEPT++;
