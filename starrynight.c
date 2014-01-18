@@ -22,7 +22,7 @@ struct dipole
     float angle;
 } lattice[X][Y];
 
-float beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
+float beta=2.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
 
 float Efield=0.0;
 float Eangle=0.0;
@@ -33,6 +33,7 @@ unsigned long REJECT=0;
 // Prototypes...
 int rand_int(int SPAN);
 void MC_move();
+double lattice_energy();
 void outputlattice_pnm(char * filename);
 void outputlattice_ppm_hsv(char * filename);
 void outputlattice_svg(char * filename);
@@ -44,6 +45,10 @@ int main(void)
     char name[50]; //for output filenames
 
     fprintf(stderr,"Starry Night - Monte Carlo brushstrokes.\n");
+
+// If we're going to do some actual science, we better have a logfile...
+    FILE *log;
+    log=fopen("starry.log","w");
 
     //Fire up the twister!
     //init_genrand(0);  // reproducible
@@ -67,6 +72,9 @@ int main(void)
 
     for (i=0;i<400;i++)
     {
+        // Log some data...
+        fprintf(log,"%d %f\n",ACCEPT+REJECT,lattice_energy());
+
         sprintf(name,"MC-PNG_step_%.4d.png",i);
         outputlattice_ppm_hsv(name);
 
@@ -75,11 +83,10 @@ int main(void)
 
         fprintf(stderr,".");
 
-        if (i==50)  { Efield=0.1; Eangle=M_PI/2;}
-        if (i==100) { Efield=0.2; Eangle=M_PI;}
-        if (i==150) { Efield=0.0;}
+        if (i==50)  { Efield=1.0; Eangle=M_PI/2;}
+        if (i%100) { Efield=-Efield;}
 
-        for (k=0;k<10*X*Y;k++)
+        for (k=0;k<X*Y;k++)
             MC_move();
     }
 
@@ -89,7 +96,7 @@ int main(void)
     outputlattice_svg("final.svg");
 
     fprintf(stderr,"ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
-    fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\b");
+    fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
 
     return 0;
 }
@@ -130,13 +137,13 @@ void MC_move()
 
             //it goes without saying that the following line is the single
             //most important in the program... Energy calculation!
-            dE+=  + cos(newangle-testangle)/(d*d*d)
-                  - cos(oldangle-testangle)/(d*d*d);
+            dE+=  - cos(newangle-testangle)/(d*d*d)
+                  + cos(oldangle-testangle)/(d*d*d);
         }
 
     // Interaction of dipole with (unshielded) E-field
-    dE+= + Efield*cos(newangle-Eangle)
-         - Efield*cos(oldangle-Eangle);
+    dE+= - Efield*cos(newangle-Eangle)
+         + Efield*cos(oldangle-Eangle);
 
     if (dE > 0.0 || exp(dE * beta) > genrand_real2() )
     {
@@ -155,6 +162,46 @@ void MC_move()
 
     fprintf(stderr,"MC: %d X %d Y oldangle %f newangle %f dE: %f\n",x,y,oldangle,newangle,dE);
 */
+}
+
+double lattice_energy()
+{
+    int x,y,dx,dy;
+    double E=0.0,d,oldangle,testangle;
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+        {
+
+// NB: just copied + pasted this code :| - should probably generalise to
+// a function, otherwise variations in cutoff / Hamiltonian will have to be in
+// two places, ugh.
+
+            // Sum over near neighbours for dipole-dipole interaction
+            for (dx=-2;dx<=2;dx++)
+                for (dy=-2;dy<=2;dy++)
+                {
+                    if (dx==0 && dy==0)
+                        continue; //no infinities / self interactions please!
+
+                    d=sqrt((float) dx*dx + dy*dy); //that old chestnut
+
+                    if (d>2.0) continue; // Cutoff in d
+
+                    testangle=lattice[(X+x+dx)%X][(Y+y+dy)%Y].angle;
+
+                    //it goes without saying that the following line is the single
+                    //most important in the program... Energy calculation!
+                    E+=   cos(oldangle-testangle)/(d*d*d);
+                }
+
+            // Interaction of dipole with (unshielded) E-field
+            E+=   Efield*cos(oldangle-Eangle);
+        }
+
+//    fprintf(stderr,"Energy of lattice: %f\n",E);
+
+    return(E);
 }
 
 void outputlattice_png(char * filename)
@@ -231,13 +278,13 @@ void outputlattice_svg(char * filename)
     fprintf(fo,"<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" height=\"%d\" width=\"%d\">\n",X,Y);
 
     //our arrow marker...
-//    fprintf(fo," <marker id=\"triangle\" viewBox=\"0 0 10 10\" refX=\"0\" refY=\"5\" markerUnits=\"strokeWidth\" markerWidth=\"4\" markerHeight=\"3\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" /></marker>\n");
+    fprintf(fo," <marker id=\"triangle\" viewBox=\"0 0 10 10\" refX=\"0\" refY=\"5\" markerUnits=\"strokeWidth\" markerWidth=\"4\" markerHeight=\"3\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" /></marker>\n");
 
     //No markers...  marker-end=\"url(#triangle)\"
 
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-            fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(0,0,0);stroke-width:0.1\"  />\n",
+            fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(0,0,0);stroke-width:0.1\" marker-end=\"url(#triangle)\" />\n",
                     i+0.5 - 0.4*sin(lattice[k][i].angle), 
                     k+0.5 - 0.4*cos(lattice[k][i].angle),
                     i+0.5 + 0.4*sin(lattice[k][i].angle),
