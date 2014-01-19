@@ -22,7 +22,7 @@ struct dipole
     float angle;
 } lattice[X][Y];
 
-float beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
+float beta=2.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
 
 float Efield=0.01; // units k_B.T per lattice unit
 float Eangle=0.0;
@@ -116,7 +116,7 @@ double site_energy(int x, int y, double newangle, double oldangle)
     int dx,dy;
     float d;
     double dE=0.0;
-    double testangle;
+    double testangle,n;
 
     // Sum over near neighbours for dipole-dipole interaction
     for (dx=-2;dx<=2;dx++)
@@ -134,12 +134,15 @@ double site_energy(int x, int y, double newangle, double oldangle)
             //it goes without saying that the following line is the single
             //most important in the program... Energy calculation!
 
+            n=atan2((float)dy,(float)dx); //angle of normal vector between test points
             // Anti-ferroelectric (dipole like)
-//            dE+=  + Dipole * cos(newangle-testangle)/(d*d*d)
-//                  - Dipole * cos(oldangle-testangle)/(d*d*d);
+            //  - this now contains a lot of trig to do the dot products. Maybe
+            //  faster to generate the vectors and do it component wise?
+            dE+=  + Dipole * ( cos(newangle-testangle) - 3.* cos(n-newangle) * cos(n-testangle) ) /(d*d*d) 
+                  - Dipole * ( cos(oldangle-testangle) - 3.* cos(n-oldangle) * cos(n-testangle) ) /(d*d*d) ;
             // Ferroelectric / Potts model
-            dE+=  - Dipole * cos(newangle-testangle)/(d*d*d)
-                  + Dipole * cos(oldangle-testangle)/(d*d*d);
+//            dE+=  - Dipole * cos(newangle-testangle)/(d*d*d)
+//                  + Dipole * cos(oldangle-testangle)/(d*d*d);
  
         }
 
