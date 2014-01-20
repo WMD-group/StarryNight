@@ -82,7 +82,7 @@ int main(void)
     for (i=0;i<400;i++)
     {
         // Log some data...
-        fprintf(log,"%d %f\n",ACCEPT+REJECT,lattice_energy()); //FIXME: lattice_energy all broken, data worthless presently.
+        fprintf(log,"%lu %f\n",ACCEPT+REJECT,lattice_energy()); //FIXME: lattice_energy all broken, data worthless presently.
         // TODO: some kind of dipole distribution? Would I have to bin it
         // myself? (boring.)
         // TODO: Split Energy into different contributions... would be nice to
