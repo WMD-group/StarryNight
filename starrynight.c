@@ -221,7 +221,8 @@ void MC_move()
 double lattice_energy()
 {
     int x,y,dx,dy;
-    double E=0.0,d,oldangle,testangle;
+    double E_dipole=0.0,E_strain=0.0,E_field=0.0;
+    double d,oldangle,testangle,n;
 
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
@@ -247,16 +248,30 @@ double lattice_energy()
 
                     //it goes without saying that the following line is the single
                     //most important in the program... Energy calculation!
-                    E+=   cos(oldangle-testangle)/(d*d*d);
+            n=atan2((float)dy,(float)dx); //angle of normal vector between test points
+            // Anti-ferroelectric (dipole like)
+            //  - this now contains a lot of trig to do the dot products. Maybe
+            //  faster to generate the vectors and do it component wise?
+            E_dipole+=   Dipole * ( cos(oldangle-testangle) - 3.* cos(n-oldangle) * cos(n-testangle) ) /(d*d*d) ;
+     
+            // Ferroelectric / Potts model
+//            dE+=  - Dipole * cos(newangle-testangle)/(d*d*d);
+ 
                 }
 
             // Interaction of dipole with (unshielded) E-field
-            E+=   Efield*cos(oldangle-Eangle);
+            E_field+=  Efield*cos(oldangle-Eangle);
+
+            //Interaction with cage
+            E_strain+=  K*sin(2*oldangle)*sin(2*oldangle);
         }
+
 
 //    fprintf(stderr,"Energy of lattice: %f\n",E);
 
-    return(E);
+    printf("%lu %f %f %f %f\n",ACCEPT+REJECT,E_dipole,E_strain,E_field,E_dipole+E_strain+E_field);
+
+    return(E_dipole+E_strain+E_field);
 }
 
 // TODO: move these output routines to a separate file...
