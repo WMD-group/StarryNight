@@ -62,8 +62,8 @@ int main(void)
     //Random initial lattice
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-            lattice[i][k].angle=2*M_PI*genrand_real2(); // randomised initial orientation of dipoles
-//            lattice[i][k].angle=M_PI/2;
+//            lattice[i][k].angle=2*M_PI*genrand_real2(); // randomised initial orientation of dipoles
+            lattice[i][k].angle=M_PI/2;
 //            lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); // continous set
 //           of dipole orientations to test colour output (should appear as
 //           spectrum)
@@ -75,28 +75,43 @@ int main(void)
 */
     outputlattice_ppm_hsv("initial.png");
 
+    fprintf(stderr,"MC startup. 'Do I dare disturb the universe?'\n");
+
+    fprintf(stderr,"'.' is %d MC moves attempted.\n",X*Y);
+
     for (i=0;i<400;i++)
     {
         // Log some data...
-        fprintf(log,"%d %f\n",ACCEPT+REJECT,lattice_energy());
+        fprintf(log,"%d %f\n",ACCEPT+REJECT,lattice_energy()); //FIXME: lattice_energy all broken, data worthless presently.
+        // TODO: some kind of dipole distribution? Would I have to bin it
+        // myself? (boring.)
+        // TODO: Split Energy into different contributions... would be nice to
+        // see polarisation delta.E spike when the field flips
 
+        // Log some pretty pictures...
         sprintf(name,"MC-PNG_step_%.4d.png",i);
         outputlattice_ppm_hsv(name);
 
         sprintf(name,"MC-SVG_step_%.4d.svg",i);
         outputlattice_svg(name);
 
+        // Update the (interactive) user what we're up to
         fprintf(stderr,".");
 
+        // Manipulate the run conditions depending on simulation time
         if (i==50)  { Efield=1.0; Eangle=M_PI/2;}
         if (i%100) { Efield=-Efield;}
 
-        for (k=0;k<X*Y;k++)
+        // Do some MC moves!
+        for (k=0;k<X*Y;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
             MC_move();
     }
 
+    // OK; we're finished...
+
     fprintf(stderr,"\n");
 
+    // Final data output / summaries.
     outputlattice_ppm_hsv("final.png");
     outputlattice_svg("final.svg");
 
@@ -106,7 +121,7 @@ int main(void)
     return 0;
 }
 
-int rand_int(int SPAN)
+int rand_int(int SPAN) // TODO: profile this to make sure it runs at an OK speed.
 {
     return((int)( (unsigned long) genrand_int32() % (unsigned long)SPAN));
 }
@@ -241,6 +256,8 @@ double lattice_energy()
 
     return(E);
 }
+
+// TODO: move these output routines to a separate file...
 
 void outputlattice_png(char * filename)
 {
