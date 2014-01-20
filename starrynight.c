@@ -22,7 +22,7 @@ struct dipole
     float angle;
 } lattice[X][Y];
 
-float beta=2.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
+float beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
 
 float Efield=0.01; // units k_B.T per lattice unit
 float Eangle=0.0;
@@ -79,10 +79,12 @@ int main(void)
 
     fprintf(stderr,"'.' is %d MC moves attempted.\n",X*Y);
 
+    fprintf(log,"# MC_Move lattice_energy Efield Eangle\n");
+
     for (i=0;i<400;i++)
     {
         // Log some data...
-        fprintf(log,"%lu %f\n",ACCEPT+REJECT,lattice_energy()); //FIXME: lattice_energy all broken, data worthless presently.
+        fprintf(log,"%lu %f %f %f\n",ACCEPT+REJECT,lattice_energy(),Efield,Eangle); //FIXME: lattice_energy all broken, data worthless presently.
         // TODO: some kind of dipole distribution? Would I have to bin it
         // myself? (boring.)
         // TODO: Split Energy into different contributions... would be nice to
@@ -100,7 +102,7 @@ int main(void)
 
         // Manipulate the run conditions depending on simulation time
         if (i==50)  { Efield=1.0; Eangle=M_PI/2;}
-        if (i%100) { Efield=-Efield;}
+        if (i%100==0) { Efield=-Efield;}
 
         // Do some MC moves!
         for (k=0;k<X*Y;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
