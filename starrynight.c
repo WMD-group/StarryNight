@@ -46,7 +46,7 @@ int rand_int(int SPAN);
 double site_energy(int x, int y, double newangle, double oldangle);
 void MC_move();
 void initialise_lattice();
-double lattice_energy();
+double lattice_energy_log(FILE *log);
 void outputlattice_pnm(char * filename);
 void outputlattice_ppm_hsv(char * filename);
 void outputlattice_svg(char * filename);
@@ -107,12 +107,14 @@ int main(void)
 
     fprintf(stderr,"'.' is %d MC moves attempted.\n",X*Y*MCMegaMultiplier);
 
-    fprintf(log,"# MC_Move lattice_energy Efield Eangle\n");
+    fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
     for (i=0;i<MCMegaSteps;i++)
     {
-        // Log some data...
-        fprintf(log,"%lu %f %f %f\n",ACCEPT+REJECT,lattice_energy(),Efield,Eangle); //FIXME: lattice_energy all broken, data worthless presently.
+        // Log some data... Nb: Slow as does a NxN summation of lattice energy
+        // contributions!
+        lattice_energy_log(log);
+        //fprintf(log,"%lu %f %f %f\n",ACCEPT+REJECT,lattice_energy(),Efield,Eangle); //FIXME: lattice_energy all broken, data worthless presently.
         // TODO: some kind of dipole distribution? Would I have to bin it
         // myself? (boring.)
         // TODO: Split Energy into different contributions... would be nice to
@@ -265,7 +267,7 @@ void MC_move()
 */
 }
 
-double lattice_energy()
+double lattice_energy_log(FILE *log)
 {
     int x,y,dx,dy;
     double E_dipole=0.0,E_strain=0.0,E_field=0.0;
@@ -316,9 +318,9 @@ double lattice_energy()
 
 //    fprintf(stderr,"Energy of lattice: %f\n",E);
 
-    printf("%lu %f %f %f %f\n",ACCEPT+REJECT,E_dipole,E_strain,E_field,E_dipole+E_strain+E_field);
+    fprintf(log,"%lu %f %f %f %f %f %f\n",ACCEPT+REJECT,Efield,Eangle,E_dipole,E_strain,E_field,E_dipole+E_strain+E_field);
 
-    return(E_dipole+E_strain+E_field);
+    return(E_dipole+E_strain+E_field); //FIXME: is this still useful?
 }
 
 // TODO: move these output routines to a separate file...
