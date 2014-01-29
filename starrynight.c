@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c"
 
-#define X 10  // Malloc is for losers.
-#define Y 10
+#define X 100  // Malloc is for losers.
+#define Y 100
 
 struct dipole
 {
@@ -167,16 +167,20 @@ static void random_sphere_point(struct dipole *p)
         x2=2.0*genrand_real1() - 1.0;
     } while (x1*x1 + x2*x2 > 1.0);
 
-    // Circle picking, after Cook 1957
-    // http://mathworld.wolfram.com/CirclePointPicking.html
-    p->x = (x1*x1 - x2*x2)  / (x1*x1 + x2*x2);
-    p->y =      2*x1*x2     / (x1*x1 + x2*x2);
-    p->z = 0.0;
-
-    // Sphere picking
-//    p->x = 2*x1*sqrt(1-x1*x1-x2*x2);
-//    p->y = 2*x2*sqrt(1-x1*x1-x2*x2);
-//    p->z = 1.0 - 2.0* (x1*x1+x2*x2);
+    if (DIM<3){
+        // Circle picking, after Cook 1957
+        // http://mathworld.wolfram.com/CirclePointPicking.html
+        p->x = (x1*x1 - x2*x2)  / (x1*x1 + x2*x2);
+        p->y =      2*x1*x2     / (x1*x1 + x2*x2);
+        p->z = 0.0;
+    }
+    else
+    {
+        // Sphere picking
+        p->x = 2*x1*sqrt(1-x1*x1-x2*x2);
+        p->y = 2*x2*sqrt(1-x1*x1-x2*x2);
+        p->z = 1.0 - 2.0* (x1*x1+x2*x2);
+    }
 }
 
 static float dot(struct dipole *a, struct dipole *b)
