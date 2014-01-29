@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c"
 
-#define X 100  // Malloc is for losers.
-#define Y 100
+#define X 50  // Malloc is for losers.
+#define Y 50
 
 struct dipole
 {
@@ -201,12 +201,17 @@ void initialise_lattice()
     //Random initial lattice
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-            random_sphere_point(& lattice[i][k]);
+//            random_sphere_point(& lattice[i][k]);
 //            lattice[i][k].angle=2*M_PI*genrand_real2(); // randomised initial orientation of dipoles
 //            lattice[i][k].angle=M_PI/2;
-//            lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); // continous set
+     {
+         lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); // continous set
 //           of dipole orientations to test colour output (should appear as
 //           spectrum)
+         lattice[i][k].x = sin(lattice[i][k].angle);
+         lattice[i][k].y=cos(lattice[i][k].angle);
+         lattice[i][k].z=0.0;
+     }
 
     //Print lattice
     for (i=0;i<X;i++)
@@ -423,13 +428,13 @@ void outputlattice_ppm_hsv(char * filename)
     for (i=0;i<X;i++) //force same ordering as SVG...
         for (k=0;k<Y;k++)
         {
-            h=fmod(atan2(lattice[i][k].y,lattice[i][k].x),M_PI*2.0); //Nb: assumes 0->2PI interval!
+            h=M_PI+atan2(lattice[i][k].y,lattice[i][k].x); //Nb: assumes 0->2PI interval!
             //h=fmod(lattice[i][k].angle,M_PI*2.0); //old angle code
             v=0.5+0.5*lattice[i][k].z;
 
             // http://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
-            hp=(int)floor(h/(M_PI/3.0))%6; //radians, woo
-            f=h/(M_PI/3.0)-floor(h/(M_PI/3.0));
+            hp=(int)floor(h/(M_PI/3.0)); //radians, woo
+            f=h/(M_PI/3.0)-(float)hp;
             
             p=v*(1.0-s);
             q=v*(1.0-f*s);
