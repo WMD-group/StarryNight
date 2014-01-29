@@ -43,6 +43,7 @@ unsigned long REJECT=0;
 int rand_int(int SPAN);
 double site_energy(int x, int y, double newangle, double oldangle);
 void MC_move();
+void initialise_lattice();
 double lattice_energy();
 void outputlattice_pnm(char * filename);
 void outputlattice_ppm_hsv(char * filename);
@@ -64,20 +65,8 @@ int main(void)
     //init_genrand(0);  // reproducible
     init_genrand(time(NULL)); // seeded with current time
 
-    //Random initial lattice
-     for (i=0;i<X;i++)
-        for (k=0;k<Y;k++)
-//            lattice[i][k].angle=2*M_PI*genrand_real2(); // randomised initial orientation of dipoles
-            lattice[i][k].angle=M_PI/2;
-//            lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); // continous set
-//           of dipole orientations to test colour output (should appear as
-//           spectrum)
+    initialise_lattice();
 
-    //Print lattice
-/*    for (i=0;i<X;i++)
-        for (k=0;k<Y;k++)
-            printf(" %f",lattice[i][k].angle);
-*/
     outputlattice_ppm_hsv("initial.png");
 
     fprintf(stderr,"MC startup. 'Do I dare disturb the universe?'\n");
@@ -126,6 +115,25 @@ int main(void)
     fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
 
     return 0;
+}
+
+void initialise_lattice()
+{
+    int i,k;
+    //Random initial lattice
+     for (i=0;i<X;i++)
+        for (k=0;k<Y;k++)
+//            lattice[i][k].angle=2*M_PI*genrand_real2(); // randomised initial orientation of dipoles
+            lattice[i][k].angle=M_PI/2;
+//            lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); // continous set
+//           of dipole orientations to test colour output (should appear as
+//           spectrum)
+
+    //Print lattice
+/*    for (i=0;i<X;i++)
+        for (k=0;k<Y;k++)
+            printf(" %f",lattice[i][k].angle);
+*/
 }
 
 int rand_int(int SPAN) // TODO: profile this to make sure it runs at an OK speed.
