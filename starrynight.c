@@ -21,6 +21,7 @@
 
 struct dipole
 {
+    float x,y,z;
     float angle;
 } lattice[X][Y];
 
@@ -42,11 +43,11 @@ unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
 
 // Prototypes...
-int rand_int(int SPAN);
-double site_energy(int x, int y, double newangle, double oldangle);
-void MC_move();
+static int rand_int(int SPAN);
+static double site_energy(int x, int y, double newangle, double oldangle);
+static void MC_move();
 void initialise_lattice();
-double lattice_energy_log(FILE *log);
+static double lattice_energy_log(FILE *log);
 void outputlattice_pnm(char * filename);
 void outputlattice_ppm_hsv(char * filename);
 void outputlattice_svg(char * filename);
@@ -100,7 +101,7 @@ int main(void)
 
     initialise_lattice();
     fprintf(stderr,"Lattice initialised.");
-
+exit(-1);
     outputlattice_ppm_hsv("initial.png");
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
@@ -131,8 +132,9 @@ int main(void)
         fprintf(stderr,".");
 
         // Manipulate the run conditions depending on simulation time
-        if (i==50)  { Efield=1.0; Eangle=M_PI/2;}
-        if (i%100==0) { Efield=-Efield;}
+        if (i==50)  { Efield=1.0; Eangle=M_PI/2;} // power up field
+        if (i==100) { Efield=-Efield;}  // flip field
+        if (i==200) { Efield=0.0;}      // relax back to nothing
 
         // Do some MC moves!
         for (k=0;k<X*Y*MCMegaMultiplier;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
@@ -153,31 +155,47 @@ int main(void)
     return 0;
 }
 
+static void random_sphere_point(struct dipole *p)
+{
+    int i;
+    // Marsaglia 1972 - random gaussian variables
+    float x1,x2;
+    do {
+        x1=2.0*genrand_real1() - 1.0;
+        x2=2.0*genrand_real1() - 1.0;
+    } while (x1*x1 + x2*x2 > 1.0);
+
+    p->x = 2*x1*sqrt(1-x1*x1-x2*x2);
+    p->y = 2*x2*sqrt(1-x1*x1-x2*x2);
+    p->z = 1.0 - 2.0* (x1*x1+x2*x2);
+}
+
 void initialise_lattice()
 {
     int i,k;
     //Random initial lattice
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
+            random_sphere_point(& lattice[i][k]);
 //            lattice[i][k].angle=2*M_PI*genrand_real2(); // randomised initial orientation of dipoles
-            lattice[i][k].angle=M_PI/2;
+//            lattice[i][k].angle=M_PI/2;
 //            lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); // continous set
 //           of dipole orientations to test colour output (should appear as
 //           spectrum)
 
     //Print lattice
-/*    for (i=0;i<X;i++)
+    for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-            printf(" %f",lattice[i][k].angle);
-*/
+            printf("\n %f %f %f",lattice[i][k].x,lattice[i][k].y,lattice[i][k].z);
+
 }
 
-int rand_int(int SPAN) // TODO: profile this to make sure it runs at an OK speed.
+static int rand_int(int SPAN) // TODO: profile this to make sure it runs at an OK speed.
 {
     return((int)( (unsigned long) genrand_int32() % (unsigned long)SPAN));
 }
 
-double site_energy(int x, int y, double newangle, double oldangle)
+static double site_energy(int x, int y, double newangle, double oldangle)
 {
     int dx,dy;
     float d;
@@ -224,7 +242,7 @@ double site_energy(int x, int y, double newangle, double oldangle)
     return(dE); 
 }
 
-void MC_move()
+static void MC_move()
 {
     int x, y;
     int dx, dy;
@@ -267,7 +285,7 @@ void MC_move()
 */
 }
 
-double lattice_energy_log(FILE *log)
+static double lattice_energy_log(FILE *log)
 {
     int x,y,dx,dy;
     double E_dipole=0.0,E_strain=0.0,E_field=0.0;
