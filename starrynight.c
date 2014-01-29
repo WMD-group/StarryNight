@@ -12,6 +12,8 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <libconfig.h>
+
 #include "mt19937ar-cok.c"
 
 #define X 50  // Malloc is for losers.
@@ -24,14 +26,14 @@ struct dipole
 
 // SIMULATION PARAMETERS
 
-float beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
+double beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
 
-float Efield=0.01; // units k_B.T per lattice unit
-float Eangle=0.0;
+double Efield=0.01; // units k_B.T per lattice unit
+double Eangle=0.0;
 
-float K=1.0; //elastic coupling constant for dipole moving within cage
+double K=1.0; //elastic coupling constant for dipole moving within cage
 
-float Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
+double Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
 
 //END OF SIMULATION PARAMETERS
 // Except for the ones hardcoded into the algorithm :^)
@@ -52,30 +54,62 @@ void outputlattice_svg(char * filename);
 int main(void)
 {
     int i,j,k; //for loop iterators
+    int MCMegaSteps=400, MCMegaMultiplier=1;
+    config_t cfg, *cf; //libconfig config structure
 
     char name[50]; //for output filenames
 
     fprintf(stderr,"Starry Night - Monte Carlo brushstrokes.\n");
 
+//Load and parse config file
+    cf = &cfg;
+    config_init(cf);
+
+    if (!config_read_file(cf,"starrynight.cfg")) 
+    {
+        fprintf(stderr, "%s:%d - %s\n",
+                config_error_file(cf),
+                config_error_line(cf),
+                config_error_text(cf));
+        config_destroy(cf);
+        return(EXIT_FAILURE);
+    }
+
+    config_lookup_float(cf,"beta",&beta);
+
+    config_lookup_float(cf,"Efield",&Efield);
+    config_lookup_float(cf,"Eangle",&Eangle);
+
+    config_lookup_float(cf,"K",&K);
+    config_lookup_float(cf,"Dipole",&Dipole);
+
+    config_lookup_int(cf,"MCMegaSteps",&MCMegaSteps);
+    config_lookup_int(cf,"MCMegaMultiplier",&MCMegaMultiplier);
+
+    fprintf(stderr,"Config loaded. ");
+
 // If we're going to do some actual science, we better have a logfile...
     FILE *log;
-    log=fopen("starry.log","w");
+    log=fopen("starrynight.log","w");
+    fprintf(stderr,"Log file opened. ");
 
     //Fire up the twister!
     //init_genrand(0);  // reproducible
     init_genrand(time(NULL)); // seeded with current time
+    fprintf(stderr,"Twister initialised. ");
 
     initialise_lattice();
+    fprintf(stderr,"Lattice initialised.");
 
     outputlattice_ppm_hsv("initial.png");
 
-    fprintf(stderr,"MC startup. 'Do I dare disturb the universe?'\n");
+    fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
-    fprintf(stderr,"'.' is %d MC moves attempted.\n",X*Y);
+    fprintf(stderr,"'.' is %d MC moves attempted.\n",X*Y*MCMegaMultiplier);
 
     fprintf(log,"# MC_Move lattice_energy Efield Eangle\n");
 
-    for (i=0;i<400;i++)
+    for (i=0;i<MCMegaSteps;i++)
     {
         // Log some data...
         fprintf(log,"%lu %f %f %f\n",ACCEPT+REJECT,lattice_energy(),Efield,Eangle); //FIXME: lattice_energy all broken, data worthless presently.
@@ -99,7 +133,7 @@ int main(void)
         if (i%100==0) { Efield=-Efield;}
 
         // Do some MC moves!
-        for (k=0;k<X*Y;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
+        for (k=0;k<X*Y*MCMegaMultiplier;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
             MC_move();
     }
 

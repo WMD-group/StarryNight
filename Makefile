@@ -1,5 +1,5 @@
 starrynight: starrynight.c
-	gcc -O4 -lm -o starrynight starrynight.c
+	gcc -O4 -lm -lconfig -o starrynight starrynight.c
 
 all: starrynight
 
