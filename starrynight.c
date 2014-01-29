@@ -42,6 +42,8 @@ double Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
 unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
 
+#define DIM 3
+
 // Prototypes...
 static int rand_int(int SPAN);
 static double site_energy(int x, int y, double newangle, double oldangle);
@@ -170,6 +172,18 @@ static void random_sphere_point(struct dipole *p)
     p->z = 1.0 - 2.0* (x1*x1+x2*x2);
 }
 
+static float dot(struct dipole *a, struct dipole *b)
+{
+    int D;
+    float sum=0.0;
+
+    sum+=a->x*b->x;
+    sum+=a->y*b->y;
+    sum+=a->z*b->z;
+
+    return(sum);
+}
+
 void initialise_lattice()
 {
     int i,k;
@@ -186,8 +200,8 @@ void initialise_lattice()
     //Print lattice
     for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-            printf("\n %f %f %f",lattice[i][k].x,lattice[i][k].y,lattice[i][k].z);
-
+            printf("\n %f %f %f %f",lattice[i][k].x,lattice[i][k].y,lattice[i][k].z,
+                    dot(&lattice[i][k],&lattice[i][k]));
 }
 
 static int rand_int(int SPAN) // TODO: profile this to make sure it runs at an OK speed.
