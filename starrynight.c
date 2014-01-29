@@ -42,7 +42,7 @@ double Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
 unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
 
-#define DIM 3
+#define DIM 2 
 
 // Prototypes...
 static int rand_int(int SPAN);
@@ -262,8 +262,8 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
 //                  + Dipole * cos(oldangle-testangle)/(d*d*d);
 
             //True dipole like
-            dE+= + Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
-                 - Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
+            dE+= - Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
+                 + Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
 
             // Ferroelectric / Potts model - vector form
 //            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
