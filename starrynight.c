@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c"
 
-#define X 50  // Malloc is for losers.
-#define Y 50
+#define X 10  // Malloc is for losers.
+#define Y 10
 
 struct dipole
 {
@@ -46,7 +46,7 @@ unsigned long REJECT=0;
 
 // Prototypes...
 static int rand_int(int SPAN);
-static double site_energy(int x, int y, double newangle, double oldangle);
+static double site_energy(int x, int y, struct dipole *newdipole, struct dipole *olddipole);
 static void MC_move();
 void initialise_lattice();
 static double lattice_energy_log(FILE *log);
@@ -103,7 +103,7 @@ int main(void)
 
     initialise_lattice();
     fprintf(stderr,"Lattice initialised.");
-exit(-1);
+
     outputlattice_ppm_hsv("initial.png");
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
@@ -160,16 +160,23 @@ exit(-1);
 static void random_sphere_point(struct dipole *p)
 {
     int i;
-    // Marsaglia 1972 - random gaussian variables
+    // Marsaglia 1972 
     float x1,x2;
     do {
         x1=2.0*genrand_real1() - 1.0;
         x2=2.0*genrand_real1() - 1.0;
     } while (x1*x1 + x2*x2 > 1.0);
 
-    p->x = 2*x1*sqrt(1-x1*x1-x2*x2);
-    p->y = 2*x2*sqrt(1-x1*x1-x2*x2);
-    p->z = 1.0 - 2.0* (x1*x1+x2*x2);
+    // Circle picking, after Cook 1957
+    // http://mathworld.wolfram.com/CirclePointPicking.html
+    p->x = (x1*x1 - x2*x2)  / (x1*x1 + x2*x2);
+    p->y =      2*x1*x2     / (x1*x1 + x2*x2);
+    p->z = 0.0;
+
+    // Sphere picking
+//    p->x = 2*x1*sqrt(1-x1*x1-x2*x2);
+//    p->y = 2*x2*sqrt(1-x1*x1-x2*x2);
+//    p->z = 1.0 - 2.0* (x1*x1+x2*x2);
 }
 
 static float dot(struct dipole *a, struct dipole *b)
@@ -209,12 +216,12 @@ static int rand_int(int SPAN) // TODO: profile this to make sure it runs at an O
     return((int)( (unsigned long) genrand_int32() % (unsigned long)SPAN));
 }
 
-static double site_energy(int x, int y, double newangle, double oldangle)
+static double site_energy(int x, int y, struct dipole *newdipole, struct dipole *olddipole)
 {
     int dx,dy;
     float d;
     double dE=0.0;
-    double testangle,n;
+    struct dipole *testdipole, n;
 
     // Sum over near neighbours for dipole-dipole interaction
     for (dx=-2;dx<=2;dx++)
@@ -227,31 +234,41 @@ static double site_energy(int x, int y, double newangle, double oldangle)
 
             if (d>2.0) continue; // Cutoff in d
 
-            testangle=lattice[(X+x+dx)%X][(Y+y+dy)%Y].angle;
+            testdipole=& lattice[(X+x+dx)%X][(Y+y+dy)%Y];
+//            testangle=lattice[(X+x+dx)%X][(Y+y+dy)%Y].angle;
 
             //it goes without saying that the following line is the single
             //most important in the program... Energy calculation!
 
-            n=atan2((float)dy,(float)dx); //angle of normal vector between test points
+            n.x=(float)dx/d; n.y=(float)dy/d; //normalised diff. vector
+
+//            n=atan2((float)dy,(float)dx); //angle of normal vector between test points
             // Anti-ferroelectric (dipole like)
             //  - this now contains a lot of trig to do the dot products. Maybe
             //  faster to generate the vectors and do it component wise?
-            dE+=  + Dipole * ( cos(newangle-testangle) - 3.* cos(n-newangle) * cos(n-testangle) ) /(d*d*d) 
-                  - Dipole * ( cos(oldangle-testangle) - 3.* cos(n-oldangle) * cos(n-testangle) ) /(d*d*d) ;
+//            dE+=  + Dipole * ( cos(newangle-testangle) - 3.* cos(n-newangle) * cos(n-testangle) ) /(d*d*d) 
+//                  - Dipole * ( cos(oldangle-testangle) - 3.* cos(n-oldangle) * cos(n-testangle) ) /(d*d*d) ;
             // Ferroelectric / Potts model
 //            dE+=  - Dipole * cos(newangle-testangle)/(d*d*d)
 //                  + Dipole * cos(oldangle-testangle)/(d*d*d);
- 
+
+            //True dipole like
+            dE+= + Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
+                 - Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
+
+            // Ferroelectric / Potts model - vector form
+//            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
+//                + Dipole * dot(olddipole,testdipole) / (d*d*d);
         }
 
     // Interaction of dipole with (unshielded) E-field
-    dE+= + Efield*cos(newangle-Eangle)
-         - Efield*cos(oldangle-Eangle);
+//    dE+= + Efield*cos(newangle-Eangle)
+//         - Efield*cos(oldangle-Eangle);
 
     // interaction with strain of cage modelled as cos^2 function (low energy
     // is diagonal with MA ion along hypotenuse)
-    dE += + K*cos(2*newangle)*cos(2*newangle)
-          - K*cos(2*oldangle)*cos(2*oldangle);
+//    dE += + K*cos(2*newangle)*cos(2*newangle)
+//          - K*cos(2*oldangle)*cos(2*oldangle);
 
     return(dE); 
 }
@@ -260,8 +277,9 @@ static void MC_move()
 {
     int x, y;
     int dx, dy;
-    float newangle,oldangle,testangle,d;
+    float d;
     float dE=0.0;
+    struct dipole newdipole, *olddipole;
 
     // Choose random dipole / lattice location
 
@@ -271,18 +289,24 @@ static void MC_move()
     // random new orientation. 
     // Nb: this is the definition of a MC move - might want to consider
     // alternative / global / less disruptive moves as well
-    newangle=2*M_PI*genrand_real2();
+//    newangle=2*M_PI*genrand_real2();
+    random_sphere_point(& newdipole);    
 
     // comparison point for the dE - the present configuration
-    oldangle=lattice[x][y].angle;
+//    oldangle=lattice[x][y].angle;
+
+    olddipole=& lattice[x][y];
 
     //calc site energy
     //double site_energy(int x, int y, double newangle, double oldangle);
-    dE=site_energy(x,y,newangle,oldangle);
+    dE=site_energy(x,y,& newdipole,olddipole);
 
     if (dE < 0.0 || exp(-dE * beta) > genrand_real2() )
     {
-        lattice[x][y].angle=newangle;
+        lattice[x][y].x=newdipole.x;
+        lattice[x][y].y=newdipole.y;
+        lattice[x][y].z=newdipole.z;
+
         ACCEPT++;
     }
     else
@@ -395,7 +419,9 @@ void outputlattice_ppm_hsv(char * filename)
     for (i=0;i<X;i++) //force same ordering as SVG...
         for (k=0;k<Y;k++)
         {
-            h=fmod(lattice[i][k].angle,M_PI*2.0);
+            h=fmod(atan2(lattice[i][k].y,lattice[i][k].x),M_PI*2.0); //Nb: assumes 0->2PI interval!
+            //h=fmod(lattice[i][k].angle,M_PI*2.0); //old angle code
+            v=0.5+0.5*lattice[i][k].z;
 
             // http://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
             hp=(int)floor(h/(M_PI/3.0))%6; //radians, woo
@@ -438,10 +464,10 @@ void outputlattice_svg(char * filename)
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
             fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(0,0,0);stroke-width:0.17\" marker-end=\"url(#triangle)\" />\n",
-                    i+0.5 - 0.4*sin(lattice[k][i].angle), 
-                    k+0.5 - 0.4*cos(lattice[k][i].angle),
-                    i+0.5 + 0.4*sin(lattice[k][i].angle),
-                    k+0.5 + 0.4*cos(lattice[k][i].angle)
+                    i+0.5 - 0.4*lattice[k][i].x, 
+                    k+0.5 - 0.4*lattice[k][i].y,
+                    i+0.5 + 0.4*lattice[k][i].x,
+                    k+0.5 + 0.4*lattice[k][i].y
                    );
     
     fprintf(fo,"</svg>\n");
