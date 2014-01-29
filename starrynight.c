@@ -167,7 +167,8 @@ double site_energy(int x, int y, double newangle, double oldangle)
     dE+= + Efield*cos(newangle-Eangle)
          - Efield*cos(oldangle-Eangle);
 
-    // interaction with strain of cage
+    // interaction with strain of cage modelled as sin^2 function (low energy
+    // is diagonal with MA ion along hypotenuse)
     dE += + K*sin(2*newangle)*sin(2*newangle)
           - K*sin(2*oldangle)*sin(2*oldangle);
 
