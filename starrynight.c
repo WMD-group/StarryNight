@@ -22,6 +22,8 @@ struct dipole
     float angle;
 } lattice[X][Y];
 
+// SIMULATION PARAMETERS
+
 float beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
 
 float Efield=0.01; // units k_B.T per lattice unit
@@ -29,7 +31,10 @@ float Eangle=0.0;
 
 float K=1.0; //elastic coupling constant for dipole moving within cage
 
-float Dipole=1.0; //units of k_B.T for spacing = 1
+float Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
+
+//END OF SIMULATION PARAMETERS
+// Except for the ones hardcoded into the algorithm :^)
 
 unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
@@ -168,8 +173,8 @@ double site_energy(int x, int y, double newangle, double oldangle)
          - Efield*cos(oldangle-Eangle);
 
     // interaction with strain of cage
-    dE += + K*sin(2*newangle)*sin(2*newangle)
-          - K*sin(2*oldangle)*sin(2*oldangle);
+    dE += + K*cos(2*newangle)*cos(2*newangle)
+          - K*cos(2*oldangle)*cos(2*oldangle);
 
 
     return(dE); 
