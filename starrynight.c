@@ -29,7 +29,8 @@ struct dipole
 
 double beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
 
-double Efield=0.01; // units k_B.T per lattice unit
+struct dipole Efield; //now a vector, still k_B.T units per lattice unit
+//double Efield=0.01; // units k_B.T per lattice unit
 double Eangle=0.0;
 
 double K=1.0; //elastic coupling constant for dipole moving within cage
@@ -42,7 +43,7 @@ double Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
 unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
 
-#define DIM 2 
+#define DIM 3 
 
 // Prototypes...
 static int rand_int(int SPAN);
@@ -59,6 +60,7 @@ int main(void)
     int i,j,k; //for loop iterators
     int MCMegaSteps=400, MCMegaMultiplier=1;
     config_t cfg, *cf; //libconfig config structure
+    double tmp;
 
     char name[50]; //for output filenames
 
@@ -80,8 +82,11 @@ int main(void)
 
     config_lookup_float(cf,"beta",&beta);
 
-    config_lookup_float(cf,"Efield",&Efield);
-    config_lookup_float(cf,"Eangle",&Eangle);
+    config_lookup_float(cf,"Efield.x",&tmp);  Efield.x=(float)tmp;
+    config_lookup_float(cf,"Efield.y",&tmp);  Efield.y=(float)tmp;
+    config_lookup_float(cf,"Efield.z",&tmp);  Efield.z=(float)tmp;
+
+//    config_lookup_float(cf,"Eangle",&Eangle);
 
     config_lookup_float(cf,"K",&K);
     config_lookup_float(cf,"Dipole",&Dipole);
@@ -134,9 +139,8 @@ int main(void)
         fprintf(stderr,".");
 
         // Manipulate the run conditions depending on simulation time
-        if (i==50)  { Efield=1.0; Eangle=M_PI/2;} // power up field
-        if (i==100) { Efield=-Efield;}  // flip field
-        if (i==200) { Efield=0.0;}      // relax back to nothing
+        if (i==100) { Efield.x=-Efield.x;}  // flip field
+        if (i==200) { Efield.x=0.0;}      // relax back to nothing
 
         // Do some MC moves!
         for (k=0;k<X*Y*MCMegaMultiplier;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
@@ -273,6 +277,9 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
     // Interaction of dipole with (unshielded) E-field
 //    dE+= + Efield*cos(newangle-Eangle)
 //         - Efield*cos(oldangle-Eangle);
+    dE+= + dot(newdipole, & Efield)
+         - dot(olddipole, & Efield);
+    fprintf(stderr,"%f\n",dot(newdipole, & Efield));
 
     // interaction with strain of cage modelled as cos^2 function (low energy
     // is diagonal with MA ion along hypotenuse)
@@ -374,7 +381,7 @@ static double lattice_energy_log(FILE *log)
                 }
 
             // Interaction of dipole with (unshielded) E-field
-            E_field+=  Efield*cos(oldangle-Eangle);
+//            E_field+=  Efield*cos(oldangle-Eangle);
 
             //Interaction with cage
             E_strain+=  K*sin(2*oldangle)*sin(2*oldangle);
@@ -383,7 +390,7 @@ static double lattice_energy_log(FILE *log)
 
 //    fprintf(stderr,"Energy of lattice: %f\n",E);
 
-    fprintf(log,"%lu %f %f %f %f %f %f\n",ACCEPT+REJECT,Efield,Eangle,E_dipole,E_strain,E_field,E_dipole+E_strain+E_field);
+    fprintf(log,"%lu %f %f %f %f %f %f\n",ACCEPT+REJECT,Efield.x,Eangle,E_dipole,E_strain,E_field,E_dipole+E_strain+E_field);
 
     return(E_dipole+E_strain+E_field); //FIXME: is this still useful?
 }
