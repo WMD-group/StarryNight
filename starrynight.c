@@ -37,13 +37,14 @@ double K=1.0; //elastic coupling constant for dipole moving within cage
 
 double Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
 
+int DIM=2; 
+
 //END OF SIMULATION PARAMETERS
 // Except for the ones hardcoded into the algorithm :^)
 
 unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
 
-#define DIM 3 
 
 // Prototypes...
 static int rand_int(int SPAN);
@@ -58,7 +59,8 @@ void outputlattice_svg(char * filename);
 int main(void)
 {
     int i,j,k; //for loop iterators
-    int MCMegaSteps=400, MCMegaMultiplier=1;
+    int MCMegaSteps=400;
+    double MCMegaMultiplier=1.0;
     config_t cfg, *cf; //libconfig config structure
     double tmp;
 
@@ -92,7 +94,7 @@ int main(void)
     config_lookup_float(cf,"Dipole",&Dipole);
 
     config_lookup_int(cf,"MCMegaSteps",&MCMegaSteps);
-    config_lookup_int(cf,"MCMegaMultiplier",&MCMegaMultiplier);
+    config_lookup_float(cf,"MCMegaMultiplier",&MCMegaMultiplier);
 
     fprintf(stderr,"Config loaded. ");
 
@@ -113,7 +115,7 @@ int main(void)
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
-    fprintf(stderr,"'.' is %d MC moves attempted.\n",X*Y*MCMegaMultiplier);
+    fprintf(stderr,"'.' is %d MC moves attempted.\n",(int)(X*Y*MCMegaMultiplier));
 
     fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
@@ -139,8 +141,9 @@ int main(void)
         fprintf(stderr,".");
 
         // Manipulate the run conditions depending on simulation time
-        if (i==100) { Efield.x=-Efield.x;}  // flip field
-        if (i==200) { Efield.x=0.0;}      // relax back to nothing
+        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
+        if (i==200) { Efield.z=1.0;}      // relax back to nothing
+        if (i==300) {Efield.z=0.0; Efield.x=1.0;}
 
         // Do some MC moves!
         for (k=0;k<X*Y*MCMegaMultiplier;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
@@ -279,7 +282,7 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
 //         - Efield*cos(oldangle-Eangle);
     dE+= + dot(newdipole, & Efield)
          - dot(olddipole, & Efield);
-    fprintf(stderr,"%f\n",dot(newdipole, & Efield));
+    //fprintf(stderr,"%f\n",dot(newdipole, & Efield));
 
     // interaction with strain of cage modelled as cos^2 function (low energy
     // is diagonal with MA ion along hypotenuse)
@@ -437,7 +440,8 @@ void outputlattice_ppm_hsv(char * filename)
         {
             h=M_PI+atan2(lattice[i][k].y,lattice[i][k].x); //Nb: assumes 0->2PI interval!
             //h=fmod(lattice[i][k].angle,M_PI*2.0); //old angle code
-            v=0.5+0.5*lattice[i][k].z;
+            v=0.5+0.4*lattice[i][k].z; //darken towards the south (-z) pole
+            s=0.6-0.6*fabs(lattice[i][k].z); //desaturate towards the poles
 
             // http://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
             hp=(int)floor(h/(M_PI/3.0)); //radians, woo
@@ -479,12 +483,17 @@ void outputlattice_svg(char * filename)
 
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-            fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(0,0,0);stroke-width:0.17\" marker-end=\"url(#triangle)\" />\n",
+            fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(%d,%d,%d);stroke-width:0.17\" marker-end=\"url(#triangle)\" />\n",
                     i+0.5 - 0.4*lattice[k][i].x, 
                     k+0.5 - 0.4*lattice[k][i].y,
                     i+0.5 + 0.4*lattice[k][i].x,
-                    k+0.5 + 0.4*lattice[k][i].y
+                    k+0.5 + 0.4*lattice[k][i].y,
+                    (int)((-lattice[k][i].z+1.0)*127.0),
+                    (int)((-lattice[k][i].z+1.0)*127.0),
+                    (int)((-lattice[k][i].z+1.0)*127.0)
                    );
+     // invert z-axis, and scale to greyscale. Therefore alternates with
+     // pointing up and down with background colour
     
     fprintf(fo,"</svg>\n");
 
