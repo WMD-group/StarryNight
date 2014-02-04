@@ -51,6 +51,7 @@ static int rand_int(int SPAN);
 static double site_energy(int x, int y, struct dipole *newdipole, struct dipole *olddipole);
 static void MC_move();
 void initialise_lattice();
+static void lattice_angle_log(FILE *log);
 static double lattice_energy_log(FILE *log);
 void outputlattice_pnm(char * filename);
 void outputlattice_ppm_hsv(char * filename);
@@ -123,7 +124,7 @@ int main(void)
     {
         // Log some data... Nb: Slow as does a NxN summation of lattice energy
         // contributions!
-        lattice_energy_log(log);
+        lattice_angle_log(log);
         //fprintf(log,"%lu %f %f %f\n",ACCEPT+REJECT,lattice_energy(),Efield,Eangle); //FIXME: lattice_energy all broken, data worthless presently.
         // TODO: some kind of dipole distribution? Would I have to bin it
         // myself? (boring.)
@@ -212,12 +213,12 @@ void initialise_lattice()
 //            lattice[i][k].angle=2*M_PI*genrand_real2(); // randomised initial orientation of dipoles
 //            lattice[i][k].angle=M_PI/2;
      {
-         lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); // continous set
-//           of dipole orientations to test colour output (should appear as
-//           spectrum)
+         lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); 
+         // continous set of dipole orientations to test colour output (should
+         // appear as spectrum)
          lattice[i][k].x = sin(lattice[i][k].angle);
-         lattice[i][k].y=cos(lattice[i][k].angle);
-         lattice[i][k].z=0.0;
+         lattice[i][k].y = cos(lattice[i][k].angle);
+         lattice[i][k].z = 0.0;
      }
 
     //Print lattice
@@ -340,6 +341,19 @@ static void MC_move()
 
     fprintf(stderr,"MC: %d X %d Y oldangle %f newangle %f dE: %f\n",x,y,oldangle,newangle,dE);
 */
+}
+
+static void lattice_angle_log(FILE *log)
+{
+    int x,y;
+    double angle;
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+        {
+            angle=atan2(lattice[x][y].y, lattice[x][y].z);
+            fprintf(log,"%f\n",angle);
+        }
 }
 
 static double lattice_energy_log(FILE *log)
