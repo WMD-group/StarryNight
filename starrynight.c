@@ -142,9 +142,9 @@ int main(void)
         fprintf(stderr,".");
 
         // Manipulate the run conditions depending on simulation time
-        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
-        if (i==200) { Efield.z=1.0;}      // relax back to nothing
-        if (i==300) {Efield.z=0.0; Efield.x=1.0;}
+//        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
+//        if (i==200) { Efield.z=1.0;}      // relax back to nothing
+//        if (i==300) {Efield.z=0.0; Efield.x=1.0;}
 
         // Do some MC moves!
         for (k=0;k<X*Y*MCMegaMultiplier;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
@@ -351,7 +351,7 @@ static void lattice_angle_log(FILE *log)
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
         {
-            angle=atan2(lattice[x][y].y, lattice[x][y].z);
+            angle=atan2(lattice[x][y].y, lattice[x][y].x);
             fprintf(log,"%f\n",angle);
         }
 }
