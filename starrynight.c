@@ -394,7 +394,12 @@ static double lattice_energy_log(FILE *log)
      
             // Ferroelectric / Potts model
 //            dE+=  - Dipole * cos(newangle-testangle)/(d*d*d);
- 
+
+            // TODO: Calculate lattice electric field profile as a result of
+            // dipoles. Integrate out to full size of lattice? Seems a bit
+            // heavy handed. Same cut-offs as used in dipole calculation??
+
+
                 }
 
             // Interaction of dipole with (unshielded) E-field
