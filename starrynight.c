@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c"
 
-#define X 50  // Malloc is for losers.
-#define Y 50
+#define X 100  // Malloc is for losers.
+#define Y 100
 
 struct dipole
 {
@@ -45,13 +45,13 @@ int DIM=2;
 unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
 
-
 // Prototypes...
 static int rand_int(int SPAN);
 static double site_energy(int x, int y, struct dipole *newdipole, struct dipole *olddipole);
 static void MC_move();
 void initialise_lattice();
 static void lattice_angle_log(FILE *log);
+static void lattice_potential_log(FILE *log);
 static double lattice_energy_log(FILE *log);
 void outputlattice_pnm(char * filename);
 void outputlattice_ppm_hsv(char * filename);
@@ -124,7 +124,7 @@ int main(void)
     {
         // Log some data... Nb: Slow as does a NxN summation of lattice energy
         // contributions!
-        lattice_angle_log(log);
+//        lattice_potential_log(log);
         //fprintf(log,"%lu %f %f %f\n",ACCEPT+REJECT,lattice_energy(),Efield,Eangle); //FIXME: lattice_energy all broken, data worthless presently.
         // TODO: some kind of dipole distribution? Would I have to bin it
         // myself? (boring.)
@@ -158,6 +158,8 @@ int main(void)
     // Final data output / summaries.
     outputlattice_ppm_hsv("final.png");
     outputlattice_svg("final.svg");
+
+    lattice_potential_log(log);
 
     fprintf(stderr,"ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
     fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
@@ -222,10 +224,12 @@ void initialise_lattice()
      }
 
     //Print lattice
-    for (i=0;i<X;i++)
+/*
+     for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
             printf("\n %f %f %f %f",lattice[i][k].x,lattice[i][k].y,lattice[i][k].z,
                     dot(&lattice[i][k],&lattice[i][k]));
+*/  
 }
 
 static int rand_int(int SPAN) // TODO: profile this to make sure it runs at an OK speed.
@@ -354,6 +358,39 @@ static void lattice_angle_log(FILE *log)
             angle=atan2(lattice[x][y].y, lattice[x][y].x);
             fprintf(log,"%f\n",angle);
         }
+}
+
+//Calculates dipole potential along trace of lattice
+static void lattice_potential_log(FILE *log)
+{
+    int x,y,dx,dy;
+    float d;
+    double pot;
+    struct dipole r;
+
+    y=Y/2; //trace across centre of material. I know, I know, PBCs.
+    for (x=0;x<X;x++)
+    {
+        pot=0.0;
+             for (dx=-6;dx<=2;dx++)
+                for (dy=-6;dy<=6;dy++)
+                {
+                    if (dx==0 && dy==0)
+                        continue; //no infinities / self interactions please!
+
+                    r.x=(float)dx; r.y=(float)dy; r.z=0.0;
+
+                    d=sqrt((float) dx*dx + dy*dy); //that old chestnut
+
+                    if (d>2.0) continue; // Cutoff in d
+
+                    // pot(r) = 1/4PiEpsilon * p.r / r^3
+                    // Electric dipole potential
+                    pot+=dot(& lattice[(X+x+dx)%X][(Y+y+dy)%Y],& r)/(d*d*d);
+                }
+        fprintf(log,"%d %f\n",x,pot);
+    }
+    
 }
 
 static double lattice_energy_log(FILE *log)
