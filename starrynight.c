@@ -377,21 +377,21 @@ static double dipole_potential(int x, int y)
     float d;
     struct dipole r;
 
-    for (dx=-MAX;dx<=MAX;dx++)
-        for (dy=-MAX;dy<=MAX;dy++)
+    for (dx=0;dx<=X;dx++)
+        for (dy=0;dy<=X;dy++)
         {
-            if (dx==0 && dy==0)
+            if (x-dx==0 && y-dy==0)
                 continue; //no infinities / self interactions please!
 
-            r.x=(float)dx; r.y=(float)dy; r.z=0.0;
+            r.x=(float)(x-dx); r.y=(float)(y-dy); r.z=0.0;
 
-            d=sqrt((float) dx*dx + dy*dy); //that old chestnut
+            d=sqrt((float) r.x*r.x + r.y*r.y); //that old chestnut
 
-            if (d>(float)MAX) continue; // Cutoff in d
+//            if (d>(float)MAX) continue; // Cutoff in d
 
             // pot(r) = 1/4PiEpsilon * p.r / r^3
             // Electric dipole potential
-            pot+=dot(& lattice[(X+x+dx)%X][(Y+y+dy)%Y],& r)/(d*d*d);
+            pot+=dot(& lattice[dx][dy],& r)/(d*d*d);
         }
     return(pot);
 }
