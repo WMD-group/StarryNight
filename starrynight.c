@@ -156,8 +156,8 @@ int main(void)
     fprintf(stderr,"\n");
 
     // Final data output / summaries.
-    outputlattice_ppm_hsv("final.png");
-    outputlattice_svg("final.svg");
+    outputlattice_ppm_hsv("MC-PNG_final.png");
+    outputlattice_svg("MC-SVG_final.svg");
 
     lattice_potential_log(log);
 
@@ -360,35 +360,47 @@ static void lattice_angle_log(FILE *log)
         }
 }
 
+//Calculate dipole potential at specific location
+static double dipole_potential(int x, int y) 
+{
+    int dx,dy,MAX=10;
+    double pot=0.0;
+    float d;
+    struct dipole r;
+
+    for (dx=-MAX;dx<=MAX;dx++)
+        for (dy=-MAX;dy<=MAX;dy++)
+        {
+            if (dx==0 && dy==0)
+                continue; //no infinities / self interactions please!
+
+            r.x=(float)dx; r.y=(float)dy; r.z=0.0;
+
+            d=sqrt((float) dx*dx + dy*dy); //that old chestnut
+
+            if (d>(float)MAX) continue; // Cutoff in d
+
+            // pot(r) = 1/4PiEpsilon * p.r / r^3
+            // Electric dipole potential
+            pot+=dot(& lattice[(X+x+dx)%X][(Y+y+dy)%Y],& r)/(d*d*d);
+        }
+    return(pot);
+}
+
+
 //Calculates dipole potential along trace of lattice
 static void lattice_potential_log(FILE *log)
 {
-    int x,y,dx,dy;
-    float d;
+    int x,y;
     double pot;
-    struct dipole r;
 
     y=Y/2; //trace across centre of material. I know, I know, PBCs.
     for (x=0;x<X;x++)
     {
         pot=0.0;
-             for (dx=-6;dx<=2;dx++)
-                for (dy=-6;dy<=6;dy++)
-                {
-                    if (dx==0 && dy==0)
-                        continue; //no infinities / self interactions please!
-
-                    r.x=(float)dx; r.y=(float)dy; r.z=0.0;
-
-                    d=sqrt((float) dx*dx + dy*dy); //that old chestnut
-
-                    if (d>2.0) continue; // Cutoff in d
-
-                    // pot(r) = 1/4PiEpsilon * p.r / r^3
-                    // Electric dipole potential
-                    pot+=dot(& lattice[(X+x+dx)%X][(Y+y+dy)%Y],& r)/(d*d*d);
-                }
-        fprintf(log,"%d %f\n",x,pot);
+        for (y=0;y<Y;y++)
+            pot+=dipole_potential(x,y);
+        fprintf(log,"%d %f %f\n",x,pot,dipole_potential(x,Y/2));
     }
     
 }
