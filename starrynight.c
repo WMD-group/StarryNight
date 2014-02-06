@@ -52,7 +52,9 @@ static void MC_move();
 void initialise_lattice();
 static void lattice_angle_log(FILE *log);
 static void lattice_potential_log(FILE *log);
+void lattice_potential_XY(char * filename);
 static double lattice_energy_log(FILE *log);
+void outputpotential_png(char * filename);
 void outputlattice_pnm(char * filename);
 void outputlattice_ppm_hsv(char * filename);
 void outputlattice_svg(char * filename);
@@ -142,6 +144,7 @@ int main(void)
         sprintf(name,"MC-SVG_step_%.4d.svg",i);
         outputlattice_svg(name);
 
+
         // Update the (interactive) user what we're up to
         fprintf(stderr,".");
 
@@ -164,7 +167,9 @@ int main(void)
     outputlattice_svg("MC-SVG_final.svg");
 
     lattice_potential_log(log);
-
+    lattice_potential_XY("final_pot_xy.dat");
+    outputpotential_png("final_pot.png");
+    
     fprintf(stderr,"ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
     fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
 
@@ -408,6 +413,40 @@ static void lattice_potential_log(FILE *log)
     }
     
 }
+
+//Calculates dipole potential across XY lattice
+void lattice_potential_XY(char * filename)
+{
+    int x,y;
+    double pot;
+    FILE *fo;
+    fo=fopen(filename,"w");
+
+    for (x=0;x<X;x++)
+    {
+        for (y=0;y<Y;y++)
+            fprintf(fo,"%d %d %f\n",x,y,dipole_potential(x,y));
+    }
+}
+
+
+void outputpotential_png(char * filename)
+{
+    int i,k;
+    FILE *fo;
+    fo=fopen(filename,"w");
+
+    fprintf (fo,"P2\n%d %d\n%d\n", X, Y, SHRT_MAX);
+
+    for (i=0;i<X;i++)
+    {
+        for (k=0;k<Y;k++)
+            fprintf(fo,"%d ",SHRT_MAX/2+(int)(SHRT_MAX*0.1*dipole_potential(i,k)));
+        fprintf(fo,"\n");
+    }
+
+}
+
 
 static double lattice_energy_log(FILE *log)
 {
