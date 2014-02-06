@@ -432,7 +432,7 @@ void lattice_potential_XY(char * filename)
 
 void outputpotential_png(char * filename)
 {
-    int i,k;
+    int i,k,pixel;
     FILE *fo;
     fo=fopen(filename,"w");
 
@@ -441,7 +441,15 @@ void outputpotential_png(char * filename)
     for (i=0;i<X;i++)
     {
         for (k=0;k<Y;k++)
-            fprintf(fo,"%d ",SHRT_MAX/2+(int)(SHRT_MAX*0.1*dipole_potential(i,k)));
+        {
+            pixel=SHRT_MAX/2+(int)(SHRT_MAX*0.1*dipole_potential(i,k));
+
+            // Bounds checking :^)
+            if (pixel<0) pixel=0;
+            if (pixel>SHRT_MAX) pixel=SHRT_MAX;
+
+            fprintf(fo,"%d ",pixel);
+        }
         fprintf(fo,"\n");
     }
 
