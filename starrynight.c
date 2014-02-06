@@ -65,7 +65,9 @@ int main(void)
     config_t cfg, *cf; //libconfig config structure
     double tmp;
 
-    char name[50]; //for output filenames
+    char name[50];
+    char const *LOGFILE = NULL; //for output filenames
+                // Yes, I know, 50 chars are enough for any segfault ^_^
 
     fprintf(stderr,"Starry Night - Monte Carlo brushstrokes.\n");
 
@@ -82,6 +84,8 @@ int main(void)
         config_destroy(cf);
         return(EXIT_FAILURE);
     }
+
+    config_lookup_string(cf,"LOGFILE",&LOGFILE); //library does its own dynamic allocation
 
     config_lookup_float(cf,"beta",&beta);
 
@@ -101,8 +105,8 @@ int main(void)
 
 // If we're going to do some actual science, we better have a logfile...
     FILE *log;
-    log=fopen("starrynight.log","w");
-    fprintf(stderr,"Log file opened. ");
+    log=fopen(LOGFILE,"w");
+    fprintf(stderr,"Log file '%s' opened. ",LOGFILE);
 
     //Fire up the twister!
     //init_genrand(0);  // reproducible
