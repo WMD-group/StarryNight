@@ -409,7 +409,7 @@ static void lattice_potential_log(FILE *log)
         pot=0.0;
         for (y=0;y<Y;y++)
             pot+=dipole_potential(x,y);
-        fprintf(log,"%d %f %f\n",x,pot,dipole_potential(x,Y/2));
+        fprintf(log,"%d %f %f\n",x,pot/(double)Y,dipole_potential(x,Y/2));
     }
     
 }
