@@ -220,17 +220,19 @@ void initialise_lattice()
     //Random initial lattice
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-//            random_sphere_point(& lattice[i][k]);
+            random_sphere_point(& lattice[i][k]);
 //            lattice[i][k].angle=2*M_PI*genrand_real2(); // randomised initial orientation of dipoles
 //            lattice[i][k].angle=M_PI/2;
-     {
-         lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); 
+
          // continous set of dipole orientations to test colour output (should
          // appear as spectrum)
-         lattice[i][k].x = sin(lattice[i][k].angle);
-         lattice[i][k].y = cos(lattice[i][k].angle);
-         lattice[i][k].z = 0.0;
-     }
+/*        {
+            lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); 
+            lattice[i][k].x = sin(lattice[i][k].angle);
+            lattice[i][k].y = cos(lattice[i][k].angle);
+            lattice[i][k].z = 0.0;
+        }
+*/
 
     //Print lattice
 /*
