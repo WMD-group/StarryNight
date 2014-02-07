@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c"
 
-#define X 100  // Malloc is for losers.
-#define Y 100
+#define X 50  // Malloc is for losers.
+#define Y 50
 
 struct dipole
 {
@@ -166,7 +166,8 @@ int main(void)
     outputlattice_ppm_hsv("MC-PNG_final.png");
     outputlattice_svg("MC-SVG_final.svg");
 
-    lattice_potential_log(log);
+//    lattice_potential_log(log);
+    lattice_angle_log(log);
     lattice_potential_XY("final_pot_xy.dat");
     outputpotential_png("final_pot.png");
     
