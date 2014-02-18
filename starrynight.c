@@ -306,6 +306,19 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
 //    dE += + K*cos(2*newangle)*cos(2*newangle)
 //          - K*cos(2*oldangle)*cos(2*oldangle);
 
+    // This is to replicate nice cos^2 (angle) effect in dot products.
+    // There must be a more sensible way - if only I could remember my AS
+    // double-angle formulae!
+
+    // along .x projection, squared
+    n.x=1.0; n.y=0.0; n.z=0.0;
+    dE +=   - K*fabs(dot(newdipole,&n))
+            + K*fabs(dot(olddipole,&n));
+    // along .y projection, squared
+    n.x=0.0; n.y=1.0; n.z=0.0;
+    dE +=   - K*fabs(dot(newdipole,&n))
+            + K*fabs(dot(olddipole,&n));
+
     return(dE); 
 }
 
