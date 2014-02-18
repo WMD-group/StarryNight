@@ -11,6 +11,8 @@
 \usepackage[version=3]{mhchem} % Formula subscripts using \ce{}
 \usepackage{subfig}
 \usepackage{dcolumn}% Align table columns on decimal point
+
+\usepackage{amsmath}% amsmath...
 \usepackage{bm}% bold math
 
 \usepackage{siunitx}% JMF addition - once a physicist, always a physicist
@@ -36,7 +38,7 @@
 \begin{document}
 
 \begin{abstract}
-Abstract
+Abstract. EPSRC gave us some money so we did our best to do great science, and these are our conclusions. 
 \end{abstract}
 
 %\pacs{88.40.-j, 71.20.Nr, 72.40.+w, 61.66.Fn}
@@ -48,6 +50,30 @@ Abstract
 
 %\maketitle 
 
+Introduction
+
+Solar cells from hybrid perovskite material display interesting device physics, most notably a hysterisis loop in the JV curve.
+
+In this paper we will
+\begin{itemize}
+ \item suggest how the unique behaviour of hybrid perovskite solar cells arrises from ferroelectric domains
+ \item develop a monte-carlo code to model the ferroelectric behaviour of hybrid perovskites from a model classical Hamiltonian
+ \item use this code to simulate device physics, hysterisis and built-in potential as a function of temperature
+\end{itemize}
+
+Method
+
+Our Hamiltonian looks a little like this
+
+\begin{align*}
+H = &\sum^n_{dipole,E-field} &\frac{1}{4.\pi \epsilon_0} (p_i.E) \\
++ &\sum^{n,m}_{dipole,dipole} &\frac{1}{4.\pi \epsilon_0} (\frac{p_i.p_j}{r^3}-\frac{3(\hat{n}.p_i)(\hat{n}.p_j)}{r^3}) \\
++ &\sum^n_{dipole,strain} &K.|p_i.\hat{x}|
+\end{align*}  
+
+Results
+
+Conclusion
 
 %\begin{figure*}[ht!]
 %\begin{center}
@@ -62,6 +88,7 @@ J.M.F. and K.T.B. are funded by EPSRC Grants EP/K016288/1 and EP/J017361/1, resp
 %F.B. is funded through the EU DESTINY Network (Grant 316494).
 %C.H.H. is funded by ERC (Grant 277757). 
 A.W. acknowledges support from the Royal Society and ERC (Grant 277757). 
+We are grateful for the lyrical encouragment of Salt N Pepa. 
 \end{acknowledgement}
 
 %\begin{suppinfo}
