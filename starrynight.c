@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c"
 
-#define X 50  // Malloc is for losers.
-#define Y 50
+#define X 100  // Malloc is for losers.
+#define Y 100
 
 struct dipole
 {
@@ -36,6 +36,8 @@ double Eangle=0.0;
 double K=1.0; //elastic coupling constant for dipole moving within cage
 
 double Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
+
+double dipole_fraction=1.0; //fraction of sites to be occupied by dipoles
 
 int DIM=2; 
 
@@ -99,6 +101,7 @@ int main(void)
 
     config_lookup_float(cf,"K",&K);
     config_lookup_float(cf,"Dipole",&Dipole);
+    config_lookup_float(cf,"dipole_fraction",&dipole_fraction);
 
     config_lookup_int(cf,"MCMegaSteps",&MCMegaSteps);
     config_lookup_float(cf,"MCMegaMultiplier",&MCMegaMultiplier);
@@ -221,7 +224,8 @@ void initialise_lattice()
     //Random initial lattice
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-            random_sphere_point(& lattice[i][k]);
+            if (genrand_real1()<dipole_fraction) //occupy fraction of sites...
+                random_sphere_point(& lattice[i][k]);
 //            lattice[i][k].angle=2*M_PI*genrand_real2(); // randomised initial orientation of dipoles
 //            lattice[i][k].angle=M_PI/2;
 
@@ -334,6 +338,8 @@ static void MC_move()
 
     x=rand_int(X);
     y=rand_int(Y);
+
+    if (lattice[x][y].x==0.0 && lattice[x][y].y==0.0) return; //dipole zero length .'. not present
 
     // random new orientation. 
     // Nb: this is the definition of a MC move - might want to consider
@@ -596,6 +602,10 @@ void outputlattice_ppm_hsv(char * filename)
             }
 
 //            fprintf(stderr,"h: %f r: %f g: %f b: %f\n",h,r,g,b);
+
+            if (lattice[i][k].x == 0.0 && lattice[i][k].y == 0.0)
+                { r=0.0; g=0.0; b=0.0; } // #FADE TO BLACK
+            //zero length dipoles, i.e. absent ones - appear as black pixels
 
             fprintf(fo,"%c%c%c",(char)(254.0*r),(char)(254.0*g),(char)(254.0*b));
         }
