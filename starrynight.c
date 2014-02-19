@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <libconfig.h>
 
-#include "mt19937ar-cok.c"
+#include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
 #define X 100  // Malloc is for losers.
 #define Y 100
@@ -22,10 +22,11 @@
 struct dipole
 {
     float x,y,z;
-    float angle;
+    float angle; //angle now obsolete... use dot products of the 3 vector above
 } lattice[X][Y];
 
 // SIMULATION PARAMETERS
+// NB: These are defaults - most are now read from config file
 
 double beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
 
@@ -39,10 +40,11 @@ double Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
 
 double dipole_fraction=1.0; //fraction of sites to be occupied by dipoles
 
-int DIM=2; 
+int DIM=2; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 
 //END OF SIMULATION PARAMETERS
-// Except for the ones hardcoded into the algorithm :^)
+
+// {{ Except for the ones hardcoded into the algorithm :^) }}
 
 unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
@@ -206,6 +208,8 @@ static void random_sphere_point(struct dipole *p)
     }
 }
 
+// 3-Vector dot-product... hand coded, should probably validate against
+// a proper linear albegra library
 static float dot(struct dipole *a, struct dipole *b)
 {
     int D;
@@ -558,6 +562,7 @@ void outputlattice_png(char * filename)
 
 }
 
+// Outputs a PPM bitmap of lattice dipole orientation on a HSV colourwheel
 void outputlattice_ppm_hsv(char * filename)
 {
     int i,k;
@@ -612,6 +617,8 @@ void outputlattice_ppm_hsv(char * filename)
     fclose(fo); //don't forget :^)
 }
 
+//Outputs an SVG file of pointing lattice dipoles; designed to overlay with PPM
+//routine above
 void outputlattice_svg(char * filename)
 {
     int i,k;
