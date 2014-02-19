@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 100  // Malloc is for losers.
-#define Y 100
+#define X 200  // Malloc is for losers.
+#define Y 200
 
 struct dipole
 {
@@ -53,8 +53,11 @@ unsigned long REJECT=0;
 static int rand_int(int SPAN);
 static double site_energy(int x, int y, struct dipole *newdipole, struct dipole *olddipole);
 static void MC_move();
+static float dot(struct dipole *a, struct dipole *b);
 void initialise_lattice();
 static void lattice_angle_log(FILE *log);
+static double polarisation();
+static double dipole_potential(int x, int y);
 static void lattice_potential_log(FILE *log);
 void lattice_potential_XY(char * filename);
 static double lattice_energy_log(FILE *log);
@@ -65,11 +68,14 @@ void outputlattice_svg(char * filename);
 
 int main(void)
 {
-    int i,j,k; //for loop iterators
+    int i,j,k, x,y; //for loop iterators
     int MCMegaSteps=400;
     double MCMegaMultiplier=1.0;
     config_t cfg, *cf; //libconfig config structure
     double tmp;
+
+    int T;
+    double P=0.0;
 
     char name[50];
     char const *LOGFILE = NULL; //for output filenames
@@ -131,6 +137,11 @@ int main(void)
 
     fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
+    for (Efield.x=0.001; Efield.x<10.0; Efield.x+=1.0)
+    for (T=0;T<1000;T+=10) //I know, I know... shouldn't hard code this.
+    {
+        beta=1/((float)T/300.0);
+
     for (i=0;i<MCMegaSteps;i++)
     {
         // Log some data... Nb: Slow as does a NxN summation of lattice energy
@@ -143,11 +154,11 @@ int main(void)
         // see polarisation delta.E spike when the field flips
 
         // Log some pretty pictures...
-        sprintf(name,"MC-PNG_step_%.4d.png",i);
-        outputlattice_ppm_hsv(name);
+//        sprintf(name,"MC-PNG_step_%.4d.png",i);
+//        outputlattice_ppm_hsv(name);
 
-        sprintf(name,"MC-SVG_step_%.4d.svg",i);
-        outputlattice_svg(name);
+//        sprintf(name,"MC-SVG_step_%.4d.svg",i);
+//        outputlattice_svg(name);
 
 
         // Update the (interactive) user what we're up to
@@ -163,6 +174,23 @@ int main(void)
             MC_move();
     }
 
+    // now data collection on equilibriated structure...
+
+    P=0.0;
+    for (i=0;i<MCMegaSteps;i++)
+    {
+        fprintf(stderr,",");
+        for (k=0;k<X*Y*MCMegaMultiplier;k++)
+            MC_move();
+        P+=polarisation();
+    }
+    P/=(float)MCMegaSteps;
+    P/=(float)X*Y;
+    P/=(float)Efield.x;
+
+    fprintf(stderr,"NORK! T: %d E: %f P: %f\n",T,Efield.x,P);
+    printf("T: %d E: %f P: %f\n",T,Efield.x,P);
+    }
     // OK; we're finished...
 
     fprintf(stderr,"\n");
@@ -170,12 +198,12 @@ int main(void)
     // Final data output / summaries.
     outputlattice_ppm_hsv("MC-PNG_final.png");
     outputlattice_svg("MC-SVG_final.svg");
-
+/*
 //    lattice_potential_log(log);
     lattice_angle_log(log);
     lattice_potential_XY("final_pot_xy.dat");
     outputpotential_png("final_pot.png");
-    
+  */  
     fprintf(stderr,"ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
     fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
 
@@ -394,6 +422,22 @@ static void lattice_angle_log(FILE *log)
             fprintf(log,"%f\n",angle);
         }
 }
+
+static double polarisation()
+{
+    double P=0.0;
+    int x,y;
+    struct dipole n;
+
+    n.x=1.0; n.y=0.0; n.z=0.0;
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            P+=dot(&lattice[x][y],&n); //dipole response in direction of Efield
+
+    return(P);
+}
+
 
 //Calculate dipole potential at specific location
 static double dipole_potential(int x, int y) 
