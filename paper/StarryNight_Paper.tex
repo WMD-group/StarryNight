@@ -50,7 +50,7 @@ Abstract. EPSRC gave us some money so we did our best to do great science, and t
 
 %\maketitle 
 
-Introduction
+\textbf{Introduction}
 
 Solar cells from hybrid perovskite material display interesting device physics, most notably a hysterisis loop in the JV curve.
 
@@ -61,9 +61,13 @@ In this paper we will
  \item use this code to simulate device physics, hysterisis and built-in potential as a function of temperature
 \end{itemize}
 
-Method
+\textbf{Method}
 
-Our Hamiltonian looks a little like this
+We start from the lattice dynamical theory of ferroelectricity, from the ideas of P.W. Anderson\cite{anderson_career_1994} and W.Cochran\cite{cochran_crystal_1960,cochran_crystal_1961}. 
+
+We limit ourself to considering that the one unstable phonon mode in the system is the free rotation of the molecular dipole within a cubic perovskite structure. This free dipole is very similar to the 'rattling titanium' hypothesis, 
+
+We construct a model Hamiltonian from local (cage strain), applied electrostatic and interacting dipole energies.
 
 \begin{align*}
 H = &\sum^n_{dipole,E-field} &\frac{1}{4.\pi \epsilon_0} (p_i.E) \\
@@ -71,9 +75,9 @@ H = &\sum^n_{dipole,E-field} &\frac{1}{4.\pi \epsilon_0} (p_i.E) \\
 + &\sum^n_{dipole,strain} &K.|p_i.\hat{x}|
 \end{align*}  
 
-Results
+\textbf{Results}
 
-Conclusion
+\textbf{Conclusion}
 
 %\begin{figure*}[ht!]
 %\begin{center}
@@ -91,11 +95,9 @@ A.W. acknowledges support from the Royal Society and ERC (Grant 277757).
 We are grateful for the lyrical encouragment of Salt N Pepa. 
 \end{acknowledgement}
 
-%\begin{suppinfo}
-%    GAUSSIAN input and output files used in this work are electronically available in a Figshare dataset.%\cite{figshare}
-%any notes on the suppinfo...
-%create a file store on figshare + get a DOI?
-%\end{suppinfo}
+\begin{suppinfo}
+    The codes, \textsc{StarryNight}, are available as a source code repository on GitHub\cite{GitHub}.
+\end{suppinfo}
 
 \bibliography{library}
 
