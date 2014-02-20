@@ -67,13 +67,33 @@ We start from the lattice dynamical theory of ferroelectricity, from the ideas o
 
 We limit ourself to considering that the one unstable phonon mode in the system is the free rotation of the molecular dipole within a cubic perovskite structure. This free dipole is very similar to the 'rattling titanium' hypothesis, 
 
-We construct a model Hamiltonian from local (cage strain), applied electrostatic and interacting dipole energies.
+The treatment of polarisation as an effect of rotational brownian motion is analytically difficult\cite{mcconnell_rotational_1980}.
+Here we simulate this physics directly with a monte-carlo method to calculate the equilibrium configuration of the dipoles.
 
-\begin{align*}
-H = &\sum^n_{dipole,E-field} &\frac{1}{4.\pi \epsilon_0} (p_i.E) \\
+We construct a model Hamiltonian from local (cage strain), applied electrostatic field and interacting dipole energies.
+
+\begin{align}
+H = &\sum^n_{dipole,E-field} &\frac{1}{4.\pi \epsilon_0} (p_i.E_0) \\
 + &\sum^{n,m}_{dipole,dipole} &\frac{1}{4.\pi \epsilon_0} (\frac{p_i.p_j}{r^3}-\frac{3(\hat{n}.p_i)(\hat{n}.p_j)}{r^3}) \\
 + &\sum^n_{dipole,strain} &K.|p_i.\hat{x}|
-\end{align*}  
+\end{align}  
+
+Our Monte-Carlo method progresses with a Metropolis algorithm. 
+A random lattice position is chosen, and a random new direction for the dipole. 
+The energy change $\Delta E$ is computed in a numerically efficient manner with a cut-off for the dipole-dipole interaction of 2 lattice units. 
+Endothermic moves are accepted if $\gamma < e^{-\beta \Delta E}$ where $\gamma$ is a random variable on $[0,1]$.
+
+At an equilibrium, we associate an electric displacement $D$ related to $E_0$ and the polarisation density by:
+
+$D =  E_0 + 4\pi P$
+
+The polarisation density $P$ we can calculate by a summation over the microscopic dipoles. 
+
+$\epsilon_s = 1+ \frac{4\pi P}{E_0}$
+
+Here $\epsilon_s$ is a static relative permitivity, rather than dielectric constant, as it is a function of temperature.
+
+
 
 \textbf{Results}
 
