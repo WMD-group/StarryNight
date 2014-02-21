@@ -137,8 +137,8 @@ int main(void)
 
     fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
-    for (Efield.x=0.001; Efield.x<10.0; Efield.x+=1.0)
-    for (T=0;T<1000;T+=10) //I know, I know... shouldn't hard code this.
+    for (Efield.x=-1.0; Efield.x<1.0; Efield.x+=0.5)
+    for (T=0;T<500;T+=10) //I know, I know... shouldn't hard code this.
     {
         beta=1/((float)T/300.0);
 
@@ -184,9 +184,11 @@ int main(void)
             MC_move();
         P+=polarisation();
     }
-    P/=(float)MCMegaSteps;
-    P/=(float)X*Y;
-    P/=(float)Efield.x;
+    P/=(float)MCMegaSteps; //average over our points
+    P/=(float)X*Y;          // per lattice site
+    P/=-(float)Efield.x;     // by Electric Field
+    P*=Dipole;
+    // See 6.5 (p 167) in Zangwill Modern Electrodynamics
 
     fprintf(stderr,"NORK! T: %d E: %f P: %f\n",T,Efield.x,P);
     printf("T: %d E: %f P: %f\n",T,Efield.x,P);
@@ -292,16 +294,18 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
     double dE=0.0;
     struct dipole *testdipole, n;
 
+    int const D=1;
+
     // Sum over near neighbours for dipole-dipole interaction
-    for (dx=-2;dx<=2;dx++)
-        for (dy=-2;dy<=2;dy++)
+    for (dx=-1;dx<=1;dx++)
+        for (dy=-1;dy<=1;dy++)
         {
             if (dx==0 && dy==0)
                 continue; //no infinities / self interactions please!
 
             d=sqrt((float) dx*dx + dy*dy); //that old chestnut
 
-            if (d>2.0) continue; // Cutoff in d
+            if (d>(float)D) continue; // Cutoff in d
 
             testdipole=& lattice[(X+x+dx)%X][(Y+y+dy)%Y];
 //            testangle=lattice[(X+x+dx)%X][(Y+y+dy)%Y].angle;
@@ -423,6 +427,8 @@ static void lattice_angle_log(FILE *log)
         }
 }
 
+// takes advantage of the fact that the integral of the polarisation is equal
+// to the total dipole moment of the dielectric
 static double polarisation()
 {
     double P=0.0;
