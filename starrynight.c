@@ -142,7 +142,7 @@ int main(void)
     fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
     for (Efield.x=0.1; Efield.x<3.0; Efield.x+=0.5)
-    for (T=0;T<500;T+=10) //I know, I know... shouldn't hard code this.
+    for (T=0;T<1500;T+=100) //I know, I know... shouldn't hard code this.
     {
         beta=1/((float)T/300.0);
 
