@@ -79,9 +79,9 @@ H = &\sum^n_{dipole,E-field} &\frac{1}{4.\pi \epsilon_0} (p_i.E_0) \\
 \end{align}  
 
 Our Monte-Carlo method progresses with a Metropolis algorithm. 
-A random lattice position is chosen, and a random new direction for the dipole. 
-The energy change $\Delta E$ is computed in a numerically efficient manner with a cut-off for the dipole-dipole interaction of 2 lattice units. 
-Endothermic moves are accepted if $\gamma < e^{-\beta \Delta E}$ where $\gamma$ is a random variable on $[0,1]$.
+A random lattice position is chosen, and a random new direction for the cation molecular dipole. 
+The energy change $\Delta E$ is computed in a numerically efficient manner with a cut-off for the dipole-dipole interaction of two lattice units; the interaction energy is calculated for unshielded ($\epsilon_r =1$) dipole-dipole interactions. 
+Exothermic moves are autuomatically accepted; endothermic moves are accepted if $\gamma < e^{-\beta \Delta E}$ where $\gamma$ is a random variable on $[0,1]$.
 
 At an equilibrium, we associate an electric displacement $D$ related to $E_0$ and the polarisation density by:
 
@@ -98,6 +98,10 @@ Here $\epsilon_s$ is a static relative permitivity, rather than dielectric const
 \textbf{Results}
 
 \textbf{Conclusion}
+
+\textbf{Computational Details}
+
+We used a Mersenne Twister\cite{matsumoto_mersenne_1998} pseudo random number generator. The initial state was a lattice of randomised dipoles.
 
 %\begin{figure*}[ht!]
 %\begin{center}
