@@ -22,7 +22,7 @@
 struct dipole
 {
     float x,y,z;
-    float angle; //angle now obsolete... use dot products of the 3 vector above
+    float length; //length of dipole, to allow for solid state mixture (MA, FA, Ammonia, etc.)
 } lattice[X][Y];
 
 // SIMULATION PARAMETERS
@@ -259,20 +259,20 @@ static float dot(struct dipole *a, struct dipole *b)
 void initialise_lattice()
 {
     int i,k;
+    float angle;
+
     //Random initial lattice
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
             if (genrand_real1()<dipole_fraction) //occupy fraction of sites...
                 random_sphere_point(& lattice[i][k]);
-//            lattice[i][k].angle=2*M_PI*genrand_real2(); // randomised initial orientation of dipoles
-//            lattice[i][k].angle=M_PI/2;
 
          // continous set of dipole orientations to test colour output (should
          // appear as spectrum)
 /*        {
-            lattice[i][k].angle=2*M_PI*(i*X+k)/((float)X*Y); 
-            lattice[i][k].x = sin(lattice[i][k].angle);
-            lattice[i][k].y = cos(lattice[i][k].angle);
+            angle=2*M_PI*(i*X+k)/((float)X*Y); 
+            lattice[i][k].x = sin(angle);
+            lattice[i][k].y = cos(angle);
             lattice[i][k].z = 0.0;
         }
 */
@@ -310,7 +310,6 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
             if (d>(float)DipoleCutOff) continue; // Cutoff in d
 
             testdipole=& lattice[(X+x+dx)%X][(Y+y+dy)%Y];
-//            testangle=lattice[(X+x+dx)%X][(Y+y+dy)%Y].angle;
 
             //it goes without saying that the following line is the single
             //most important in the program... Energy calculation!
@@ -382,16 +381,11 @@ static void MC_move()
     // random new orientation. 
     // Nb: this is the definition of a MC move - might want to consider
     // alternative / global / less disruptive moves as well
-//    newangle=2*M_PI*genrand_real2();
     random_sphere_point(& newdipole);    
-
-    // comparison point for the dE - the present configuration
-//    oldangle=lattice[x][y].angle;
 
     olddipole=& lattice[x][y];
 
     //calc site energy
-    //double site_energy(int x, int y, double newangle, double oldangle);
     dE=site_energy(x,y,& newdipole,olddipole);
 
     if (dE < 0.0 || exp(-dE * beta) > genrand_real2() )
@@ -404,16 +398,6 @@ static void MC_move()
     }
     else
         REJECT++;
-
-    // DEBUGGING / OUTPUT PRINTS
-/*
-    if (lattice[x][y].angle==newangle)
-        fprintf(stderr,"A "); //i.e. accepted move
-    else
-        fprintf(stderr,"R ");
-
-    fprintf(stderr,"MC: %d X %d Y oldangle %f newangle %f dE: %f\n",x,y,oldangle,newangle,dE);
-*/
 }
 
 static void lattice_angle_log(FILE *log)
@@ -533,7 +517,7 @@ void outputpotential_png(char * filename)
 
 }
 
-
+/* This whole function defunct - no longer have angles...
 static double lattice_energy_log(FILE *log)
 {
     int x,y,dx,dy;
@@ -594,7 +578,7 @@ static double lattice_energy_log(FILE *log)
 
     return(E_dipole+E_strain+E_field); //FIXME: is this still useful?
 }
-
+*/
 // TODO: move these output routines to a separate file...
 
 void outputlattice_png(char * filename)
@@ -608,7 +592,7 @@ void outputlattice_png(char * filename)
     for (i=0;i<X;i++)
     {
         for (k=0;k<Y;k++)
-            fprintf(fo,"%d ",(int)(SHRT_MAX*lattice[i][k].angle/(2*M_PI)));
+            fprintf(fo,"%d ",(int)(SHRT_MAX*atan2(lattice[i][k].y,lattice[i][k].x)/(2*M_PI)));
         fprintf(fo,"\n");
     }
 
@@ -637,7 +621,6 @@ void outputlattice_ppm_hsv(char * filename)
         for (k=0;k<Y;k++)
         {
             h=M_PI+atan2(lattice[i][k].y,lattice[i][k].x); //Nb: assumes 0->2PI interval!
-            //h=fmod(lattice[i][k].angle,M_PI*2.0); //old angle code
             v=0.5+0.4*lattice[i][k].z; //darken towards the south (-z) pole
             s=0.6-0.6*fabs(lattice[i][k].z); //desaturate towards the poles
 
