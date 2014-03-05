@@ -30,6 +30,7 @@ struct mixture
     float length;
     float prevalence;
 } dipoles[10];
+int dipolecount=0;
 
 // SIMULATION PARAMETERS
 // NB: These are defaults - most are now read from config file
@@ -77,7 +78,6 @@ void outputlattice_svg(char * filename);
 int main(void)
 {
     int i,j,k, x,y; //for loop iterators
-    int count;
     int MCMegaSteps=400;
     double MCMegaMultiplier=1.0;
     config_t cfg, *cf; //libconfig config structure
@@ -122,16 +122,16 @@ int main(void)
 
     // read in list of dipoles + prevalence for solid mixture
     setting = config_lookup(cf, "Dipoles");
-    count   = config_setting_length(setting);
-    for (i=0;i<count;i++)
+    dipolecount   = config_setting_length(setting);
+    for (i=0;i<dipolecount;i++)
         dipoles[i].length=config_setting_get_float_elem(setting,i);
     setting = config_lookup(cf, "Prevalence");
-    count   = config_setting_length(setting);
-    for (i=0;i<count;i++)
+    dipolecount   = config_setting_length(setting);
+    for (i=0;i<dipolecount;i++)
         dipoles[i].prevalence=config_setting_get_float_elem(setting,i);
 
     // stderr printf to check we read correctly
-    for (i=0;i<count;i++)
+    for (i=0;i<dipolecount;i++)
         fprintf(stderr,"Dipole: %d Length: %f Prevalence: %f\n",i,dipoles[i].length, dipoles[i].prevalence);
 
     config_lookup_int(cf,"DipoleCutOff",&DipoleCutOff);
