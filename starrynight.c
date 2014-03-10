@@ -326,26 +326,13 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
             if (dx==0 && dy==0)
                 continue; //no infinities / self interactions please!
 
-            d=sqrt((float) dx*dx + dy*dy); //that old chestnut
+            d=sqrt((float) dx*dx + dy*dy); //that old chestnut; distance in Euler space
 
             if (d>(float)DipoleCutOff) continue; // Cutoff in d
 
             testdipole=& lattice[(X+x+dx)%X][(Y+y+dy)%Y];
 
-            //it goes without saying that the following line is the single
-            //most important in the program... Energy calculation!
-
             n.x=(float)dx/d; n.y=(float)dy/d; //normalised diff. vector
-
-//            n=atan2((float)dy,(float)dx); //angle of normal vector between test points
-            // Anti-ferroelectric (dipole like)
-            //  - this now contains a lot of trig to do the dot products. Maybe
-            //  faster to generate the vectors and do it component wise?
-//            dE+=  + Dipole * ( cos(newangle-testangle) - 3.* cos(n-newangle) * cos(n-testangle) ) /(d*d*d) 
-//                  - Dipole * ( cos(oldangle-testangle) - 3.* cos(n-oldangle) * cos(n-testangle) ) /(d*d*d) ;
-            // Ferroelectric / Potts model
-//            dE+=  - Dipole * cos(newangle-testangle)/(d*d*d)
-//                  + Dipole * cos(oldangle-testangle)/(d*d*d);
 
             //True dipole like
             dE+= - Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
@@ -357,8 +344,6 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
         }
 
     // Interaction of dipole with (unshielded) E-field
-//    dE+= + Efield*cos(newangle-Eangle)
-//         - Efield*cos(oldangle-Eangle);
     dE+= + dot(newdipole, & Efield)
          - dot(olddipole, & Efield);
     //fprintf(stderr,"%f\n",dot(newdipole, & Efield));
