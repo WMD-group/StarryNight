@@ -1,0 +1,2 @@
+TARGET=StarryNight_Paper
+include Makefile.include
