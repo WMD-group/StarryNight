@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 250  // Malloc is for losers.
-#define Y 250
+#define X 100  // Malloc is for losers.
+#define Y 100
 
 struct dipole
 {
@@ -220,6 +220,7 @@ int main(int argc, char *argv[])
         for (k=0;k<MCMinorSteps;k++)
             MC_move();
         P+=polarisation();
+        fprintf(stderr,"%f",polarisation());
     }
     P/=(float)MCMegaSteps; //average over our points
     P/=(float)X*Y;          // per lattice site
