@@ -75,7 +75,7 @@ void outputlattice_pnm(char * filename);
 void outputlattice_ppm_hsv(char * filename);
 void outputlattice_svg(char * filename);
 
-int main(void)
+int main(int argc, char *argv[])
 {
     int i,j,k, x,y; //for loop iterators
     int MCMegaSteps=400;
@@ -143,6 +143,12 @@ int main(void)
     MCMinorSteps=(int)((float)X*(float)Y*MCMegaMultiplier);
 
     fprintf(stderr,"Config loaded. ");
+// Now override with command line options if supplied...
+    if (argc>1)
+    {
+        sscanf(argv[1],"%d",&T);
+        fprintf(stderr,"Command line temperature: T = %d\n",T);
+    }
 
 // If we're going to do some actual science, we better have a logfile...
     FILE *log;
@@ -165,8 +171,9 @@ int main(void)
 
     fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
-    for (Efield.x=0.1; Efield.x<3.0; Efield.x+=0.5)
-    for (T=0;T<1500;T+=100) //I know, I know... shouldn't hard code this.
+    //old code - now read in option, so I can parallise externally
+//    for (Efield.x=0.1; Efield.x<3.0; Efield.x+=0.5)
+//    for (T=0;T<1500;T+=100) //I know, I know... shouldn't hard code this.
     {
         beta=1/((float)T/300.0);
 
@@ -199,7 +206,7 @@ int main(void)
 
         // Do some MC moves!
 
-#pragma omp parallel for
+//#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
         for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
             MC_move();
     }
