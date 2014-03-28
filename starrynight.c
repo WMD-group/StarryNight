@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 200  // Malloc is for losers.
-#define Y 200
+#define X 250  // Malloc is for losers.
+#define Y 250
 
 struct dipole
 {
@@ -80,6 +80,7 @@ int main(void)
     int i,j,k, x,y; //for loop iterators
     int MCMegaSteps=400;
     double MCMegaMultiplier=1.0;
+    int MCMinorSteps=0;
     config_t cfg, *cf; //libconfig config structure
     const config_setting_t *setting;
     double tmp;
@@ -139,6 +140,8 @@ int main(void)
     config_lookup_int(cf,"MCMegaSteps",&MCMegaSteps);
     config_lookup_float(cf,"MCMegaMultiplier",&MCMegaMultiplier);
 
+    MCMinorSteps=(int)((float)X*(float)Y*MCMegaMultiplier);
+
     fprintf(stderr,"Config loaded. ");
 
 // If we're going to do some actual science, we better have a logfile...
@@ -195,7 +198,9 @@ int main(void)
 //        if (i==300) {Efield.z=0.0; Efield.x=1.0;}
 
         // Do some MC moves!
-        for (k=0;k<X*Y*MCMegaMultiplier;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
+
+#pragma omp parallel for
+        for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
             MC_move();
     }
 
@@ -205,7 +210,7 @@ int main(void)
     for (i=0;i<MCMegaSteps;i++)
     {
         fprintf(stderr,",");
-        for (k=0;k<X*Y*MCMegaMultiplier;k++)
+        for (k=0;k<MCMinorSteps;k++)
             MC_move();
         P+=polarisation();
     }
