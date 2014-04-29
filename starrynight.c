@@ -155,9 +155,11 @@ int main(int argc, char *argv[])
         sscanf(argv[2],"%lf",&Dipole);
         fprintf(stderr,"Command Line Dipole: Dipole = %lf\n",Dipole);
     }
+    sprintf(name,"T_%d_Dipole_%f.log",T,Dipole);
 
 // If we're going to do some actual science, we better have a logfile...
     FILE *log;
+    LOGFILE=name;
     log=fopen(LOGFILE,"w");
     fprintf(stderr,"Log file '%s' opened. ",LOGFILE);
 
@@ -242,14 +244,17 @@ int main(int argc, char *argv[])
     fprintf(stderr,"\n");
 
     // Final data output / summaries.
-    outputlattice_ppm_hsv("MC-PNG_final.png");
-    outputlattice_svg("MC-SVG_final.svg");
-/*
+//    outputlattice_ppm_hsv("MC-PNG_final.png");
+//    outputlattice_svg("MC-SVG_final.svg");
+
 //    lattice_potential_log(log);
     lattice_angle_log(log);
-    lattice_potential_XY("final_pot_xy.dat");
-    outputpotential_png("final_pot.png");
-  */  
+    sprintf(name,"Dipole_pot_xy_T:_%d_Dipole:_%f.log",T,Dipole);
+    lattice_potential_XY(name); //"final_pot_xy.dat");
+    
+    sprintf(name,"Dipole_pot_xy_T:_%d_Dipole:_%f.png",T,Dipole);
+    outputpotential_png(name); //"final_pot.png");
+    
     fprintf(stderr,"Monte Carlo moves - ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
     fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
 
