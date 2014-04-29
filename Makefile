@@ -5,7 +5,7 @@ starrynight-mac-openmp: starrynight.c
 	/usr/local/bin/gcc-4.8 -O4 -lm -lconfig -fopenmp -lgomp -o starrynight starrynight.c
 
 parallel: starrynight
-	seq 0 10 500 | parallel  ./starrynight {}  | sort -k2 -g > foo.dat
+	seq 0 20 1000 | parallel  ./starrynight {}  | sort -k2 -g > T-dep.dat
 
 all: starrynight
 

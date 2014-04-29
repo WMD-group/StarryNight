@@ -142,12 +142,18 @@ int main(int argc, char *argv[])
 
     MCMinorSteps=(int)((float)X*(float)Y*MCMegaMultiplier);
 
-    fprintf(stderr,"Config loaded. ");
+    fprintf(stderr,"Config loaded. \n");
+
 // Now override with command line options if supplied...
     if (argc>1)
     {
         sscanf(argv[1],"%d",&T);
         fprintf(stderr,"Command line temperature: T = %d\n",T);
+    }
+    if (argc>2)
+    {
+        sscanf(argv[2],"%lf",&Dipole);
+        fprintf(stderr,"Command Line Dipole: Dipole = %lf\n",Dipole);
     }
 
 // If we're going to do some actual science, we better have a logfile...
@@ -225,7 +231,7 @@ int main(int argc, char *argv[])
     P/=(float)MCMegaSteps; //average over our points
     P/=(float)X*Y;          // per lattice site
     P/=-(float)Efield.x;     // by Electric Field
-    //P*=Dipole;
+    P*=Dipole;
     // See 6.5 (p 167) in Zangwill Modern Electrodynamics
 
     fprintf(stderr,"NORK! T: %d E: %f P: %f\n",T,Efield.x,P);
@@ -244,7 +250,7 @@ int main(int argc, char *argv[])
     lattice_potential_XY("final_pot_xy.dat");
     outputpotential_png("final_pot.png");
   */  
-    fprintf(stderr,"ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
+    fprintf(stderr,"Monte Carlo moves - ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
     fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
 
     return 0;
