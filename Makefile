@@ -8,7 +8,7 @@ parallel: starrynight
 	seq 0 20 1000 | parallel  ./starrynight {}  | sort -k2 -g > T-dep.dat
 
 superparallel: starrynight
-	awk 'BEGIN{for (i=0;i<1000;i=i+20) { for (j=0;j<2;j=j+0.1) printf ("%f %f\n",i,j); }}' \
+	awk 'BEGIN{for (i=0;i<1000;i=i+20) { for (j=0.1;j<3;j=j+0.5) printf ("%f %f\n",i,j); }}' \
 		| parallel --colsep ' ' ./starrynight {1} {2}  > aggregate.dat
 
 

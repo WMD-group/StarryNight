@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
     // See 6.5 (p 167) in Zangwill Modern Electrodynamics
 
     fprintf(stderr,"NORK! T: %d E: %f P: %f\n",T,Efield.x,P);
-    printf("T: %d E: %f P: %f\n",T,Efield.x,P);
+    printf("T: %d Dipole: %f E: %f P: %f\n",T,Dipole,Efield.x,P);
     }
     // OK; we're finished...
 
