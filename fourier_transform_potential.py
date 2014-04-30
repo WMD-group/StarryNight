@@ -6,29 +6,31 @@ from IPython import embed #iPython magic for interactive session...
 
 # General setup of figure...
 fig=plt.figure()
-ax=fig.add_subplot(211)
+ax=fig.add_subplot(121)
 
-data = numpy.genfromtxt("Dipole_pot_xy_T:_100_Dipole:_2.100000.log")
+data = numpy.genfromtxt("final_pot_xy.dat")
+
 nrows, ncols = 100,100
 grid=data[:,2].reshape((nrows,ncols))
 print data
 
 plt.imshow(grid,extent=(data[:,0].min(), data[:,0].max(), data[:,1].max(), data[:,1].min()),
-                   interpolation='nearest', cmap=plt.cm.jet) #, cmap=cm.gist_rainbow)
-plt.colorbar()
+                   interpolation='nearest', cmap=plt.cm.RdBu) #RdBu) #, cmap=cm.gist_rainbow)
+#plt.colorbar()
 #plt.show()
 
-ax=fig.add_subplot(212)
+ax=fig.add_subplot(122)
 
-fftdata=numpy.fft.fft2(data)
+fftdata=numpy.fft.fft2(grid)
+
 fftdata=numpy.fft.fftshift(fftdata)
 fftdata=fftdata.real
 print fftdata 
-grid=fftdata[:,2].reshape((nrows,ncols))
+#grid=fftdata[:,2].reshape((nrows,ncols))
 
-plt.imshow(grid,extent=(fftdata[:,0].min(), fftdata[:,0].max(), fftdata[:,1].max(), fftdata[:,1].min()),
-                   interpolation='nearest', cmap=plt.cm.jet) #, cmap=cm.gist_rainbow)
-plt.colorbar()
+plt.imshow(abs(fftdata),extent=(data[:,0].min(), data[:,0].max(), data[:,1].max(), data[:,1].min()),
+                   interpolation='nearest', cmap=plt.cm.PuBuGn) #, cmap=cm.gist_rainbow)
+#plt.colorbar()
 plt.show()
 
 
