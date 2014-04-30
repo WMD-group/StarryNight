@@ -7,7 +7,7 @@ INKSCAPE="/Applications/Inkscape.app/Contents/Resources/script"
 PWD=` pwd `
 
 
-LATTICE=50
+LATTICE=25
 PIXELS=500
 
 for i 

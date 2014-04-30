@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 100  // Malloc is for losers.
-#define Y 100
+#define X 25  // Malloc is for losers.
+#define Y 25
 
 struct dipole
 {
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
 
     config_lookup_string(cf,"LOGFILE",&LOGFILE); //library does its own dynamic allocation
 
-    config_lookup_float(cf,"beta",&beta);
+    config_lookup_int(cf,"T",&T);
 
     config_lookup_float(cf,"Efield.x",&tmp);  Efield.x=(float)tmp;
     config_lookup_float(cf,"Efield.y",&tmp);  Efield.y=(float)tmp;
@@ -197,11 +197,11 @@ int main(int argc, char *argv[])
         // see polarisation delta.E spike when the field flips
 
         // Log some pretty pictures...
-//        sprintf(name,"MC-PNG_step_%.4d.png",i);
-//        outputlattice_ppm_hsv(name);
+        sprintf(name,"MC-PNG_step_%.4d.png",i);
+        outputlattice_ppm_hsv(name);
 
-//        sprintf(name,"MC-SVG_step_%.4d.svg",i);
-//        outputlattice_svg(name);
+        sprintf(name,"MC-SVG_step_%.4d.svg",i);
+        outputlattice_svg(name);
 
 
         // Update the (interactive) user what we're up to
@@ -244,8 +244,8 @@ int main(int argc, char *argv[])
     fprintf(stderr,"\n");
 
     // Final data output / summaries.
-//    outputlattice_ppm_hsv("MC-PNG_final.png");
-//    outputlattice_svg("MC-SVG_final.svg");
+    outputlattice_ppm_hsv("MC-PNG_final.png");
+    outputlattice_svg("MC-SVG_final.svg");
 
 //    lattice_potential_log(log);
     lattice_angle_log(log);
@@ -694,7 +694,7 @@ void outputlattice_svg(char * filename)
     fprintf(fo,"<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" height=\"%d\" width=\"%d\">\n",X,Y);
 
     //our arrow marker...
-    fprintf(fo," <marker id=\"triangle\" viewBox=\"0 0 10 10\" refX=\"7\" refY=\"5\" markerUnits=\"strokeWidth\" markerWidth=\"4\" markerHeight=\"3\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" /></marker>\n");
+    fprintf(fo," <marker id=\"triangle\" viewBox=\"0 0 10 10\" refX=\"7\" refY=\"5\" markerUnits=\"strokeWidth\" markerWidth=\"2\" markerHeight=\"2\" orient=\"auto\"><path d=\"M 0 0 L 10 5 L 0 10 z\" /></marker>\n");
 
     //No markers...  marker-end=\"url(#triangle)\"
 

@@ -9,5 +9,5 @@ do
     rm  "${i}".tmp
 #turn on background transparent for coalescing into combined movie with colour plots... otherwise white for direct movie viewing
 # -background transparent
-    convert -antialias -background transparent -density 1200 -scale 500x "${i}" ${i%.*}.png  
+    convert -antialias -background transparent -density 4800 -scale 500x "${i}" ${i%.*}.png  
 done
