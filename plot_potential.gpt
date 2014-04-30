@@ -1,0 +1,30 @@
+#load '/Users/jarvist/CODES/gnuplot-colorbrewer/sequential/YlGnBu.plt'
+# Divering Red-Orange-White-Teal-Blue
+load '/Users/jarvist/CODES/gnuplot-colorbrewer/diverging/RdBu.plt'
+
+#get rid of axes...
+unset xtics
+unset ytics
+# ... colorbox...
+unset colorbox
+unset border
+
+set lmargin 0
+set rmargin 0
+set tmargin 0
+set bmargin 0
+
+
+set zrange [-6:6]
+
+#final_pot_xy.dat    initial_pot_xy.dat
+
+p [-0.5:24.5][-0.5:24.5] "initial_pot_xy.dat" u 1:2:3 with image
+
+set terminal png truecolor size 512,512
+set output "initial_pot_xy.png"
+replot
+
+set output "final_pot_xy.png"
+p [-0.5:24.5][-0.5:24.5] "final_pot_xy.dat" u 1:2:3 with image
+

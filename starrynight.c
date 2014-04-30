@@ -64,6 +64,7 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
 static void MC_move();
 static float dot(struct dipole *a, struct dipole *b);
 void initialise_lattice();
+void initialise_lattice_spectrum();
 static void lattice_angle_log(FILE *log);
 static double polarisation();
 static double dipole_potential(int x, int y);
@@ -164,15 +165,16 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Log file '%s' opened. ",LOGFILE);
 
     //Fire up the twister!
-    //init_genrand(0);  // reproducible
-    init_genrand(time(NULL)); // seeded with current time
+    init_genrand(314159265);  // reproducible data :)
+    //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Twister initialised. ");
 
     initialise_lattice();
     fprintf(stderr,"Lattice initialised.");
 
     outputlattice_ppm_hsv("initial.png");
-
+    lattice_potential_XY("initial_pot_xy.dat"); // potential distro
+ 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
     fprintf(stderr,"'.' is %d MC moves attempted.\n",(int)(X*Y*MCMegaMultiplier));
@@ -250,7 +252,8 @@ int main(int argc, char *argv[])
 //    lattice_potential_log(log);
     lattice_angle_log(log);
     sprintf(name,"Dipole_pot_xy_T:_%d_Dipole:_%f.log",T,Dipole);
-    lattice_potential_XY(name); //"final_pot_xy.dat");
+    lattice_potential_XY(name); 
+    lattice_potential_XY("final_pot_xy.dat");
     
     sprintf(name,"Dipole_pot_xy_T:_%d_Dipole:_%f.png",T,Dipole);
     outputpotential_png(name); //"final_pot.png");
@@ -312,16 +315,6 @@ void initialise_lattice()
             if (genrand_real1()<dipole_fraction) //occupy fraction of sites...
                 random_sphere_point(& lattice[i][k]);
 
-         // continous set of dipole orientations to test colour output (should
-         // appear as spectrum)
-/*        {
-            angle=2*M_PI*(i*X+k)/((float)X*Y); 
-            lattice[i][k].x = sin(angle);
-            lattice[i][k].y = cos(angle);
-            lattice[i][k].z = 0.0;
-        }
-*/
-
     //Print lattice
 /*
      for (i=0;i<X;i++)
@@ -329,6 +322,24 @@ void initialise_lattice()
             printf("\n %f %f %f %f",lattice[i][k].x,lattice[i][k].y,lattice[i][k].z,
                     dot(&lattice[i][k],&lattice[i][k]));
 */  
+}
+
+void initialise_lattice_spectrum()
+{
+    int i,k;
+    float angle;
+
+    // initial lattice on spectrum as test
+     for (i=0;i<X;i++)
+        for (k=0;k<Y;k++)
+         // continous set of dipole orientations to test colour output (should
+         // appear as spectrum)
+        {
+            angle=2*M_PI*(i*X+k)/((float)X*Y); 
+            lattice[i][k].x = sin(angle);
+            lattice[i][k].y = cos(angle);
+            lattice[i][k].z = 0.0;
+        }
 }
 
 static int rand_int(int SPAN) // TODO: profile this to make sure it runs at an OK speed.
