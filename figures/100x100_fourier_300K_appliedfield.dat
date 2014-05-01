@@ -1,0 +1,10 @@
+
+./starrynight
+python fourier_transform_potential.py
+
+. export_svg.sh MC-SVG_final.svg
+convert -scale 1000x1000 -coalesce MC-PNG_final.png MC-SVG_final.png MC-SVG_final_COMBINED.png
+mv MC-SVG_final_COMBINED-1.png MC-SVG_final_COMBINED.png
+
+cp -a fourier_transform_potential_data.png fourier_transform_potential_transform.png MC-SVG_final_COMBINED.png /Users/jarvist/REPOSITORY/jarv_writings/StarryNight-Paper/figures/100x100_fourier_300K_appliedfield
+

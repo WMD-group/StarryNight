@@ -17,7 +17,7 @@
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
 #define X 100  // Malloc is for losers.
-#define Y 100
+#define Y 100 
 
 struct dipole
 {

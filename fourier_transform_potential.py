@@ -6,7 +6,7 @@ from IPython import embed #iPython magic for interactive session...
 
 # General setup of figure...
 fig=plt.figure()
-ax=fig.add_subplot(121)
+ax=fig.add_subplot(111)
 
 data = numpy.genfromtxt("final_pot_xy.dat")
 
@@ -17,9 +17,21 @@ print data
 plt.imshow(grid,extent=(data[:,0].min(), data[:,0].max(), data[:,1].max(), data[:,1].min()),
                    interpolation='nearest', cmap=plt.cm.RdBu) #RdBu) #, cmap=cm.gist_rainbow)
 #plt.colorbar()
-#plt.show()
+plt.tight_layout(pad=0.3) #, w_pad=0.5, h_pad=1.0) # Magic incantation for non-terrible plots
+plt.axis('off')
 
-ax=fig.add_subplot(122)
+plt.show()
+fig.savefig("fourier_transform_potential_data.png",bbox_inches='tight', pad_inches=0)
+
+# _____ _____ _____
+# |  ___|  ___|_   _|
+# | |_  | |_    | |
+# |  _| |  _|   | |
+# |_|   |_|     |_|
+#
+
+fig=plt.figure()
+ax=fig.add_subplot(111)
 
 fftdata=numpy.fft.fft2(grid)
 
@@ -31,8 +43,11 @@ print fftdata
 plt.imshow(abs(fftdata),extent=(data[:,0].min(), data[:,0].max(), data[:,1].max(), data[:,1].min()),
                    interpolation='nearest', cmap=plt.cm.PuBuGn) #, cmap=cm.gist_rainbow)
 #plt.colorbar()
-plt.show()
 
+plt.tight_layout(pad=0.3) #, w_pad=0.5, h_pad=1.0) # Magic incantation for non-terrible plots
+plt.axis('off')
+plt.show()
+fig.savefig("fourier_transform_potential_transform.png",bbox_inches='tight', pad_inches=0)
 
 
 end
