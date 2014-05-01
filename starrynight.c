@@ -199,11 +199,11 @@ int main(int argc, char *argv[])
         // see polarisation delta.E spike when the field flips
 
         // Log some pretty pictures...
-        sprintf(name,"MC-PNG_step_%.4d.png",i);
-        outputlattice_ppm_hsv(name);
+//        sprintf(name,"MC-PNG_step_%.4d.png",i);
+//        outputlattice_ppm_hsv(name);
 
-        sprintf(name,"MC-SVG_step_%.4d.svg",i);
-        outputlattice_svg(name);
+//        sprintf(name,"MC-SVG_step_%.4d.svg",i);
+//        outputlattice_svg(name);
 
 
         // Update the (interactive) user what we're up to
@@ -224,14 +224,29 @@ int main(int argc, char *argv[])
     // now data collection on equilibriated structure...
 
     P=0.0;
-    for (i=0;i<MCMegaSteps;i++)
-    {
-        fprintf(stderr,",");
-        for (k=0;k<MCMinorSteps;k++)
-            MC_move();
-        P+=polarisation();
-        fprintf(stderr,"%f",polarisation());
+    
+    // hard coded for loops for Hysterisis exploration
+
+    double maxfield=Efield.x;
+//    for (maxfield=10.0;maxfield<10.001;maxfield=maxfield+1.0)
+    for (i=0;i<5;i++) // hysterisis loop counter
+    { 
+        for (Efield.x=maxfield;Efield.x>-maxfield;Efield.x-=0.01)
+        {
+            fprintf(stderr,"-");
+            for (k=0;k<MCMinorSteps;k++)
+                MC_move();
+            printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
+        }
+        for (Efield.x=-maxfield;Efield.x<maxfield;Efield.x+=0.01)
+        {
+            fprintf(stderr,"+");
+            for (k=0;k<MCMinorSteps;k++)
+                MC_move();
+            printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
+        }
     }
+
     P/=(float)MCMegaSteps; //average over our points
     P/=(float)X*Y;          // per lattice site
     P/=-(float)Efield.x;     // by Electric Field
@@ -239,8 +254,8 @@ int main(int argc, char *argv[])
     // See 6.5 (p 167) in Zangwill Modern Electrodynamics
 
     fprintf(stderr,"NORK! T: %d E: %f P: %f\n",T,Efield.x,P);
-    printf("T: %d Dipole: %f E: %f P: %f\n",T,Dipole,Efield.x,P);
-    }
+    //printf("T: %d Dipole: %f E: %f P: %f\n",T,Dipole,Efield.x,P);
+    } 
     // OK; we're finished...
 
     fprintf(stderr,"\n");
@@ -253,7 +268,7 @@ int main(int argc, char *argv[])
     lattice_angle_log(log);
     sprintf(name,"Dipole_pot_xy_T:_%d_Dipole:_%f.log",T,Dipole);
     lattice_potential_XY(name); 
-    lattice_potential_XY("final_pot_xy.dat");
+//    lattice_potential_XY("final_pot_xy.dat");
     
     sprintf(name,"Dipole_pot_xy_T:_%d_Dipole:_%f.png",T,Dipole);
     outputpotential_png(name); //"final_pot.png");

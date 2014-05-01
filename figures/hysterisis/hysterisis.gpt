@@ -1,0 +1,6 @@
+p "hyster_5dipole.dat" u 4:6 w l lt -1
+
+set terminal potscript enhanced
+set output "hysterisis.ps"
+replot
+
