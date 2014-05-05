@@ -10,8 +10,8 @@ fi
 
 PWD=` pwd `
 
-LATTICE=100
-PIXELS=1000
+LATTICE=10
+PIXELS=200
 
 for i 
 do

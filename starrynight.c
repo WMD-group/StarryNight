@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 100  // Malloc is for losers.
-#define Y 100 
+#define X 10  // Malloc is for losers.
+#define Y 10 
 
 struct dipole
 {
@@ -273,8 +273,17 @@ int main(int argc, char *argv[])
 
 //    lattice_potential_log(log);
     lattice_angle_log(log);
-    sprintf(name,"Dipole_pot_xy_T:_%d_Dipole:_%f.log",T,Dipole);
+
+    sprintf(name,"Dipole_pot_xy_T:_%04d_Dipole:_%f.log",T,Dipole);
     lattice_potential_XY(name); 
+
+    sprintf(name,"Dipole_pot_xy_T:_%04d_Dipole:_%f_MC-PNG_final.png",T,Dipole);
+    outputlattice_ppm_hsv(name);
+    
+    sprintf(name,"Dipole_pot_xy_T:_%04d_Dipole:_%f_MC-SVG_final.svg",T,Dipole);
+    outputlattice_svg(name);
+    
+    
     lattice_potential_XY("final_pot_xy.dat");
     
     sprintf(name,"Dipole_pot_xy_T:_%d_Dipole:_%f.png",T,Dipole);
