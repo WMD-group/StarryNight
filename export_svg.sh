@@ -1,11 +1,14 @@
 echo "WARNING: hard coded to size of lattice!"
 
 # Sensible Linux
-INKSCAPE="inkscape"
+if [[ `uname` == 'Linux' ]]; then
+    INKSCAPE="inkscape"
+else
 # MAC OS X
-INKSCAPE="/Applications/Inkscape.app/Contents/Resources/script"
-PWD=` pwd `
+    INKSCAPE="/Applications/Inkscape.app/Contents/Resources/script"
+fi
 
+PWD=` pwd `
 
 LATTICE=100
 PIXELS=1000
