@@ -8,6 +8,7 @@ from IPython import embed #iPython magic for interactive session...
 fig=plt.figure()
 ax=fig.add_subplot(111)
 
+#data = numpy.genfromtxt("initial_pot_xy.dat") # Typically randomly oriented dipoles - useful to check power spectrum / code
 data = numpy.genfromtxt("final_pot_xy.dat")
 
 nrows, ncols = 100,100
@@ -49,6 +50,30 @@ plt.axis('off')
 plt.show()
 fig.savefig("fourier_transform_potential_transform.png",bbox_inches='tight', pad_inches=0)
 
+  #   ######        ####### ####### #######
+ ##   #     #       #       #          #
+# #   #     #       #       #          #
+  #   #     # ##### #####   #####      #
+  #   #     #       #       #          #
+  #   #     #       #       #          #
+##### ######        #       #          #
+
+fftdata=numpy.fft.rfft2(grid)
+
+#fftdata=numpy.fft.fftshift(fftdata)
+fftdata=abs(fftdata.real)
+print fftdata 
+
+trace = numpy.sum(fftdata,axis=0)
+trace = abs(trace)
+
+print trace
+
+plt.plot(trace)
+plt.show()
+
+plt.plot(fftdata)
+plt.show()
 
 end
 

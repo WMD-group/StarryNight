@@ -229,16 +229,16 @@ int main(int argc, char *argv[])
 
     double maxfield=Efield.x;
 //    for (maxfield=10.0;maxfield<10.001;maxfield=maxfield+1.0)
-    for (i=0;i<5;i++) // hysterisis loop counter
+    for (i=0;i<0;i++) // hysterisis loop counter
     { 
-        for (Efield.x=maxfield;Efield.x>-maxfield;Efield.x-=0.01)
+        for (Efield.x=maxfield;Efield.x>-maxfield;Efield.x-=0.0005)
         {
             fprintf(stderr,"-");
             for (k=0;k<MCMinorSteps;k++)
                 MC_move();
             printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
         }
-        for (Efield.x=-maxfield;Efield.x<maxfield;Efield.x+=0.01)
+        for (Efield.x=-maxfield;Efield.x<maxfield;Efield.x+=0.0005)
         {
             fprintf(stderr,"+");
             for (k=0;k<MCMinorSteps;k++)
@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
     lattice_angle_log(log);
     sprintf(name,"Dipole_pot_xy_T:_%d_Dipole:_%f.log",T,Dipole);
     lattice_potential_XY(name); 
-//    lattice_potential_XY("final_pot_xy.dat");
+    lattice_potential_XY("final_pot_xy.dat");
     
     sprintf(name,"Dipole_pot_xy_T:_%d_Dipole:_%f.png",T,Dipole);
     outputpotential_png(name); //"final_pot.png");
