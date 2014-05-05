@@ -72,6 +72,18 @@ print trace
 plt.plot(trace)
 plt.show()
 
+data = numpy.genfromtxt("initial_pot_xy.dat")
+nrows, ncols = 100,100
+grid=data[:,2].reshape((nrows,ncols))
+fftdata=numpy.fft.rfft2(grid)
+fftdata=abs(fftdata.real)
+trace = numpy.sum(fftdata,axis=0)
+trace = abs(trace)
+plt.plot(trace)
+
+
+plt.show()
+
 plt.plot(fftdata)
 plt.show()
 

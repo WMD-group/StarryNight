@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
  
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
-    fprintf(stderr,"'.' is %d MC moves attempted.\n",(int)(X*Y*MCMegaMultiplier));
+    fprintf(stderr,"'.' is %d MC moves attempted.\n",MCMinorSteps);
 
     fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
@@ -224,7 +224,14 @@ int main(int argc, char *argv[])
     // now data collection on equilibriated structure...
 
     P=0.0;
-    
+   
+    for (i=0;i<10;i++)
+    {
+        P+=polarisation();
+        for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
+            MC_move();
+        fprintf(stderr,","); 
+    }
     // hard coded for loops for Hysterisis exploration
 
     double maxfield=Efield.x;
@@ -254,7 +261,7 @@ int main(int argc, char *argv[])
     // See 6.5 (p 167) in Zangwill Modern Electrodynamics
 
     fprintf(stderr,"NORK! T: %d E: %f P: %f\n",T,Efield.x,P);
-    //printf("T: %d Dipole: %f E: %f P: %f\n",T,Dipole,Efield.x,P);
+    printf("T: %d Dipole: %f E: %f P: %f\n",T,Dipole,Efield.x,P);
     } 
     // OK; we're finished...
 
