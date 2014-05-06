@@ -3,9 +3,9 @@
 for i 
 do
 
- convert -scale 500x500 -coalesce "${i/SVG/PNG}" "${i}" out.png
+ convert -scale 1000x1000 -coalesce "${i/SVG/PNG}" "${i}" out.png
  mv out-1.png "${i%.png}_COMBINED.png"
  echo -n "."
 done
 
-mplayer mf://*COMBINED.png -fps 10
+#mplayer mf://*COMBINED.png -fps 10

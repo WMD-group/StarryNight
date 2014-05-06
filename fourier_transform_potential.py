@@ -11,15 +11,25 @@ ax=fig.add_subplot(111)
 #data = numpy.genfromtxt("initial_pot_xy.dat") # Typically randomly oriented dipoles - useful to check power spectrum / code
 data = numpy.genfromtxt("final_pot_xy.dat")
 
-nrows, ncols = 100,100
+nrows, ncols = 25,25
 grid=data[:,2].reshape((nrows,ncols))
+
+# 6 FOOT HIGH NOTE:
+#   The AXES are screwy. Y is reversed; but this is also the case for the PNG output + the SVG output (reversed at the generation stage).
+#   Presently everything agrees. BE CAREFUL!
+
 print data
 
 plt.imshow(grid,extent=(data[:,0].min(), data[:,0].max(), data[:,1].max(), data[:,1].min()),
                    interpolation='nearest', cmap=plt.cm.RdBu) #RdBu) #, cmap=cm.gist_rainbow)
 #plt.colorbar()
-plt.tight_layout(pad=0.3) #, w_pad=0.5, h_pad=1.0) # Magic incantation for non-terrible plots
+#plt.tight_layout(pad=0.3) #, w_pad=0.5, h_pad=1.0) # Magic incantation for non-terrible plots
+
+# Make plot with no border for overlaying with direct outputs...
 plt.axis('off')
+plt.gca().set_frame_on(False)
+plt.gca().set_xticks([])
+plt.gca().set_yticks([])
 
 plt.show()
 fig.savefig("fourier_transform_potential_data.png",bbox_inches='tight', pad_inches=0)
