@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     int T;
     double P=0.0;
 
-    char name[50];
+    char name[100];
     char const *LOGFILE = NULL; //for output filenames
                 // Yes, I know, 50 chars are enough for any segfault ^_^
 

@@ -3,7 +3,7 @@
 for i in Dipole_pot_xy_T*MC-SVG_final.png
 do
 
- convert -scale 200x200 -coalesce "${i/SVG/PNG}" "${i}" out.png
+ convert -scale 500x500 -coalesce "${i/SVG/PNG}" "${i}" out.png
  mv out-1.png "${i%.png}_COMBINED.png"
  echo -n "."
 done

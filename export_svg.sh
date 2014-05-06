@@ -11,7 +11,7 @@ fi
 PWD=` pwd `
 
 LATTICE=10
-PIXELS=200
+PIXELS=500
 
 for i 
 do
