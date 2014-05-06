@@ -54,9 +54,11 @@ print fftdata
 plt.imshow(abs(fftdata),extent=(data[:,0].min(), data[:,0].max(), data[:,1].max(), data[:,1].min()),
                    interpolation='nearest', cmap=plt.cm.PuBuGn) #, cmap=cm.gist_rainbow)
 #plt.colorbar()
-
-plt.tight_layout(pad=0.3) #, w_pad=0.5, h_pad=1.0) # Magic incantation for non-terrible plots
 plt.axis('off')
+plt.gca().set_frame_on(False)
+plt.gca().set_xticks([])
+plt.gca().set_yticks([])
+
 plt.show()
 fig.savefig("fourier_transform_potential_transform.png",bbox_inches='tight', pad_inches=0)
 
@@ -82,6 +84,8 @@ print trace
 plt.plot(trace)
 plt.show()
 
+fig.savefig("fourier_transform_potential_1D_FFT_final.png",bbox_inches='tight', pad_inches=0)
+
 data = numpy.genfromtxt("initial_pot_xy.dat")
 nrows, ncols = 100,100
 grid=data[:,2].reshape((nrows,ncols))
@@ -91,8 +95,10 @@ trace = numpy.sum(fftdata,axis=0)
 trace = abs(trace)
 plt.plot(trace)
 
-
 plt.show()
+
+fig.savefig("fourier_transform_potential_1D_FFT_initial.png",bbox_inches='tight', pad_inches=0)
+
 
 plt.plot(fftdata)
 plt.show()

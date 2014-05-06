@@ -1,0 +1,9 @@
+# Nb: was editing starrynight.cfg to change Efield.x
+# Then...
+. amazing_arrows_dipole_potential.sh
+. rename_dipole_files.sh
+# type in the prefix for the above...
+
+mkdir 25x25_field_fourier
+mv field_* 25x25_field_fourier/
+mv 25x25_field_fourier/ figures/

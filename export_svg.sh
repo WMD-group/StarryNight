@@ -10,7 +10,11 @@ fi
 
 PWD=` pwd `
 
-LATTICE=25
+#LATTICE=25
+
+LATTICE=$(grep "#define X" starrynight.c | awk '{print $3}') #Madness or genius? I can't tell.
+echo "Lattice: ${LATTICE}"
+
 PIXELS=1000
 
 for i 
