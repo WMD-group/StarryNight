@@ -8,6 +8,10 @@ from IPython import embed #iPython magic for interactive session...
 fig=plt.figure()
 ax=fig.add_subplot(111)
 
+# Awk one liner to generate test data (checkerboard):
+#  awk 'BEGIN{for (i=0;i<25;i=i+1) { for (j=0;j<25;j=j+1) printf ("%d %d %f\n",i,j,(i+j)%2); }}' > final_pot_xy.dat
+# (funky sin strips - use of sin is a bit of an abuse, but gives nice off-diag 2D FFT)
+#  awk 'BEGIN{for (i=0;i<25;i=i+1) { for (j=0;j<25;j=j+1) printf ("%d %d %f\n",i,j,sin((i+j)%10)); }}' > final_pot_xy.dat
 #data = numpy.genfromtxt("initial_pot_xy.dat") # Typically randomly oriented dipoles - useful to check power spectrum / code
 data = numpy.genfromtxt("final_pot_xy.dat")
 
