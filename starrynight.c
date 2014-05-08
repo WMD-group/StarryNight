@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Lattice initialised.");
 
     outputlattice_ppm_hsv("initial.png");
-    lattice_potential_XY("initial_pot_xy.dat"); // potential distro
+    //lattice_potential_XY("initial_pot_xy.dat"); // potential distro
  
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
@@ -233,6 +233,7 @@ int main(int argc, char *argv[])
         fprintf(stderr,","); 
     }
     // hard coded for loops for Hysterisis exploration
+    P/=10;
 
     double maxfield=Efield.x;
 //    for (maxfield=10.0;maxfield<10.001;maxfield=maxfield+1.0)
@@ -254,14 +255,14 @@ int main(int argc, char *argv[])
         }
     }
 
-    P/=(float)MCMegaSteps; //average over our points
+   // P/=(float)MCMegaSteps; //average over our points
     P/=(float)X*Y;          // per lattice site
-    P/=-(float)Efield.x;     // by Electric Field
-    P*=Dipole;
+   // P/=-(float)Efield.x;     // by Electric Field
+   // P*=Dipole;
     // See 6.5 (p 167) in Zangwill Modern Electrodynamics
 
-    fprintf(stderr,"NORK! T: %d E: %f P: %f polarisation: %f\n",T,Efield.x,P,polarisation());
-    printf("T: %d Dipole: %f E: %f P: %f polarisation: %f\n",T,Dipole,Efield.x,P,polarisation());
+    fprintf(stderr,"NORK! T: %d E: %f P: %f polarisation(per_site): %f\n",T,Efield.x,P,polarisation()/((float)X*Y));
+    printf("T: %d Dipole: %f E: %f P: %f polarisation(per_site): %f\n",T,Dipole,Efield.x,P,polarisation()/((float)X*Y));
     } 
     // OK; we're finished...
 
