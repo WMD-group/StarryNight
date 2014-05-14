@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Log file '%s' opened. ",LOGFILE);
 
     //Fire up the twister!
-    init_genrand(314159265);  // reproducible data :)
+    init_genrand(0xDEADBEEF); //314159265);  // reproducible data :)
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Twister initialised. ");
 
