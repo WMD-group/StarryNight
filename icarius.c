@@ -133,51 +133,6 @@ main()
    fprintf(stderr,"Time Taken: %d seconds\n",time(NULL)-timestart);   
 }
 
-snake_span()
-{
-   int x,y,z,i;
-int snakemin[MAX_SNAKES],snakemax[MAX_SNAKES],snakeid;
-   int histogram[25];
-   
-   printf("#Total Snakes: %d\n",num_snakes);
-   
-   for (snakeid=0;snakeid<num_snakes;snakeid++)
-     {
-	snakemin[snakeid]=-1;
-	snakemax[snakeid]=0;
-     }
-   
-     for (x=0;x<X;x++)
-       for (y=0;y<Y;y++)
-	 for (z=0;z<Z;z++)
-	   if (lattice[x][y][z]>-1)
-	   {
-	      snakeid=lattice[x][y][z];
-	      
-	      if (snakemin[snakeid]<0)
-		snakemin[snakeid]=z;
-	      if (snakemax[snakeid]<z)
-		snakemax[snakeid]=z;
-	   }
-   
-   //Now place into nice histogram
-   
-   for (i=0;i<25;i++)
-     histogram[i]=0;
-   
-   for (snakeid=0;snakeid<num_snakes;snakeid++)
-     {
-	histogram[snakemax[snakeid]-snakemin[snakeid]]++;
-     //printf("snake: %d distz: %d min: %d max: %d\n",snakeid,snakemax[snakeid]-snakemin[snakeid],snakemin[snakeid],snakemax[snakeid]);
-   
-     }
-   
-   for (i=0;i<25;i++)
-   
-     printf("Length: %d NumSnakes: %d\n",i,histogram[i]);
-}
-
-
 gorgophone()
 {
    struct hopper temp;
