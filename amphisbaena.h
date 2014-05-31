@@ -16,9 +16,9 @@
 //In 2D console display, Z is the number of lines, X is the number of Characters. Y goes 'into' the screen & should be set to 1
 
 #define MAX_SNAKES 100000 //cutoff for maximum number of snakes 
-                         // - will segfault if attempts to generate more than this
+// - will segfault if attempts to generate more than this
 #define MAX_SEGMENTS 28 //cutoff of maximum number of segments in a snake 
-                        //  - will cut off gaussian distribution at this value
+//  - will cut off gaussian distribution at this value
 
 #define l_0 20 //average length of snakes in gaussian distribution
 #define sigma 0.00000001 //500 //snake lengths are gaussian distribution of this standard deviation
@@ -30,7 +30,7 @@
  * cold = 20.0
  * intermediate = 200.0 
  * hot= 2000.0
-*/
+ */
 #define DENSITY 0.45 //density of snake material as a fraction of the whole
 
 #define TOTAL_SLITHERS 10000000
@@ -38,8 +38,8 @@
 
 float iE[2][2] =		//interaction energies between the different plastics
 {
-  {0.0, 0.0},
-  {0.0, 50} //+ve energies are attractive, -ve energies are repulsive
+    {0.0, 0.0},
+    {0.0, 50} //+ve energies are attractive, -ve energies are repulsive
 };
 
 //End of Simulation Configuration Parameters
@@ -54,13 +54,13 @@ struct coord{ int x;  int y;  int z; };
 
 struct snake_struct
 {
-     int head; //initial head at oroborus[0]
-     int segs; //number of segments in snake
-     int id;   //identity - number of snake.int >1
-     struct coord oroborus[MAX_SEGMENTS];
-               //array of locations of snake segments, loops around on itself - hence oroborus
+    int head; //initial head at oroborus[0]
+    int segs; //number of segments in snake
+    int id;   //identity - number of snake.int >1
+    struct coord oroborus[MAX_SEGMENTS];
+    //array of locations of snake segments, loops around on itself - hence oroborus
 }
- snakes[MAX_SNAKES];
+snakes[MAX_SNAKES];
 //End of Global Variables + Types
 //Start of Prototypes
 float lattice_energy();
@@ -77,23 +77,23 @@ void wriggle ();
 void crawl(int x, int y, int z);
 void percolate();  
 int fit_snake (struct snake_struct *snake, int x, int y, int z, int length,
-	                      int segment);
+        int segment);
 //End of Prototypes
 
 //long long rand_count=0;
 long float_seed = -1;
-double
+    double
 rand_float ()
 {
-//   rand_count++; //count random numbers used
-//  return (ran2 (&float_seed));
-return(genrand_real2());
+    //   rand_count++; //count random numbers used
+    //  return (ran2 (&float_seed));
+    return(genrand_real2());
 }
 
-int
+    int
 rand_int (int max)
 {
-// rand_count++; //count random numbers used
-  return (int) (genrand_real2() * (double) max);
-  }
-  
+    // rand_count++; //count random numbers used
+    return (int) (genrand_real2() * (double) max);
+}
+

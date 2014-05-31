@@ -91,11 +91,11 @@ int main(int argc, char *argv[])
 
     char name[100];
     char const *LOGFILE = NULL; //for output filenames
-                // Yes, I know, 50 chars are enough for any segfault ^_^
+    // Yes, I know, 50 chars are enough for any segfault ^_^
 
     fprintf(stderr,"Starry Night - Monte Carlo brushstrokes.\n");
 
-//Load and parse config file
+    //Load and parse config file
     cf = &cfg;
     config_init(cf);
 
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     config_lookup_float(cf,"Efield.y",&tmp);  Efield.y=(float)tmp;
     config_lookup_float(cf,"Efield.z",&tmp);  Efield.z=(float)tmp;
 
-//    config_lookup_float(cf,"Eangle",&Eangle);
+    //    config_lookup_float(cf,"Eangle",&Eangle);
 
     config_lookup_float(cf,"K",&K);
     config_lookup_float(cf,"Dipole",&Dipole);
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 
     fprintf(stderr,"Config loaded. \n");
 
-// Now override with command line options if supplied...
+    // Now override with command line options if supplied...
     if (argc>1)
     {
         sscanf(argv[1],"%d",&T);
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
     }
     sprintf(name,"T_%d_Dipole_%f.log",T,Dipole);
 
-// If we're going to do some actual science, we better have a logfile...
+    // If we're going to do some actual science, we better have a logfile...
     FILE *log;
     LOGFILE=name;
     log=fopen(LOGFILE,"w");
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 
     outputlattice_ppm_hsv("initial.png");
     //lattice_potential_XY("initial_pot_xy.dat"); // potential distro
- 
+
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
     fprintf(stderr,"'.' is %d MC moves attempted.\n",MCMinorSteps);
@@ -182,87 +182,87 @@ int main(int argc, char *argv[])
     fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
     //old code - now read in option, so I can parallise externally
-//    for (Efield.x=0.1; Efield.x<3.0; Efield.x+=0.5)
-//    for (T=0;T<1500;T+=100) //I know, I know... shouldn't hard code this.
+    //    for (Efield.x=0.1; Efield.x<3.0; Efield.x+=0.5)
+    //    for (T=0;T<1500;T+=100) //I know, I know... shouldn't hard code this.
     {
         beta=1/((float)T/300.0);
 
-    for (i=0;i<MCMegaSteps;i++)
-    {
-        // Log some data... Nb: Slow as does a NxN summation of lattice energy
-        // contributions!
-//        lattice_potential_log(log);
-        //fprintf(log,"%lu %f %f %f\n",ACCEPT+REJECT,lattice_energy(),Efield,Eangle); //FIXME: lattice_energy all broken, data worthless presently.
-        // TODO: some kind of dipole distribution? Would I have to bin it
-        // myself? (boring.)
-        // TODO: Split Energy into different contributions... would be nice to
-        // see polarisation delta.E spike when the field flips
-
-        // Log some pretty pictures...
-//        sprintf(name,"MC-PNG_step_%.4d.png",i);
-//        outputlattice_ppm_hsv(name);
-
-//        sprintf(name,"MC-SVG_step_%.4d.svg",i);
-//        outputlattice_svg(name);
-
-
-        // Update the (interactive) user what we're up to
-        fprintf(stderr,".");
-
-        // Manipulate the run conditions depending on simulation time
-//        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
-//        if (i==200) { Efield.z=1.0;}      // relax back to nothing
-//        if (i==300) {Efield.z=0.0; Efield.x=1.0;}
-
-        // Do some MC moves!
-
-//#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
-        for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
-            MC_move();
-    }
-
-    // now data collection on equilibriated structure...
-
-    P=0.0;
-   
-    for (i=0;i<10;i++)
-    {
-        P+=polarisation();
-        for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
-            MC_move();
-        fprintf(stderr,","); 
-    }
-    // hard coded for loops for Hysterisis exploration
-    P/=10;
-
-    double maxfield=Efield.x;
-//    for (maxfield=10.0;maxfield<10.001;maxfield=maxfield+1.0)
-    for (i=0;i<0;i++) // hysterisis loop counter
-    { 
-        for (Efield.x=maxfield;Efield.x>-maxfield;Efield.x-=0.0005)
+        for (i=0;i<MCMegaSteps;i++)
         {
-            fprintf(stderr,"-");
-            for (k=0;k<MCMinorSteps;k++)
+            // Log some data... Nb: Slow as does a NxN summation of lattice energy
+            // contributions!
+            //        lattice_potential_log(log);
+            //fprintf(log,"%lu %f %f %f\n",ACCEPT+REJECT,lattice_energy(),Efield,Eangle); //FIXME: lattice_energy all broken, data worthless presently.
+            // TODO: some kind of dipole distribution? Would I have to bin it
+            // myself? (boring.)
+            // TODO: Split Energy into different contributions... would be nice to
+            // see polarisation delta.E spike when the field flips
+
+            // Log some pretty pictures...
+            //        sprintf(name,"MC-PNG_step_%.4d.png",i);
+            //        outputlattice_ppm_hsv(name);
+
+            //        sprintf(name,"MC-SVG_step_%.4d.svg",i);
+            //        outputlattice_svg(name);
+
+
+            // Update the (interactive) user what we're up to
+            fprintf(stderr,".");
+
+            // Manipulate the run conditions depending on simulation time
+            //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
+            //        if (i==200) { Efield.z=1.0;}      // relax back to nothing
+            //        if (i==300) {Efield.z=0.0; Efield.x=1.0;}
+
+            // Do some MC moves!
+
+            //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
+            for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
                 MC_move();
-            printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
         }
-        for (Efield.x=-maxfield;Efield.x<maxfield;Efield.x+=0.0005)
+
+        // now data collection on equilibriated structure...
+
+        P=0.0;
+
+        for (i=0;i<10;i++)
         {
-            fprintf(stderr,"+");
-            for (k=0;k<MCMinorSteps;k++)
+            P+=polarisation();
+            for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
                 MC_move();
-            printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
+            fprintf(stderr,","); 
         }
-    }
+        // hard coded for loops for Hysterisis exploration
+        P/=10;
 
-   // P/=(float)MCMegaSteps; //average over our points
-    P/=(float)X*Y;          // per lattice site
-   // P/=-(float)Efield.x;     // by Electric Field
-   // P*=Dipole;
-    // See 6.5 (p 167) in Zangwill Modern Electrodynamics
+        double maxfield=Efield.x;
+        //    for (maxfield=10.0;maxfield<10.001;maxfield=maxfield+1.0)
+        for (i=0;i<0;i++) // hysterisis loop counter
+        { 
+            for (Efield.x=maxfield;Efield.x>-maxfield;Efield.x-=0.0005)
+            {
+                fprintf(stderr,"-");
+                for (k=0;k<MCMinorSteps;k++)
+                    MC_move();
+                printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
+            }
+            for (Efield.x=-maxfield;Efield.x<maxfield;Efield.x+=0.0005)
+            {
+                fprintf(stderr,"+");
+                for (k=0;k<MCMinorSteps;k++)
+                    MC_move();
+                printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
+            }
+        }
 
-    fprintf(stderr,"NORK! T: %d E: %f P: %f polarisation(per_site): %f\n",T,Efield.x,P,polarisation()/((float)X*Y));
-    printf("T: %d Dipole: %f E: %f P: %f polarisation(per_site): %f\n",T,Dipole,Efield.x,P,polarisation()/((float)X*Y));
+        // P/=(float)MCMegaSteps; //average over our points
+        P/=(float)X*Y;          // per lattice site
+        // P/=-(float)Efield.x;     // by Electric Field
+        // P*=Dipole;
+        // See 6.5 (p 167) in Zangwill Modern Electrodynamics
+
+        fprintf(stderr,"NORK! T: %d E: %f P: %f polarisation(per_site): %f\n",T,Efield.x,P,polarisation()/((float)X*Y));
+        printf("T: %d Dipole: %f E: %f P: %f polarisation(per_site): %f\n",T,Dipole,Efield.x,P,polarisation()/((float)X*Y));
     } 
     // OK; we're finished...
 
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
     outputlattice_ppm_hsv("MC-PNG_final.png");
     outputlattice_svg("MC-SVG_final.svg");
 
-//    lattice_potential_log(log);
+    //    lattice_potential_log(log);
     lattice_angle_log(log);
 
     sprintf(name,"Dipole_pot_xy_T:_%04d_Dipole:_%f.log",T,Dipole);
@@ -280,16 +280,16 @@ int main(int argc, char *argv[])
 
     sprintf(name,"Dipole_pot_xy_T:_%04d_Dipole:_%f_MC-PNG_final.png",T,Dipole);
     outputlattice_ppm_hsv(name);
-    
+
     sprintf(name,"Dipole_pot_xy_T:_%04d_Dipole:_%f_MC-SVG_final.svg",T,Dipole);
     outputlattice_svg(name);
-    
-    
+
+
     lattice_potential_XY("final_pot_xy.dat");
-    
+
     sprintf(name,"Dipole_pot_xy_T:_%d_Dipole:_%f.png",T,Dipole);
     outputpotential_png(name); //"final_pot.png");
-    
+
     fprintf(stderr,"Monte Carlo moves - ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
     fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
 
@@ -342,18 +342,18 @@ void initialise_lattice()
     float angle;
 
     //Random initial lattice
-     for (i=0;i<X;i++)
+    for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
             if (genrand_real1()<dipole_fraction) //occupy fraction of sites...
                 random_sphere_point(& lattice[i][k]);
 
     //Print lattice
-/*
-     for (i=0;i<X;i++)
-        for (k=0;k<Y;k++)
-            printf("\n %f %f %f %f",lattice[i][k].x,lattice[i][k].y,lattice[i][k].z,
-                    dot(&lattice[i][k],&lattice[i][k]));
-*/  
+    /*
+       for (i=0;i<X;i++)
+       for (k=0;k<Y;k++)
+       printf("\n %f %f %f %f",lattice[i][k].x,lattice[i][k].y,lattice[i][k].z,
+       dot(&lattice[i][k],&lattice[i][k]));
+       */  
 }
 
 void initialise_lattice_spectrum()
@@ -362,10 +362,10 @@ void initialise_lattice_spectrum()
     float angle;
 
     // initial lattice on spectrum as test
-     for (i=0;i<X;i++)
+    for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
-         // continous set of dipole orientations to test colour output (should
-         // appear as spectrum)
+            // continous set of dipole orientations to test colour output (should
+            // appear as spectrum)
         {
             angle=2*M_PI*(i*X+k)/((float)X*Y); 
             lattice[i][k].x = sin(angle);
@@ -403,22 +403,22 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
 
             //True dipole like
             dE+= - Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
-                 + Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
+                + Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
 
             // Ferroelectric / Potts model - vector form
-//            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
-//                + Dipole * dot(olddipole,testdipole) / (d*d*d);
+            //            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
+            //                + Dipole * dot(olddipole,testdipole) / (d*d*d);
         }
 
     // Interaction of dipole with (unshielded) E-field
     dE+= + dot(newdipole, & Efield)
-         - dot(olddipole, & Efield);
+        - dot(olddipole, & Efield);
     //fprintf(stderr,"%f\n",dot(newdipole, & Efield));
 
     // interaction with strain of cage modelled as cos^2 function (low energy
     // is diagonal with MA ion along hypotenuse)
-//    dE += + K*cos(2*newangle)*cos(2*newangle)
-//          - K*cos(2*oldangle)*cos(2*oldangle);
+    //    dE += + K*cos(2*newangle)*cos(2*newangle)
+    //          - K*cos(2*oldangle)*cos(2*oldangle);
 
     // This is to replicate nice cos^2 (angle) effect in dot products.
     // There must be a more sensible way - if only I could remember my AS
@@ -427,11 +427,11 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
     // along .x projection, squared
     n.x=1.0; n.y=0.0; n.z=0.0;
     dE +=   - K*fabs(dot(newdipole,&n))
-            + K*fabs(dot(olddipole,&n));
+        + K*fabs(dot(olddipole,&n));
     // along .y projection, squared
     n.x=0.0; n.y=1.0; n.z=0.0;
     dE +=   - K*fabs(dot(newdipole,&n))
-            + K*fabs(dot(olddipole,&n));
+        + K*fabs(dot(olddipole,&n));
 
     return(dE); 
 }
@@ -522,7 +522,7 @@ static double dipole_potential(int x, int y)
 
             d=sqrt((float) r.x*r.x + r.y*r.y); //that old chestnut
 
-//            if (d>(float)MAX) continue; // Cutoff in d
+            //            if (d>(float)MAX) continue; // Cutoff in d
 
             // pot(r) = 1/4PiEpsilon * p.r / r^3
             // Electric dipole potential
@@ -546,7 +546,7 @@ static void lattice_potential_log(FILE *log)
             pot+=dipole_potential(x,y);
         fprintf(log,"%d %f %f\n",x,pot/(double)Y,dipole_potential(x,Y/2));
     }
-    
+
 }
 
 //Calculates dipole potential across XY lattice
@@ -591,65 +591,65 @@ void outputpotential_png(char * filename)
 }
 
 /* This whole function defunct - no longer have angles...
-static double lattice_energy_log(FILE *log)
-{
-    int x,y,dx,dy;
-    double E_dipole=0.0,E_strain=0.0,E_field=0.0;
-    double d,oldangle,testangle,n;
+   static double lattice_energy_log(FILE *log)
+   {
+   int x,y,dx,dy;
+   double E_dipole=0.0,E_strain=0.0,E_field=0.0;
+   double d,oldangle,testangle,n;
 
-    for (x=0;x<X;x++)
-        for (y=0;y<Y;y++)
-        {
+   for (x=0;x<X;x++)
+   for (y=0;y<Y;y++)
+   {
 
 // NB: just copied + pasted this code :| - should probably generalise to
 // a function, otherwise variations in cutoff / Hamiltonian will have to be in
 // two places, ugh.
-        oldangle=lattice[x][y].angle;
-        
-            // Sum over near neighbours for dipole-dipole interaction
-            for (dx=-2;dx<=2;dx++)
-                for (dy=-2;dy<=2;dy++)
-                {
-                    if (dx==0 && dy==0)
-                        continue; //no infinities / self interactions please!
+oldangle=lattice[x][y].angle;
 
-                    d=sqrt((float) dx*dx + dy*dy); //that old chestnut
+// Sum over near neighbours for dipole-dipole interaction
+for (dx=-2;dx<=2;dx++)
+for (dy=-2;dy<=2;dy++)
+{
+if (dx==0 && dy==0)
+continue; //no infinities / self interactions please!
 
-                    if (d>2.0) continue; // Cutoff in d
+d=sqrt((float) dx*dx + dy*dy); //that old chestnut
 
-                    testangle=lattice[(X+x+dx)%X][(Y+y+dy)%Y].angle;
+if (d>2.0) continue; // Cutoff in d
 
-                    //it goes without saying that the following line is the single
-                    //most important in the program... Energy calculation!
-            n=atan2((float)dy,(float)dx); //angle of normal vector between test points
-            // Anti-ferroelectric (dipole like)
-            //  - this now contains a lot of trig to do the dot products. Maybe
-            //  faster to generate the vectors and do it component wise?
-            E_dipole+=   Dipole * ( cos(oldangle-testangle) - 3.* cos(n-oldangle) * cos(n-testangle) ) /(d*d*d) ;
-     
-            // Ferroelectric / Potts model
+testangle=lattice[(X+x+dx)%X][(Y+y+dy)%Y].angle;
+
+//it goes without saying that the following line is the single
+//most important in the program... Energy calculation!
+n=atan2((float)dy,(float)dx); //angle of normal vector between test points
+// Anti-ferroelectric (dipole like)
+//  - this now contains a lot of trig to do the dot products. Maybe
+//  faster to generate the vectors and do it component wise?
+E_dipole+=   Dipole * ( cos(oldangle-testangle) - 3.* cos(n-oldangle) * cos(n-testangle) ) /(d*d*d) ;
+
+// Ferroelectric / Potts model
 //            dE+=  - Dipole * cos(newangle-testangle)/(d*d*d);
 
-            // TODO: Calculate lattice electric field profile as a result of
-            // dipoles. Integrate out to full size of lattice? Seems a bit
-            // heavy handed. Same cut-offs as used in dipole calculation??
+// TODO: Calculate lattice electric field profile as a result of
+// dipoles. Integrate out to full size of lattice? Seems a bit
+// heavy handed. Same cut-offs as used in dipole calculation??
 
 
-                }
+}
 
-            // Interaction of dipole with (unshielded) E-field
+// Interaction of dipole with (unshielded) E-field
 //            E_field+=  Efield*cos(oldangle-Eangle);
 
-            //Interaction with cage
-            E_strain+=  K*sin(2*oldangle)*sin(2*oldangle);
-        }
+//Interaction with cage
+E_strain+=  K*sin(2*oldangle)*sin(2*oldangle);
+}
 
 
 //    fprintf(stderr,"Energy of lattice: %f\n",E);
 
-    fprintf(log,"%lu %f %f %f %f %f %f\n",ACCEPT+REJECT,Efield.x,Eangle,E_dipole,E_strain,E_field,E_dipole+E_strain+E_field);
+fprintf(log,"%lu %f %f %f %f %f %f\n",ACCEPT+REJECT,Efield.x,Eangle,E_dipole,E_strain,E_field,E_dipole+E_strain+E_field);
 
-    return(E_dipole+E_strain+E_field); //FIXME: is this still useful?
+return(E_dipole+E_strain+E_field); //FIXME: is this still useful?
 }
 */
 // TODO: move these output routines to a separate file...
@@ -681,11 +681,11 @@ void outputlattice_ppm_hsv(char * filename)
     float h,s,v; // HSV
     float p,t,q,f; // intemediates for HSV->RGB conversion
     int hp;
-    
+
     FILE *fo;
     fo=fopen(filename,"w");
 
-//Set Saturation + Value, vary hue
+    //Set Saturation + Value, vary hue
     s=0.6; v=0.8;
 
     fprintf (fo,"P6\n%d %d\n255\n", X, Y);
@@ -700,11 +700,11 @@ void outputlattice_ppm_hsv(char * filename)
             // http://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
             hp=(int)floor(h/(M_PI/3.0)); //radians, woo
             f=h/(M_PI/3.0)-(float)hp;
-            
+
             p=v*(1.0-s);
             q=v*(1.0-f*s);
             t=v*(1.0-(1.0-f)*s);
-            
+
             switch (hp){
                 case 0: r=v; g=t; b=p; break;
                 case 1: r=q; g=v; b=p; break;
@@ -714,10 +714,10 @@ void outputlattice_ppm_hsv(char * filename)
                 case 5: r=v; g=p; b=q; break;
             }
 
-//            fprintf(stderr,"h: %f r: %f g: %f b: %f\n",h,r,g,b);
+            //            fprintf(stderr,"h: %f r: %f g: %f b: %f\n",h,r,g,b);
 
             if (lattice[i][k].x == 0.0 && lattice[i][k].y == 0.0)
-                { r=0.0; g=0.0; b=0.0; } // #FADE TO BLACK
+            { r=0.0; g=0.0; b=0.0; } // #FADE TO BLACK
             //zero length dipoles, i.e. absent ones - appear as black pixels
 
             fprintf(fo,"%c%c%c",(char)(254.0*r),(char)(254.0*g),(char)(254.0*b));
@@ -741,7 +741,7 @@ void outputlattice_svg(char * filename)
 
     //No markers...  marker-end=\"url(#triangle)\"
 
-     for (i=0;i<X;i++)
+    for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
             fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(%d,%d,%d);stroke-width:0.17\" marker-end=\"url(#triangle)\" />\n",
                     i+0.5 + 0.4*lattice[k][i].y, 
@@ -752,9 +752,9 @@ void outputlattice_svg(char * filename)
                     (int)((-lattice[k][i].z+1.0)*127.0),
                     (int)((-lattice[k][i].z+1.0)*127.0)
                    );
-     // invert z-axis, and scale to greyscale. Therefore alternates with
-     // pointing up and down with background colour
-    
+    // invert z-axis, and scale to greyscale. Therefore alternates with
+    // pointing up and down with background colour
+
     fprintf(fo,"</svg>\n");
 
     fclose(fo);
