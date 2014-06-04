@@ -743,10 +743,10 @@ void outputlattice_svg(char * filename)
      for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
             fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(%d,%d,%d);stroke-width:0.17\" marker-end=\"url(#triangle)\" />\n",
-                    i+0.5 + 0.4*lattice[k][i].y, 
-                    k+0.5 + 0.4*lattice[k][i].x,
-                    i+0.5 - 0.4*lattice[k][i].y,
-                    k+0.5 - 0.4*lattice[k][i].x,
+                    i+0.5 - 0.4*lattice[k][i].x, 
+                    k+0.5 - 0.4*lattice[k][i].y,
+                    i+0.5 + 0.4*lattice[k][i].x,
+                    k+0.5 + 0.4*lattice[k][i].y,
                     (int)((-lattice[k][i].z+1.0)*127.0),
                     (int)((-lattice[k][i].z+1.0)*127.0),
                     (int)((-lattice[k][i].z+1.0)*127.0)
