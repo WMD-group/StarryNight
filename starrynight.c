@@ -16,14 +16,17 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 200  // Malloc is for losers.
-#define Y 200 
+#define X 7  // Malloc is for losers.
+#define Y 7 
+#define Z 7 
+
+int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 
 struct dipole
 {
     float x,y,z;
     float length; //length of dipole, to allow for solid state mixture (MA, FA, Ammonia, etc.)
-} lattice[X][Y];
+} lattice[X][Y][Z];
 
 struct mixture
 {
@@ -49,8 +52,6 @@ double dipole_fraction=1.0; //fraction of sites to be occupied by dipoles
 
 int DipoleCutOff=3;
 
-int DIM=2; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
-
 //END OF SIMULATION PARAMETERS
 
 // {{ Except for the ones hardcoded into the algorithm :^) }}
@@ -60,14 +61,14 @@ unsigned long REJECT=0;
 
 // Prototypes...
 static int rand_int(int SPAN);
-static double site_energy(int x, int y, struct dipole *newdipole, struct dipole *olddipole);
+static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole);
 static void MC_move();
 static float dot(struct dipole *a, struct dipole *b);
 void initialise_lattice();
 void initialise_lattice_spectrum();
 static void lattice_angle_log(FILE *log);
 static double polarisation();
-static double dipole_potential(int x, int y);
+static double dipole_potential(int x, int y, int z);
 static void lattice_potential_log(FILE *log);
 void lattice_potential_XY(char * filename);
 static double lattice_energy_log(FILE *log);
@@ -75,6 +76,7 @@ void outputpotential_png(char * filename);
 void outputlattice_pnm(char * filename);
 void outputlattice_ppm_hsv(char * filename);
 void outputlattice_svg(char * filename);
+void outputlattice_xyz(char * filename);
 
 int main(int argc, char *argv[])
 {
@@ -275,20 +277,21 @@ int main(int argc, char *argv[])
     //    lattice_potential_log(log);
     lattice_angle_log(log);
 
-    sprintf(name,"Dipole_pot_xy_T:_%04d_Dipole:_%f.log",T,Dipole);
+    sprintf(name,"Dipole_pot_xy_T_%04d_Dipole_%f.log",T,Dipole);
     lattice_potential_XY(name); 
 
-    sprintf(name,"Dipole_pot_xy_T:_%04d_Dipole:_%f_MC-PNG_final.png",T,Dipole);
+    sprintf(name,"Dipole_pot_xy_T_%04d_Dipole_%f_MC-PNG_final.png",T,Dipole);
     outputlattice_ppm_hsv(name);
 
-    sprintf(name,"Dipole_pot_xy_T:_%04d_Dipole:_%f_MC-SVG_final.svg",T,Dipole);
+    sprintf(name,"Dipole_pot_xy_T_%04d_Dipole_%f_MC-SVG_final.svg",T,Dipole);
     outputlattice_svg(name);
-
 
     lattice_potential_XY("final_pot_xy.dat");
 
-    sprintf(name,"Dipole_pot_xy_T:_%d_Dipole:_%f.png",T,Dipole);
+    sprintf(name,"Dipole_pot_xy_T_%d_Dipole_%f.png",T,Dipole);
     outputpotential_png(name); //"final_pot.png");
+
+    outputlattice_xyz("dipoles.xyz");
 
     fprintf(stderr,"Monte Carlo moves - ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
     fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
@@ -338,14 +341,15 @@ static float dot(struct dipole *a, struct dipole *b)
 
 void initialise_lattice()
 {
-    int i,k;
+    int x,y,z;
     float angle;
 
     //Random initial lattice
-    for (i=0;i<X;i++)
-        for (k=0;k<Y;k++)
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
             if (genrand_real1()<dipole_fraction) //occupy fraction of sites...
-                random_sphere_point(& lattice[i][k]);
+                random_sphere_point(& lattice[x][y][z]);
 
     //Print lattice
     /*
@@ -358,19 +362,20 @@ void initialise_lattice()
 
 void initialise_lattice_spectrum()
 {
-    int i,k;
+    int x,y,z;
     float angle;
 
     // initial lattice on spectrum as test
-    for (i=0;i<X;i++)
-        for (k=0;k<Y;k++)
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
             // continous set of dipole orientations to test colour output (should
             // appear as spectrum)
         {
-            angle=2*M_PI*(i*X+k)/((float)X*Y); 
-            lattice[i][k].x = sin(angle);
-            lattice[i][k].y = cos(angle);
-            lattice[i][k].z = 0.0;
+            angle=2*M_PI*(x*X+y)/((float)X*Y); 
+            lattice[x][y][z].x = sin(angle);
+            lattice[x][y][z].y = cos(angle);
+            lattice[x][y][z].z = 0.0;
         }
 }
 
@@ -379,9 +384,9 @@ static int rand_int(int SPAN) // TODO: profile this to make sure it runs at an O
     return((int)( (unsigned long) genrand_int32() % (unsigned long)SPAN));
 }
 
-static double site_energy(int x, int y, struct dipole *newdipole, struct dipole *olddipole)
+static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole)
 {
-    int dx,dy;
+    int dx,dy,dz;
     float d;
     double dE=0.0;
     struct dipole *testdipole, n;
@@ -389,21 +394,22 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
     // Sum over near neighbours for dipole-dipole interaction
     for (dx=-DipoleCutOff;dx<=DipoleCutOff;dx++)
         for (dy=-DipoleCutOff;dy<=DipoleCutOff;dy++)
+            for (dz=-DipoleCutOff;dz<=DipoleCutOff;dz++)
         {
-            if (dx==0 && dy==0)
+            if (dx==0 && dy==0 && dz==0)
                 continue; //no infinities / self interactions please!
 
-            d=sqrt((float) dx*dx + dy*dy); //that old chestnut; distance in Euler space
+            d=sqrt((float) dx*dx + dy*dy + dz*dz); //that old chestnut; distance in Euler space
 
             if (d>(float)DipoleCutOff) continue; // Cutoff in d
 
-            testdipole=& lattice[(X+x+dx)%X][(Y+y+dy)%Y];
+            testdipole=& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z];
 
-            n.x=(float)dx/d; n.y=(float)dy/d; //normalised diff. vector
+            n.x=(float)dx/d; n.y=(float)dy/d; n.z=(float)dz/d; //normalised diff. vector
 
             //True dipole like
-            dE+= - Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
-                + Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
+            dE+=  Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
+                - Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
 
             // Ferroelectric / Potts model - vector form
             //            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
@@ -438,8 +444,7 @@ static double site_energy(int x, int y, struct dipole *newdipole, struct dipole 
 
 static void MC_move()
 {
-    int x, y;
-    int dx, dy;
+    int x, y, z;
     float d;
     float dE=0.0;
     struct dipole newdipole, *olddipole;
@@ -448,24 +453,25 @@ static void MC_move()
 
     x=rand_int(X);
     y=rand_int(Y);
+    z=rand_int(Z);
 
-    if (lattice[x][y].x==0.0 && lattice[x][y].y==0.0) return; //dipole zero length .'. not present
+    if (lattice[x][y][z].x==0.0 && lattice[x][y][z].y==0.0 && lattice[x][y][z].z==0.0) return; //dipole zero length .'. not present
 
     // random new orientation. 
     // Nb: this is the definition of a MC move - might want to consider
     // alternative / global / less disruptive moves as well
     random_sphere_point(& newdipole);    
 
-    olddipole=& lattice[x][y];
+    olddipole=& lattice[x][y][z];
 
     //calc site energy
-    dE=site_energy(x,y,& newdipole,olddipole);
+    dE=site_energy(x,y,z, & newdipole,olddipole);
 
     if (dE < 0.0 || exp(-dE * beta) > genrand_real2() )
     {
-        lattice[x][y].x=newdipole.x;
-        lattice[x][y].y=newdipole.y;
-        lattice[x][y].z=newdipole.z;
+        lattice[x][y][z].x=newdipole.x;
+        lattice[x][y][z].y=newdipole.y;
+        lattice[x][y][z].z=newdipole.z;
 
         ACCEPT++;
     }
@@ -473,7 +479,7 @@ static void MC_move()
         REJECT++;
 }
 
-static void lattice_angle_log(FILE *log)
+static void lattice_angle_log(FILE *log) // nb: 2D angle
 {
     int x,y;
     double angle;
@@ -481,7 +487,7 @@ static void lattice_angle_log(FILE *log)
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
         {
-            angle=atan2(lattice[x][y].y, lattice[x][y].x);
+            angle=atan2(lattice[x][y][0].y, lattice[x][y][0].x);
             fprintf(log,"%f\n",angle);
         }
 }
@@ -491,42 +497,45 @@ static void lattice_angle_log(FILE *log)
 static double polarisation()
 {
     double P=0.0;
-    int x,y;
+    int x,y,z;
     struct dipole n;
 
     n.x=1.0; n.y=0.0; n.z=0.0;
 
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
-            P+=dot(&lattice[x][y],&n); //dipole response in direction of Efield
+            for (z=0;z<Z;z++)
+                P+=dot(&lattice[x][y][z],&n); //dipole response in direction of Efield
 
     return(P);
 }
 
 
 //Calculate dipole potential at specific location
-static double dipole_potential(int x, int y) 
+static double dipole_potential(int x, int y, int z) 
 {
-    int dx,dy,MAX=10;
+    int dx,dy,dz;
+    int MAX=10;
     double pot=0.0;
     float d;
     struct dipole r;
 
-    for (dx=0;dx<=X;dx++)
-        for (dy=0;dy<=X;dy++)
+    for (dx=0;dx<X;dx++)
+        for (dy=0;dy<X;dy++)
+            for (dz=0;dz<Z;dz++)
         {
-            if (x-dx==0 && y-dy==0)
+            if (x-dx==0 && y-dy==0 && z-dz==0)
                 continue; //no infinities / self interactions please!
 
-            r.x=(float)(x-dx); r.y=(float)(y-dy); r.z=0.0;
+            r.x=(float)(x-dx); r.y=(float)(y-dy); r.z=(float)(z-dz);
 
-            d=sqrt((float) r.x*r.x + r.y*r.y); //that old chestnut
+            d=sqrt((float) r.x*r.x + r.y*r.y + r.z*r.z); //that old chestnut
 
             //            if (d>(float)MAX) continue; // Cutoff in d
 
             // pot(r) = 1/4PiEpsilon * p.r / r^3
             // Electric dipole potential
-            pot+=dot(& lattice[dx][dy],& r)/(d*d*d);
+            pot+=dot(& lattice[dx][dy][dz],& r)/(d*d*d);
         }
     return(pot);
 }
@@ -535,16 +544,17 @@ static double dipole_potential(int x, int y)
 //Calculates dipole potential along trace of lattice
 static void lattice_potential_log(FILE *log)
 {
-    int x,y;
+    int x,y,z;
     double pot;
 
     y=Y/2; //trace across centre of material. I know, I know, PBCs.
+    z=0;
     for (x=0;x<X;x++)
     {
         pot=0.0;
         for (y=0;y<Y;y++)
-            pot+=dipole_potential(x,y);
-        fprintf(log,"%d %f %f\n",x,pot/(double)Y,dipole_potential(x,Y/2));
+            pot+=dipole_potential(x,y,z);
+        fprintf(log,"%d %f %f\n",x,pot/(double)Y,dipole_potential(x,Y/2,z));
     }
 
 }
@@ -558,11 +568,24 @@ void lattice_potential_XY(char * filename)
     fo=fopen(filename,"w");
 
     for (x=0;x<X;x++)
-    {
         for (y=0;y<Y;y++)
-            fprintf(fo,"%d %d %f\n",x,y,dipole_potential(x,y));
-    }
+            fprintf(fo,"%d %d %f\n",x,y,dipole_potential(x,y,0));
 }
+
+//Calculates dipole potential across XYZ volume
+void lattice_potential_XYZ(char * filename)
+{
+    int x,y,z;
+    double pot;
+    FILE *fo;
+    fo=fopen(filename,"w");
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+                fprintf(fo,"%d %d %f\n",x,y,dipole_potential(x,y,z));
+}
+
 
 
 void outputpotential_png(char * filename)
@@ -577,7 +600,7 @@ void outputpotential_png(char * filename)
     {
         for (k=0;k<Y;k++)
         {
-            pixel=SHRT_MAX/2+(int)(SHRT_MAX*0.1*dipole_potential(i,k));
+            pixel=SHRT_MAX/2+(int)(SHRT_MAX*0.1*dipole_potential(i,k,0));
 
             // Bounds checking :^)
             if (pixel<0) pixel=0;
@@ -665,7 +688,7 @@ void outputlattice_png(char * filename)
     for (i=0;i<X;i++)
     {
         for (k=0;k<Y;k++)
-            fprintf(fo,"%d ",(int)(SHRT_MAX*atan2(lattice[i][k].y,lattice[i][k].x)/(2*M_PI)));
+            fprintf(fo,"%d ",(int)(SHRT_MAX*atan2(lattice[i][k][0].y,lattice[i][k][0].x)/(2*M_PI)));
         fprintf(fo,"\n");
     }
 
@@ -693,9 +716,9 @@ void outputlattice_ppm_hsv(char * filename)
     for (i=0;i<X;i++) //force same ordering as SVG...
         for (k=0;k<Y;k++)
         {
-            h=M_PI+atan2(lattice[i][k].y,lattice[i][k].x); //Nb: assumes 0->2PI interval!
-            v=0.5+0.4*lattice[i][k].z; //darken towards the south (-z) pole
-            s=0.6-0.6*fabs(lattice[i][k].z); //desaturate towards the poles
+            h=M_PI+atan2(lattice[i][k][0].y,lattice[i][k][0].x); //Nb: assumes 0->2PI interval!
+            v=0.5+0.4*lattice[i][k][0].z; //darken towards the south (-z) pole
+            s=0.6-0.6*fabs(lattice[i][k][0].z); //desaturate towards the poles
 
             // http://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
             hp=(int)floor(h/(M_PI/3.0)); //radians, woo
@@ -716,7 +739,7 @@ void outputlattice_ppm_hsv(char * filename)
 
             //            fprintf(stderr,"h: %f r: %f g: %f b: %f\n",h,r,g,b);
 
-            if (lattice[i][k].x == 0.0 && lattice[i][k].y == 0.0)
+            if (lattice[i][k][0].x == 0.0 && lattice[i][k][0].y == 0.0 && lattice[i][k][0].z == 0.0)
             { r=0.0; g=0.0; b=0.0; } // #FADE TO BLACK
             //zero length dipoles, i.e. absent ones - appear as black pixels
 
@@ -744,13 +767,13 @@ void outputlattice_svg(char * filename)
     for (i=0;i<X;i++)
         for (k=0;k<Y;k++)
             fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(%d,%d,%d);stroke-width:0.17\" marker-end=\"url(#triangle)\" />\n",
-                    i+0.5 + 0.4*lattice[k][i].y, 
-                    k+0.5 + 0.4*lattice[k][i].x,
-                    i+0.5 - 0.4*lattice[k][i].y,
-                    k+0.5 - 0.4*lattice[k][i].x,
-                    (int)((-lattice[k][i].z+1.0)*127.0),
-                    (int)((-lattice[k][i].z+1.0)*127.0),
-                    (int)((-lattice[k][i].z+1.0)*127.0)
+                    i+0.5 + 0.4*lattice[k][i][0].x, 
+                    k+0.5 + 0.4*lattice[k][i][0].y,
+                    i+0.5 - 0.4*lattice[k][i][0].x,
+                    k+0.5 - 0.4*lattice[k][i][0].y,
+                    (int)((-lattice[k][i][0].z+1.0)*127.0),
+                    (int)((-lattice[k][i][0].z+1.0)*127.0),
+                    (int)((-lattice[k][i][0].z+1.0)*127.0)
                    );
     // invert z-axis, and scale to greyscale. Therefore alternates with
     // pointing up and down with background colour
@@ -760,4 +783,21 @@ void outputlattice_svg(char * filename)
     fclose(fo);
 }
 
+void outputlattice_xyz(char * filename)
+{
+    int x,y,z;
+    float r=1.6/2; // half length of C-N molecule
+    float d=6.4; // lattice size - for placing molecule
+    
+    FILE *fo;
+    fo=fopen(filename,"w");
+    fprintf(fo,"%d\n\n",X*Y*Z*2); //number of atoms... i.e. lattice sites times 2
 
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+            {
+                fprintf(fo,"C %f %f %f\n",d*x+r*lattice[x][y][z].x, d*y+r*lattice[x][y][z].y, d*z+r*lattice[x][y][z].z);
+                fprintf(fo,"N %f %f %f\n",d*x-r*lattice[x][y][z].x, d*y-r*lattice[x][y][z].y, d*z-r*lattice[x][y][z].z);
+            }
+}
