@@ -77,6 +77,7 @@ void outputlattice_pnm(char * filename);
 void outputlattice_ppm_hsv(char * filename);
 void outputlattice_svg(char * filename);
 void outputlattice_xyz(char * filename);
+void outputlattice_xyz_overprint(char * filename);
 
 int main(int argc, char *argv[])
 {
@@ -292,6 +293,7 @@ int main(int argc, char *argv[])
     outputpotential_png(name); //"final_pot.png");
 
     outputlattice_xyz("dipoles.xyz");
+    outputlattice_xyz_overprint("overprint.xyz");
 
     fprintf(stderr,"Monte Carlo moves - ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
     fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
@@ -800,4 +802,20 @@ void outputlattice_xyz(char * filename)
                 fprintf(fo,"C %f %f %f\n",d*x+r*lattice[x][y][z].x, d*y+r*lattice[x][y][z].y, d*z+r*lattice[x][y][z].z);
                 fprintf(fo,"N %f %f %f\n",d*x-r*lattice[x][y][z].x, d*y-r*lattice[x][y][z].y, d*z-r*lattice[x][y][z].z);
             }
+}
+
+void outputlattice_xyz_overprint(char * filename)
+{
+    int x,y,z;
+    float r=6.0; // half length of C-N molecule
+    float d=6.4; // lattice size - for placing molecule
+    
+    FILE *fo;
+    fo=fopen(filename,"w");
+    fprintf(fo,"%d\n\nC 0.0 0.0 0.0\n",1+(X*Y*Z)); //number of atoms...
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+                fprintf(fo,"N %f %f %f\n",r*lattice[x][y][z].x, r*lattice[x][y][z].y, r*lattice[x][y][z].z);
 }
