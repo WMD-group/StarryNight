@@ -65,6 +65,7 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
 static void MC_move();
 static float dot(struct dipole *a, struct dipole *b);
 void initialise_lattice();
+void initialise_lattice_wall();
 void initialise_lattice_spectrum();
 static void lattice_angle_log(FILE *log);
 static double polarisation();
@@ -172,10 +173,16 @@ int main(int argc, char *argv[])
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Twister initialised. ");
 
-    initialise_lattice();
+    initialise_lattice();// _wall();
     fprintf(stderr,"Lattice initialised.");
 
+    // output initialised lattice - mainly for debugging
     outputlattice_ppm_hsv("initial.png");
+    outputlattice_svg("initial-SVG.svg");
+    outputpotential_png("initial_pot.png"); //"final_pot.png");
+    outputlattice_xyz("initial_dipoles.xyz");
+    outputlattice_xyz_overprint("initial_overprint.xyz");
+ 
     //lattice_potential_XY("initial_pot_xy.dat"); // potential distro
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
@@ -289,7 +296,7 @@ int main(int argc, char *argv[])
 
     lattice_potential_XY("final_pot_xy.dat");
 
-    sprintf(name,"Dipole_pot_xy_T_%d_Dipole_%f.png",T,Dipole);
+    sprintf(name,"Dipole_pot_xy_T_%04d_Dipole_%f.png",T,Dipole);
     outputpotential_png(name); //"final_pot.png");
 
     outputlattice_xyz("dipoles.xyz");
@@ -362,6 +369,16 @@ void initialise_lattice()
        */  
 }
 
+void initialise_lattice_wall()
+{
+    int x,y,z;
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+                    { lattice[x][y][z].x=x%2; lattice[x][y][z].y=y%2; lattice[x][y][z].z=z%2; }
+}
+
 void initialise_lattice_spectrum()
 {
     int x,y,z;
@@ -410,8 +427,8 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
             n.x=(float)dx/d; n.y=(float)dy/d; n.z=(float)dz/d; //normalised diff. vector
 
             //True dipole like
-            dE+= - Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
-                + Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
+            dE+=  Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
+                - Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
 
             // Ferroelectric / Potts model - vector form
             //            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
@@ -754,7 +771,7 @@ void outputlattice_ppm_hsv(char * filename)
 //routine above
 void outputlattice_svg(char * filename)
 {
-    int i,k;
+    int x,y;
 
     FILE *fo;
     fo=fopen(filename,"w");
@@ -766,16 +783,16 @@ void outputlattice_svg(char * filename)
 
     //No markers...  marker-end=\"url(#triangle)\"
 
-    for (i=0;i<X;i++)
-        for (k=0;k<Y;k++)
+    for (x=0;x<X;x++) // care with X&Y - non-intuitive to get agreement with outputlattice_ppm_hsv for post-production overlaying
+        for (y=0;y<Y;y++)
             fprintf(fo," <line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" style=\"stroke:rgb(%d,%d,%d);stroke-width:0.17\" marker-end=\"url(#triangle)\" />\n",
-                    i+0.5 + 0.4*lattice[k][i][0].x, 
-                    k+0.5 + 0.4*lattice[k][i][0].y,
-                    i+0.5 - 0.4*lattice[k][i][0].x,
-                    k+0.5 - 0.4*lattice[k][i][0].y,
-                    (int)((-lattice[k][i][0].z+1.0)*127.0),
-                    (int)((-lattice[k][i][0].z+1.0)*127.0),
-                    (int)((-lattice[k][i][0].z+1.0)*127.0)
+                    y+0.5 + 0.4*lattice[x][y][0].y, 
+                    x+0.5 + 0.4*lattice[x][y][0].x,
+                    y+0.5 - 0.4*lattice[x][y][0].y,
+                    x+0.5 - 0.4*lattice[x][y][0].x,
+                    (int)((-lattice[x][y][0].z+1.0)*127.0),
+                    (int)((-lattice[x][y][0].z+1.0)*127.0),
+                    (int)((-lattice[x][y][0].z+1.0)*127.0)
                    );
     // invert z-axis, and scale to greyscale. Therefore alternates with
     // pointing up and down with background colour
@@ -789,8 +806,9 @@ void outputlattice_xyz(char * filename)
 {
     int x,y,z;
     float r=1.6/2; // half length of C-N molecule
-    float d=6.4; // lattice size - for placing molecule
-    
+    float d=3.0; // lattice size - for placing molecule
+                // artificially small - to make molecules relatively bigger!
+                // Nb: set to 3.0 to get pymol to draw bonds between aligned MA    
     FILE *fo;
     fo=fopen(filename,"w");
     fprintf(fo,"%d\n\n",X*Y*Z*2); //number of atoms... i.e. lattice sites times 2
