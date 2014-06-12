@@ -16,9 +16,9 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 7  // Malloc is for losers.
-#define Y 7 
-#define Z 7 
+#define X 6  // Malloc is for losers.
+#define Y 6 
+#define Z 6 
 
 int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 
@@ -410,8 +410,8 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
             n.x=(float)dx/d; n.y=(float)dy/d; n.z=(float)dz/d; //normalised diff. vector
 
             //True dipole like
-            dE+=  Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
-                - Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
+            dE+= - Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
+                + Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
 
             // Ferroelectric / Potts model - vector form
             //            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
