@@ -79,6 +79,7 @@ void outputlattice_ppm_hsv(char * filename);
 void outputlattice_svg(char * filename);
 void outputlattice_xyz(char * filename);
 void outputlattice_xyz_overprint(char * filename);
+void outputlattice_pymol_cgo(char * filename);
 
 int main(int argc, char *argv[])
 {
@@ -301,6 +302,7 @@ int main(int argc, char *argv[])
 
     outputlattice_xyz("dipoles.xyz");
     outputlattice_xyz_overprint("overprint.xyz");
+    outputlattice_pymol_cgo("dipoles.py");
 
     fprintf(stderr,"Monte Carlo moves - ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
     fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
@@ -837,3 +839,66 @@ void outputlattice_xyz_overprint(char * filename)
             for (z=0;z<Z;z++)
                 fprintf(fo,"N %f %f %f\n",r*lattice[x][y][z].x, r*lattice[x][y][z].y, r*lattice[x][y][z].z);
 }
+
+// Outputs Pymol CGO sphere primitives of lattice dipole orientation on a HSV colourwheel
+void outputlattice_pymol_cgo(char * filename)
+{
+    float d=3.0; //to agree with XYZ file
+    int x,y,z;
+    float angle;
+
+    float r,g,b; // RGB
+    float h,s,v; // HSV
+    float p,t,q,f; // intemediates for HSV->RGB conversion
+    int hp;
+
+    FILE *fo;
+    fo=fopen(filename,"w");
+    fprintf(fo,"from pymol.cgo import *\nfrom pymol import cmd\n");
+    fprintf(fo,"obj = [ ALPHA, 0.6"); // Alpha = degree of transparency (1.0 = opaque, 0.0 = transparent)
+
+    //Set Saturation + Value, vary hue
+    s=0.6; v=0.8;
+
+
+    for (x=0;x<X;x++) //force same ordering as SVG...
+        for (y=0;y<Y;y++)
+        for (z=0;z<Z;z++)
+        {
+            h=M_PI+atan2(lattice[x][y][z].y,lattice[x][y][z].x); //Nb: assumes 0->2PI interval!
+            v=0.5+0.4*lattice[x][y][z].z; //darken towards the south (-z) pole
+            s=0.6-0.6*fabs(lattice[x][y][z].z); //desaturate towards the poles
+
+            // http://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
+            hp=(int)floor(h/(M_PI/3.0)); //radians, woo
+            f=h/(M_PI/3.0)-(float)hp;
+
+            p=v*(1.0-s);
+            q=v*(1.0-f*s);
+            t=v*(1.0-(1.0-f)*s);
+
+            switch (hp){
+                case 0: r=v; g=t; b=p; break;
+                case 1: r=q; g=v; b=p; break;
+                case 2: r=p; g=v; b=t; break;
+                case 3: r=p; g=q; b=v; break;
+                case 4: r=t; g=p; b=v; break;
+                case 5: r=v; g=p; b=q; break;
+            }
+
+            //            fprintf(stderr,"h: %f r: %f g: %f b: %f\n",h,r,g,b);
+
+            if (lattice[x][y][z].x == 0.0 && lattice[x][y][z].y == 0.0 && lattice[x][y][z].z == 0.0)
+            { r=0.0; g=0.0; b=0.0; } // #FADE TO BLACK
+            //zero length dipoles, i.e. absent ones - appear as black pixels
+
+            fprintf(fo,",COLOR, %f, %f, %f,\n",r,g,b);
+            fprintf(fo,"SPHERE, %f, %f, %f, %f\n",x*d,y*d,z*d,d/2);
+        }
+    fprintf(fo,"]\n");
+    fprintf(fo,"cmd.load_cgo(obj,'battenberg')");
+
+    fclose(fo); //don't forget :^)
+}
+
+
