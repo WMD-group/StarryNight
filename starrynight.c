@@ -16,9 +16,9 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 6  // Malloc is for losers.
-#define Y 6 
-#define Z 6 
+#define X 16  // Malloc is for losers.
+#define Y 16 
+#define Z 16 
 
 int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 
@@ -808,7 +808,7 @@ void outputlattice_xyz(char * filename)
 {
     int x,y,z;
     float r=1.6/2; // half length of C-N molecule
-    float d=3.0; // lattice size - for placing molecule
+    float d=3.5; // lattice size - for placing molecule
                 // artificially small - to make molecules relatively bigger!
                 // Nb: set to 3.0 to get pymol to draw bonds between aligned MA    
     FILE *fo;
@@ -843,7 +843,8 @@ void outputlattice_xyz_overprint(char * filename)
 // Outputs Pymol CGO sphere primitives of lattice dipole orientation on a HSV colourwheel
 void outputlattice_pymol_cgo(char * filename)
 {
-    float d=3.0; //to agree with XYZ file
+    float d=3.5; //to agree with XYZ file
+    float a=0.6; // radius of sphere within above
     int x,y,z;
     float angle;
 
@@ -893,8 +894,8 @@ void outputlattice_pymol_cgo(char * filename)
             //zero length dipoles, i.e. absent ones - appear as black pixels
 
             fprintf(fo,",COLOR, %f, %f, %f,\n",r,g,b);
-            fprintf(fo,"SPHERE, %f, %f, %f, %f\n",x*d,y*d,z*d,d/2);
-        }
+            fprintf(fo,"SPHERE, %f, %f, %f, %f\n",x*d,y*d,z*d,a*d/2);
+    }
     fprintf(fo,"]\n");
     fprintf(fo,"cmd.load_cgo(obj,'battenberg')");
 
