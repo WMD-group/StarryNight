@@ -943,14 +943,14 @@ void outputlattice_pymol_cgo(char * filename)
 
 void outputlattice_dumb_terminal()
 {
-    const char * arrows="|/-\\|/-\\"; // "Dancing at angles"
+    const char * arrows="-\\|/-\\|/"; // "Dancing at angles"
     int x,y;
     float a;
     int z=0;
 
-    for (x=0;x<X;x++)
+    for (y=0;y<Y;y++)
     {
-        for (y=0;y<Y;y++)
+        for (x=0;x<X;x++)
         {
             a=atan2(lattice[x][y][z].y,lattice[x][y][z].x);
             a=a/(M_PI); //fraction of circle
