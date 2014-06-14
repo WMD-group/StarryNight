@@ -831,11 +831,13 @@ void outputlattice_svg(char * filename)
     fclose(fo);
 }
 
+#define ZSCALE 5.0 // Scales Z-axis in Pymol xyz / CGO outputs
+
 void outputlattice_xyz(char * filename)
 {
     int x,y,z;
     float r=1.6/2; // half length of C-N molecule
-    float d=3.0; // lattice size - for placing molecule
+    float d=4.0; // lattice size - for placing molecule
                 // artificially small - to make molecules relatively bigger!
                 // Nb: set to 3.0 to get pymol to draw bonds between aligned MA    
     FILE *fo;
@@ -846,8 +848,8 @@ void outputlattice_xyz(char * filename)
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
             {
-                fprintf(fo,"C %f %f %f\n",d*x+r*lattice[x][y][z].x, d*y+r*lattice[x][y][z].y, d*z+r*lattice[x][y][z].z);
-                fprintf(fo,"N %f %f %f\n",d*x-r*lattice[x][y][z].x, d*y-r*lattice[x][y][z].y, d*z-r*lattice[x][y][z].z);
+                fprintf(fo,"C %f %f %f\n",d*x+r*lattice[x][y][z].x, d*y+r*lattice[x][y][z].y, ZSCALE*(d*z)+r*lattice[x][y][z].z);
+                fprintf(fo,"N %f %f %f\n",d*x-r*lattice[x][y][z].x, d*y-r*lattice[x][y][z].y, ZSCALE*(d*z)-r*lattice[x][y][z].z);
             }
 }
 
@@ -870,7 +872,8 @@ void outputlattice_xyz_overprint(char * filename)
 // Outputs Pymol CGO sphere primitives of lattice dipole orientation on a HSV colourwheel
 void outputlattice_pymol_cgo(char * filename)
 {
-    float d=3.0; //to agree with XYZ file
+    float d=4.0; //to agree with XYZ file
+    float a=1.4; // radius of sphere within above
     int x,y,z;
     float angle;
 
@@ -882,7 +885,7 @@ void outputlattice_pymol_cgo(char * filename)
     FILE *fo;
     fo=fopen(filename,"w");
     fprintf(fo,"from pymol.cgo import *\nfrom pymol import cmd\n");
-    fprintf(fo,"obj = [ ALPHA, 0.6"); // Alpha = degree of transparency (1.0 = opaque, 0.0 = transparent)
+    fprintf(fo,"obj = [ ALPHA, 0.7"); // Alpha = degree of transparency (1.0 = opaque, 0.0 = transparent)
 
     //Set Saturation + Value, vary hue
     s=0.6; v=0.8;
@@ -920,8 +923,18 @@ void outputlattice_pymol_cgo(char * filename)
             //zero length dipoles, i.e. absent ones - appear as black pixels
 
             fprintf(fo,",COLOR, %f, %f, %f,\n",r,g,b);
-            fprintf(fo,"SPHERE, %f, %f, %f, %f\n",x*d,y*d,z*d,d/2);
-        }
+            // sphere of colour centered at the site
+            fprintf(fo,"SPHERE, %f, %f, %f, %f\n",x*d,y*d,ZSCALE*z*d,a*d/2);
+           
+            // makes a square (plane) of colour at the site
+            //  - presently half works - odd triangle taken out of the square!
+/*            fprintf(fo,"BEGIN, TRIANGLE_STRIP, NORMAL, 0.0, 0.0, 1.0,\n");
+            fprintf(fo,"VERTEX, %f, %f, %f,",d*(x-0.5), d*(y-0.5),  ZSCALE*(d*z));
+            fprintf(fo,"VERTEX, %f, %f, %f,",d*(x+0.5), d*(y-0.5),  ZSCALE*(d*z));
+            fprintf(fo,"VERTEX, %f, %f, %f,",d*(x+0.5), d*(y+0.5),  ZSCALE*(d*z));
+            fprintf(fo,"VERTEX, %f, %f, %f,",d*(x-0.5), d*(y+0.5),  ZSCALE*(d*z));
+            fprintf(fo,"END");*/
+    }
     fprintf(fo,"]\n");
     fprintf(fo,"cmd.load_cgo(obj,'battenberg')");
 
