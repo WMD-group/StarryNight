@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 40  // Malloc is for losers.
-#define Y 40 
+#define X 30  // Malloc is for losers.
+#define Y 30 
 #define Z 6 
 
 int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
@@ -67,6 +67,7 @@ static float dot(struct dipole *a, struct dipole *b);
 void initialise_lattice();
 void initialise_lattice_wall();
 void initialise_lattice_spectrum();
+void initialise_lattice_buckled();
 static void lattice_angle_log(FILE *log);
 static double polarisation();
 static double dipole_potential(int x, int y, int z);
@@ -175,7 +176,10 @@ int main(int argc, char *argv[])
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Twister initialised. ");
 
-    initialise_lattice_spectrum();
+    //initialise_lattice(); //populate wiht random dipoles
+    //initialise_lattice_spectrum(); //dipoles to test output routines
+    initialise_lattice_wall(); //already-paired to test simulator
+
     fprintf(stderr,"Lattice initialised.");
 
     // output initialised lattice - mainly for debugging
@@ -376,7 +380,7 @@ void initialise_lattice()
        */  
 }
 
-void initialise_lattice_wall()
+void initialise_lattice_buckled()
 {
     int x,y,z;
 
@@ -385,6 +389,24 @@ void initialise_lattice_wall()
             for (z=0;z<Z;z++)
                     { lattice[x][y][z].x=x%2; lattice[x][y][z].y=y%2; lattice[x][y][z].z=z%2; }
 }
+
+void initialise_lattice_wall()
+{
+    int x,y,z;
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+            { 
+                if (y<Y/2)
+                    { lattice[x][y][z].x=(2.*((z+y)%2))-1.0; lattice[x][y][z].y=0.0; } // modulo arithmathic burns my brain
+                else
+                    { lattice[x][y][z].x=0.0; lattice[x][y][z].y=(2.*((x+z)%2))-1.0; } 
+                lattice[x][y][z].z=0.0; 
+//                fprintf(stderr,"Dipole: %d %d %d %f %f %f\n",x,y,z,lattice[x][y][z].x,lattice[x][y][z].y,lattice[x][y][z].z);
+            }
+}
+
 
 void initialise_lattice_spectrum()
 {
