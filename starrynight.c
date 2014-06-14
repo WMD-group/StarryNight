@@ -16,8 +16,8 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 6  // Malloc is for losers.
-#define Y 6 
+#define X 40  // Malloc is for losers.
+#define Y 40 
 #define Z 6 
 
 int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
@@ -80,6 +80,7 @@ void outputlattice_svg(char * filename);
 void outputlattice_xyz(char * filename);
 void outputlattice_xyz_overprint(char * filename);
 void outputlattice_pymol_cgo(char * filename);
+void outputlattice_dumb_terminal();
 
 int main(int argc, char *argv[])
 {
@@ -174,7 +175,7 @@ int main(int argc, char *argv[])
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Twister initialised. ");
 
-    initialise_lattice();// _wall();
+    initialise_lattice_spectrum();
     fprintf(stderr,"Lattice initialised.");
 
     // output initialised lattice - mainly for debugging
@@ -183,7 +184,9 @@ int main(int argc, char *argv[])
     outputpotential_png("initial_pot.png"); //"final_pot.png");
     outputlattice_xyz("initial_dipoles.xyz");
     outputlattice_xyz_overprint("initial_overprint.xyz");
- 
+
+    outputlattice_dumb_terminal(); //Party like it's 1980
+
     //lattice_potential_XY("initial_pot_xy.dat"); // potential distro
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
@@ -219,6 +222,8 @@ int main(int argc, char *argv[])
 
             // Update the (interactive) user what we're up to
             fprintf(stderr,".");
+            fprintf(stderr,"\n");
+            outputlattice_dumb_terminal(); //Party like it's 1980
 
             // Manipulate the run conditions depending on simulation time
             //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
@@ -901,4 +906,36 @@ void outputlattice_pymol_cgo(char * filename)
     fclose(fo); //don't forget :^)
 }
 
+void outputlattice_dumb_terminal()
+{
+    const char * arrows="|/-\\|/-\\"; // "Dancing at angles"
+    int x,y;
+    float a;
+    int z=0;
 
+    for (x=0;x<X;x++)
+    {
+        for (y=0;y<Y;y++)
+        {
+            a=atan2(lattice[x][y][z].y,lattice[x][y][z].x);
+            a=a/(M_PI); //fraction of circle
+            a=a+1.0; //map to [0,2]
+            a=a+0.125; //I could tell you what this magic number is, but then I'd have to kill you.
+            // OK -seriously, it's 45degrees/2 in our current basis, so that
+            // the colours + text are centered _AROUND_ the cardinal
+            // directions, not oscillating either side of N,NE,E... etc.
+            if (a>2.0) a=a-2.0; //wrap around so values always show.
+            a*=4; //pieces of eight
+            fprintf (stderr,"%c[%d",27,31+((int)a)%8 ); //+(lattice[x][y][z]%7));
+            if (a<4.0)
+                fprintf(stderr,";7");
+            fprintf(stderr,"m%c %c[0m",arrows[(int)a],27);
+            fprintf(stderr,"%c[37m%c[0m",27,27); //RESET
+            
+//            fprintf(stderr,"%c ",arrows[(int)a]); // dumb - just black 'n'
+//            white
+        }
+        fprintf(stderr,"\n");
+    }
+    fprintf(stderr,"\n");
+}
