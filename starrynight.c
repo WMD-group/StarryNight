@@ -1013,7 +1013,19 @@ void outputlattice_dumb_terminal()
         
             //if (potential<0.0) // if negative
             //    fprintf(stderr,";7"); // bold
-            fprintf(stderr,"m%c %c[0m",density[(int)(8.0*fabs(potential)/DMAX)],27);
+
+            a=atan2(lattice[x][y][z].y,lattice[x][y][z].x);
+            a=a/(M_PI); //fraction of circle
+            a=a+1.0; //map to [0,2]
+            a=a+0.125; //I could tell you what this magic number is, but then I'd have to kill you.
+            // OK -seriously, it's 45degrees/2 in our current basis, so that
+            // the colours + text are centered _AROUND_ the cardinal
+            // directions, not oscillating either side of N,NE,E... etc.
+            if (a>2.0) a=a-2.0; //wrap around so values always show.
+            a*=4; //pieces of eight
+            char arrow=arrows[(int)a];  // selectss arrow
+
+            fprintf(stderr,"m%c%c%c[0m",density[(int)(8.0*fabs(potential)/DMAX)],arrow,27);
         }
 
         fprintf(stderr,"\n");
