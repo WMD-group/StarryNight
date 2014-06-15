@@ -177,10 +177,10 @@ int main(int argc, char *argv[])
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Twister initialised. ");
 
-    //initialise_lattice(); //populate wiht random dipoles
+    initialise_lattice(); //populate wiht random dipoles
     //initialise_lattice_spectrum(); //dipoles to test output routines
     //initialise_lattice_wall(); //already-paired to test simulator
-    initialise_lattice_slip();
+    //initialise_lattice_slip();
 
     fprintf(stderr,"Lattice initialised.");
 
@@ -959,12 +959,17 @@ void outputlattice_pymol_cgo(char * filename)
     fclose(fo); //don't forget :^)
 }
 
+float DMAX=55.0; //sensible starting value...
+
 void outputlattice_dumb_terminal()
 {
     const char * arrows="-\\|/-\\|/"; // "Dancing at angles"
     int x,y;
     float a;
     int z=0;
+    float new_DMAX=0.0; //used to calibrate next colour scale, based on present maxima of data
+
+    fprintf(stderr,"%*s%*s\n",(X)-2, "DIPOLES", (2*X)+8,"POTENTIAL"); //padded labels
 
     for (y=0;y<Y;y++)
     {
@@ -979,16 +984,41 @@ void outputlattice_dumb_terminal()
             // directions, not oscillating either side of N,NE,E... etc.
             if (a>2.0) a=a-2.0; //wrap around so values always show.
             a*=4; //pieces of eight
-            fprintf (stderr,"%c[%d",27,31+((int)a)%8 ); //+(lattice[x][y][z]%7));
-            if (a<4.0)
+            fprintf (stderr,"%c[%d",27,31+((int)a)%8 ); // Sets colour of output routine
+            if (a<4.0)                                  // makes colour bold / normal depending on arrow orientation
                 fprintf(stderr,";7");
-            fprintf(stderr,"m%c %c[0m",arrows[(int)a],27);
+            fprintf(stderr,"m%c %c[0m",arrows[(int)a],27);  // prints arrow
             fprintf(stderr,"%c[37m%c[0m",27,27); //RESET
             
 //            fprintf(stderr,"%c ",arrows[(int)a]); // dumb - just black 'n'
 //            white
         }
+
+        // OK - now potential plot :^)
+        float potential;
+//        const char * density=".,:;o*O#"; //increasing potential density
+        const char * density="012345689";
+        fprintf(stderr,"    ");
+        for (x=0;x<X;x++)
+        {
+            potential=dipole_potential(x,y,z);
+            if (fabs(potential)>new_DMAX)
+                new_DMAX=fabs(potential); // used to calibrate scale - technically this changes
+            //printf("%f\t",potential); //debug routine to get scale
+            
+            //fprintf(stderr,"%c[%d",27,31+((int)(8.0*fabs(potential)/DMAX))%8); //8 colours
+            //fprintf(stderr,"%c[48;5;%d",27,17+(int)(214.0*fabs(potential)/DMAX)); // Xterm 256 color map - (16..231)
+            fprintf(stderr,"%c[48;5;%d",27,232+12+(int)(12.0*potential/DMAX)); // Xterm 256 color map - shades of grey (232..255)
+            // https://code.google.com/p/conemu-maximus5/wiki/AnsiEscapeCodes#xterm_256_color_processing_requirements
+        
+            //if (potential<0.0) // if negative
+            //    fprintf(stderr,";7"); // bold
+            fprintf(stderr,"m%c %c[0m",density[(int)(8.0*fabs(potential)/DMAX)],27);
+        }
+
         fprintf(stderr,"\n");
     }
-    fprintf(stderr,"\n");
+    fprintf(stderr,"DMAX: %f new_DMAX: %f\n",DMAX,new_DMAX);
+    DMAX=(new_DMAX+DMAX)/2.0; // mean of old and new (sampled, noisy) value
+    DMAX=new_DMAX; // infinite fast following - but leads to fluctuations at steady state
 }
