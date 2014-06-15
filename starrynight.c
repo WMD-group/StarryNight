@@ -16,9 +16,9 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 30  // Malloc is for losers.
-#define Y 30 
-#define Z 6 
+#define X 41 // Malloc is for losers.
+#define Y 41 
+#define Z 20 
 
 int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 
@@ -66,6 +66,7 @@ static void MC_move();
 static float dot(struct dipole *a, struct dipole *b);
 void initialise_lattice();
 void initialise_lattice_wall();
+void initialise_lattice_slip();
 void initialise_lattice_spectrum();
 void initialise_lattice_buckled();
 static void lattice_angle_log(FILE *log);
@@ -178,7 +179,8 @@ int main(int argc, char *argv[])
 
     //initialise_lattice(); //populate wiht random dipoles
     //initialise_lattice_spectrum(); //dipoles to test output routines
-    initialise_lattice_wall(); //already-paired to test simulator
+    //initialise_lattice_wall(); //already-paired to test simulator
+    initialise_lattice_slip();
 
     fprintf(stderr,"Lattice initialised.");
 
@@ -407,6 +409,22 @@ void initialise_lattice_wall()
             }
 }
 
+void initialise_lattice_slip()
+{
+    int x,y,z;
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+            { 
+                if (x<X/2)
+                    { lattice[x][y][z].x=(2.*((z+y)%2))-1.0; lattice[x][y][z].y=0.0; } // modulo arithmathic burns my brain
+                else
+                    { lattice[x][y][z].x=(2.*((z+y+1)%2))-1.0; lattice[x][y][z].y=0.0; } // modulo arithmathic burns my brain
+                lattice[x][y][z].z=0.0; 
+//                fprintf(stderr,"Dipole: %d %d %d %f %f %f\n",x,y,z,lattice[x][y][z].x,lattice[x][y][z].y,lattice[x][y][z].z);
+            }
+}
 
 void initialise_lattice_spectrum()
 {
