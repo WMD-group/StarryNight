@@ -18,9 +18,9 @@
 
 #define X 41 // Malloc is for losers.
 #define Y 41 
-#define Z 20 
+#define Z 1 
 
-int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
+int DIM=2; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 
 struct dipole
 {
@@ -125,6 +125,8 @@ int main(int argc, char *argv[])
     config_lookup_float(cf,"Efield.y",&tmp);  Efield.y=(float)tmp;
     config_lookup_float(cf,"Efield.z",&tmp);  Efield.z=(float)tmp;
 
+    fprintf(stderr,"Efield: x %f y %f z %f\n",Efield.x,Efield.y,Efield.z);
+
     //    config_lookup_float(cf,"Eangle",&Eangle);
 
     config_lookup_float(cf,"K",&K);
@@ -177,9 +179,9 @@ int main(int argc, char *argv[])
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Twister initialised. ");
 
-    initialise_lattice(); //populate wiht random dipoles
+    //initialise_lattice(); //populate wiht random dipoles
     //initialise_lattice_spectrum(); //dipoles to test output routines
-    //initialise_lattice_wall(); //already-paired to test simulator
+    initialise_lattice_wall(); //already-paired to test simulator
     //initialise_lattice_slip();
 
     fprintf(stderr,"Lattice initialised.");
@@ -230,6 +232,8 @@ int main(int argc, char *argv[])
             fprintf(stderr,".");
             fprintf(stderr,"\n");
             outputlattice_dumb_terminal(); //Party like it's 1980
+            
+            fprintf(stderr,"Efield: x %f y %f z %f | K %f\n",Efield.x,Efield.y,Efield.z,K);
 
             // Manipulate the run conditions depending on simulation time
             //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
@@ -400,7 +404,7 @@ void initialise_lattice_wall()
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
             { 
-                if (y<Y/2)
+                if (y<Y/2 ^ x>X/2) // bitwise XOR - to make checkerboard
                     { lattice[x][y][z].x=(2.*((z+y)%2))-1.0; lattice[x][y][z].y=0.0; } // modulo arithmathic burns my brain
                 else
                     { lattice[x][y][z].x=0.0; lattice[x][y][z].y=(2.*((x+z)%2))-1.0; } 
@@ -452,7 +456,7 @@ static int rand_int(int SPAN) // TODO: profile this to make sure it runs at an O
 
 static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole)
 {
-    int dx,dy,dz;
+    int dx,dy,dz=0;
     float d;
     double dE=0.0;
     struct dipole *testdipole, n;
@@ -460,8 +464,10 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
     // Sum over near neighbours for dipole-dipole interaction
     for (dx=-DipoleCutOff;dx<=DipoleCutOff;dx++)
         for (dy=-DipoleCutOff;dy<=DipoleCutOff;dy++)
-            for (dz=-DipoleCutOff;dz<=DipoleCutOff;dz++)
-        {
+            #if(Z>1) //i.e. 3D in Z
+            for (dz=-DipoleCutOff;dz<=DipoleCutOff;dz++) //NB: conditional zDipoleCutOff to allow for 2D version
+            #endif
+            {
             if (dx==0 && dy==0 && dz==0)
                 continue; //no infinities / self interactions please!
 
@@ -480,7 +486,7 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
             // Ferroelectric / Potts model - vector form
             //            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
             //                + Dipole * dot(olddipole,testdipole) / (d*d*d);
-        }
+            }
 
     // Interaction of dipole with (unshielded) E-field
     dE+= + dot(newdipole, & Efield)
@@ -969,7 +975,7 @@ void outputlattice_dumb_terminal()
     int z=0;
     float new_DMAX=0.0; //used to calibrate next colour scale, based on present maxima of data
 
-    fprintf(stderr,"%*s%*s\n",(X)-2, "DIPOLES", (2*X)+8,"POTENTIAL"); //padded labels
+    fprintf(stderr,"%*s%*s\n",X+3, "DIPOLES", (2*X)+4,"POTENTIAL"); //padded labels
 
     for (y=0;y<Y;y++)
     {
