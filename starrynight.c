@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
             fprintf(stderr,"\n");
             outputlattice_dumb_terminal(); //Party like it's 1980
             
-            fprintf(stderr,"Efield: x %f y %f z %f | K %f\n",Efield.x,Efield.y,Efield.z,K);
+            fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
 
             // Manipulate the run conditions depending on simulation time
             //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
