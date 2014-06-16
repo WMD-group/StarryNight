@@ -18,9 +18,9 @@
 
 #define X 41 // Malloc is for losers.
 #define Y 41 
-#define Z 1 
+#define Z 10 
 
-int DIM=2; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
+int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 
 struct dipole
 {
@@ -47,6 +47,7 @@ double Eangle=0.0;
 double K=1.0; //elastic coupling constant for dipole moving within cage
 
 double Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
+double CageStrain=1.0; // as above
 
 double dipole_fraction=1.0; //fraction of sites to be occupied by dipoles
 
@@ -131,6 +132,7 @@ int main(int argc, char *argv[])
 
     config_lookup_float(cf,"K",&K);
     config_lookup_float(cf,"Dipole",&Dipole);
+    config_lookup_float(cf,"CageStrain",&CageStrain);
 
     // read in list of dipoles + prevalence for solid mixture
     setting = config_lookup(cf, "Dipoles");
@@ -179,9 +181,9 @@ int main(int argc, char *argv[])
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Twister initialised. ");
 
-    //initialise_lattice(); //populate wiht random dipoles
+    initialise_lattice(); //populate wiht random dipoles
     //initialise_lattice_spectrum(); //dipoles to test output routines
-    initialise_lattice_wall(); //already-paired to test simulator
+    //initialise_lattice_wall(); //already-paired to test simulator
     //initialise_lattice_slip();
 
     fprintf(stderr,"Lattice initialised.");
@@ -246,7 +248,7 @@ int main(int argc, char *argv[])
             for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
                 MC_move();
         }
-
+/*
         // now data collection on equilibriated structure...
 
         P=0.0;
@@ -289,6 +291,7 @@ int main(int argc, char *argv[])
 
         fprintf(stderr,"NORK! T: %d E: %f P: %f polarisation(per_site): %f\n",T,Efield.x,P,polarisation()/((float)X*Y));
         printf("T: %d Dipole: %f E: %f P: %f polarisation(per_site): %f\n",T,Dipole,Efield.x,P,polarisation()/((float)X*Y));
+*/
     } 
     // OK; we're finished...
 
@@ -486,6 +489,12 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
             // Ferroelectric / Potts model - vector form
             //            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
             //                + Dipole * dot(olddipole,testdipole) / (d*d*d);
+            
+            // Now reborn as our cage-strain term!
+            if ((dx*dx+dy*dy+dz*dz)==1) //only nearest neighbour
+                dE+= - CageStrain* dot(newdipole,testdipole)
+                    + CageStrain * dot(olddipole,testdipole); // signs to energetic drive alignment of vectors (dot product = more +ve, dE = -ve)
+
             }
 
     // Interaction of dipole with (unshielded) E-field
