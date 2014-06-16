@@ -1,6 +1,9 @@
 starrynight: starrynight.c
 	gcc -O4 -lm -lconfig -o starrynight starrynight.c
 
+profile: starrynight.c
+	gcc -lm -lconfig -o starrynight starrynight.c -pg
+
 starrynight-mac-openmp: starrynight.c
 	/usr/local/bin/gcc-4.8 -O4 -lm -lconfig -fopenmp -lgomp -o starrynight starrynight.c
 
