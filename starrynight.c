@@ -1002,7 +1002,10 @@ void outputlattice_dumb_terminal()
             fprintf (stderr,"%c[%d",27,31+((int)a)%8 ); // Sets colour of output routine
             if (a<4.0)                                  // makes colour bold / normal depending on arrow orientation
                 fprintf(stderr,";7");
-            fprintf(stderr,"m%c %c[0m",arrows[(int)a],27);  // prints arrow
+            char arrow=arrows[(int)a];
+            if (lattice[x][y][z].z> sqrt(2)/2.0) arrow='o';
+            if (lattice[x][y][z].z<-sqrt(2)/2.0) arrow='x';
+            fprintf(stderr,"m%c %c[0m",arrow,27);  // prints arrow
             fprintf(stderr,"%c[37m%c[0m",27,27); //RESET
             
 //            fprintf(stderr,"%c ",arrows[(int)a]); // dumb - just black 'n'
@@ -1039,7 +1042,9 @@ void outputlattice_dumb_terminal()
             if (a>2.0) a=a-2.0; //wrap around so values always show.
             a*=4; //pieces of eight
             char arrow=arrows[(int)a];  // selectss arrow
-
+            if (lattice[x][y][z].z> sqrt(2)/2.0) arrow='o';
+            if (lattice[x][y][z].z<-sqrt(2)/2.0) arrow='x';
+ 
             fprintf(stderr,"m%c%c%c[0m",density[(int)(8.0*fabs(potential)/DMAX)],arrow,27);
         }
 
