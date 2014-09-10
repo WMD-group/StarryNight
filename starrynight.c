@@ -16,11 +16,11 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 41 // Malloc is for losers.
-#define Y 41 
-#define Z 10 
+#define X 42 // Malloc is for losers.
+#define Y 42 
+#define Z 1 
 
-int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
+int DIM=2; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 
 struct dipole
 {
@@ -49,7 +49,7 @@ double K=1.0; //elastic coupling constant for dipole moving within cage
 double Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
 double CageStrain=1.0; // as above
 
-double dipole_fraction=1.0; //fraction of sites to be occupied by dipoles
+double dipole_fraction=0.9; //fraction of sites to be occupied by dipoles
 
 int DipoleCutOff=3;
 
@@ -75,6 +75,7 @@ static double polarisation();
 static double dipole_potential(int x, int y, int z);
 static void lattice_potential_log(FILE *log);
 void lattice_potential_XY(char * filename);
+void lattice_potential_XYZ(char * filename);
 static double lattice_energy_log(FILE *log);
 void outputpotential_png(char * filename);
 void outputlattice_pnm(char * filename);
@@ -134,6 +135,7 @@ int main(int argc, char *argv[])
     config_lookup_float(cf,"Dipole",&Dipole);
     config_lookup_float(cf,"CageStrain",&CageStrain);
 
+/*
     // read in list of dipoles + prevalence for solid mixture
     setting = config_lookup(cf, "Dipoles");
     dipolecount   = config_setting_length(setting);
@@ -147,6 +149,11 @@ int main(int argc, char *argv[])
     // stderr printf to check we read correctly
     for (i=0;i<dipolecount;i++)
         fprintf(stderr,"Dipole: %d Length: %f Prevalence: %f\n",i,dipoles[i].length, dipoles[i].prevalence);
+*/
+    // above doesn't do anything currently - not sure whether I lost the code
+    // at some point?
+
+    config_lookup_float(cf,"DipoleFraction",&dipole_fraction);
 
     config_lookup_int(cf,"DipoleCutOff",&DipoleCutOff);
 
@@ -304,18 +311,18 @@ int main(int argc, char *argv[])
     //    lattice_potential_log(log);
     lattice_angle_log(log);
 
-    sprintf(name,"Dipole_pot_xy_T_%04d_Dipole_%f.log",T,Dipole);
-    lattice_potential_XY(name); 
+    sprintf(name,"Dipole_pot_xy_T_%04d_DipoleFraction_%f.log",T,dipole_fraction);
+    lattice_potential_XYZ(name); 
 
-    sprintf(name,"Dipole_pot_xy_T_%04d_Dipole_%f_MC-PNG_final.png",T,Dipole);
+    sprintf(name,"Dipole_pot_xy_T_%04d_DipoleFraction_%f_MC-PNG_final.png",T,dipole_fraction);
     outputlattice_ppm_hsv(name);
 
-    sprintf(name,"Dipole_pot_xy_T_%04d_Dipole_%f_MC-SVG_final.svg",T,Dipole);
+    sprintf(name,"Dipole_pot_xy_T_%04d_DipoleFraction_%f_MC-SVG_final.svg",T,dipole_fraction);
     outputlattice_svg(name);
 
-    lattice_potential_XY("final_pot_xy.dat");
+//    lattice_potential_XY("final_pot_xy.dat");
 
-    sprintf(name,"Dipole_pot_xy_T_%04d_Dipole_%f.png",T,Dipole);
+    sprintf(name,"Dipole_pot_xy_T_%04d_DipoleFraction_%f.png",T,dipole_fraction);
     outputpotential_png(name); //"final_pot.png");
 
     outputlattice_xyz("dipoles.xyz");
@@ -377,9 +384,12 @@ void initialise_lattice()
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
+            {
             if (genrand_real1()<dipole_fraction) //occupy fraction of sites...
                 random_sphere_point(& lattice[x][y][z]);
-
+            else
+                {lattice[x][y][z].x=0.0; lattice[x][y][z].y=0.0; lattice[x][y][z].z=0.0; }
+            }
     //Print lattice
     /*
        for (i=0;i<X;i++)
@@ -591,9 +601,39 @@ static double polarisation()
     return(P);
 }
 
-
 //Calculate dipole potential at specific location
 static double dipole_potential(int x, int y, int z) 
+{
+    int dx,dy,dz=0;
+    int MAX=10;
+    double pot=0.0;
+    float d;
+    struct dipole r;
+
+    for (dx=-MAX;dx<MAX;dx++)
+        for (dy=-MAX;dy<MAX;dy++)
+            #if(Z>1) //i.e. 3D in Z
+            for (dz=-MAX;dz<MAX;dz++)
+            #endif
+        {
+            if (dx==0 && dy==0 && dz==0)
+                continue; //no infinities / self interactions please!
+
+            r.x=(float)(dx); r.y=(float)(dy); r.z=(float)(dz);
+
+            d=sqrt((float) r.x*r.x + r.y*r.y + r.z*r.z); //that old chestnut
+
+            if (d>(float)MAX) continue; // Cutoff in d
+
+            // pot(r) = 1/4PiEpsilon * p.r / r^3
+            // Electric dipole potential
+            pot+=dot(& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z] ,& r)/(d*d*d);
+        }
+    return(pot);
+}
+
+//Calculate dipole potential at specific location
+/*static double dipole_potential(int x, int y, int z) 
 {
     int dx,dy,dz;
     int MAX=10;
@@ -620,7 +660,7 @@ static double dipole_potential(int x, int y, int z)
         }
     return(pot);
 }
-
+*/
 
 //Calculates dipole potential along trace of lattice
 static void lattice_potential_log(FILE *log)
@@ -983,6 +1023,8 @@ void outputlattice_dumb_terminal()
     float a;
     int z=0;
     float new_DMAX=0.0; //used to calibrate next colour scale, based on present maxima of data
+    float variance=0.0; // sum of potential^2
+    float mean=0.0;
 
     fprintf(stderr,"%*s%*s\n",X+3, "DIPOLES", (2*X)+4,"POTENTIAL"); //padded labels
 
@@ -1005,6 +1047,9 @@ void outputlattice_dumb_terminal()
             char arrow=arrows[(int)a];
             if (lattice[x][y][z].z> sqrt(2)/2.0) arrow='o';
             if (lattice[x][y][z].z<-sqrt(2)/2.0) arrow='x';
+
+            if (lattice[x][y][z].x==0.0 && lattice[x][y][z].y==0.0 && lattice[x][y][z].z==0.0) arrow='*'; 
+
             fprintf(stderr,"m%c %c[0m",arrow,27);  // prints arrow
             fprintf(stderr,"%c[37m%c[0m",27,27); //RESET
             
@@ -1020,6 +1065,9 @@ void outputlattice_dumb_terminal()
         for (x=0;x<X;x++)
         {
             potential=dipole_potential(x,y,z);
+            variance+=potential*potential;
+            mean+=potential;
+
             if (fabs(potential)>new_DMAX)
                 new_DMAX=fabs(potential); // used to calibrate scale - technically this changes
             //printf("%f\t",potential); //debug routine to get scale
@@ -1042,15 +1090,18 @@ void outputlattice_dumb_terminal()
             if (a>2.0) a=a-2.0; //wrap around so values always show.
             a*=4; //pieces of eight
             char arrow=arrows[(int)a];  // selectss arrow
-            if (lattice[x][y][z].z> sqrt(2)/2.0) arrow='o';
-            if (lattice[x][y][z].z<-sqrt(2)/2.0) arrow='x';
- 
+            if (lattice[x][y][z].z> sqrt(2)/2.0) arrow='o'; // override for 'up' (towards you - physics arrow style 'o')
+            if (lattice[x][y][z].z<-sqrt(2)/2.0) arrow='x'; // and 'down' (away from you, physics arrow style 'x')
+
+            
             fprintf(stderr,"m%c%c%c[0m",density[(int)(8.0*fabs(potential)/DMAX)],arrow,27);
         }
 
         fprintf(stderr,"\n");
     }
-    fprintf(stderr,"DMAX: %f new_DMAX: %f\n",DMAX,new_DMAX);
+    mean=mean/(X*Y);
+    variance=variance/(X*Y); 
+    fprintf(stderr,"DMAX: %f new_DMAX: %f variance: %f mean: %f\n",DMAX,new_DMAX,variance,mean);
     DMAX=(new_DMAX+DMAX)/2.0; // mean of old and new (sampled, noisy) value
     DMAX=new_DMAX; // infinite fast following - but leads to fluctuations at steady state
 }
