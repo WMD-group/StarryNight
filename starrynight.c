@@ -16,11 +16,11 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
-#define X 42 // Malloc is for losers.
-#define Y 42 
-#define Z 1 
+#define X 38 // Malloc is for losers.
+#define Y 38 
+#define Z 20 
 
-int DIM=2; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
+int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 
 struct dipole
 {
@@ -70,6 +70,7 @@ void initialise_lattice_wall();
 void initialise_lattice_slip();
 void initialise_lattice_spectrum();
 void initialise_lattice_buckled();
+void initialise_lattice_slab_delete();
 static void lattice_angle_log(FILE *log);
 static double polarisation();
 static double dipole_potential(int x, int y, int z);
@@ -135,21 +136,21 @@ int main(int argc, char *argv[])
     config_lookup_float(cf,"Dipole",&Dipole);
     config_lookup_float(cf,"CageStrain",&CageStrain);
 
-/*
+    /*
     // read in list of dipoles + prevalence for solid mixture
     setting = config_lookup(cf, "Dipoles");
     dipolecount   = config_setting_length(setting);
     for (i=0;i<dipolecount;i++)
-        dipoles[i].length=config_setting_get_float_elem(setting,i);
+    dipoles[i].length=config_setting_get_float_elem(setting,i);
     setting = config_lookup(cf, "Prevalence");
     dipolecount   = config_setting_length(setting);
     for (i=0;i<dipolecount;i++)
-        dipoles[i].prevalence=config_setting_get_float_elem(setting,i);
+    dipoles[i].prevalence=config_setting_get_float_elem(setting,i);
 
     // stderr printf to check we read correctly
     for (i=0;i<dipolecount;i++)
-        fprintf(stderr,"Dipole: %d Length: %f Prevalence: %f\n",i,dipoles[i].length, dipoles[i].prevalence);
-*/
+    fprintf(stderr,"Dipole: %d Length: %f Prevalence: %f\n",i,dipoles[i].length, dipoles[i].prevalence);
+    */
     // above doesn't do anything currently - not sure whether I lost the code
     // at some point?
 
@@ -192,6 +193,8 @@ int main(int argc, char *argv[])
     //initialise_lattice_spectrum(); //dipoles to test output routines
     //initialise_lattice_wall(); //already-paired to test simulator
     //initialise_lattice_slip();
+
+    initialise_lattice_slab_delete();
 
     fprintf(stderr,"Lattice initialised.");
 
@@ -241,7 +244,7 @@ int main(int argc, char *argv[])
             fprintf(stderr,".");
             fprintf(stderr,"\n");
             outputlattice_dumb_terminal(); //Party like it's 1980
-            
+
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
 
             // Manipulate the run conditions depending on simulation time
@@ -255,17 +258,17 @@ int main(int argc, char *argv[])
             for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
                 MC_move();
         }
-/*
+        /*
         // now data collection on equilibriated structure...
 
         P=0.0;
 
         for (i=0;i<10;i++)
         {
-            P+=polarisation();
-            for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
-                MC_move();
-            fprintf(stderr,","); 
+        P+=polarisation();
+        for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
+        MC_move();
+        fprintf(stderr,","); 
         }
         // hard coded for loops for Hysterisis exploration
         P/=10;
@@ -274,20 +277,20 @@ int main(int argc, char *argv[])
         //    for (maxfield=10.0;maxfield<10.001;maxfield=maxfield+1.0)
         for (i=0;i<0;i++) // hysterisis loop counter
         { 
-            for (Efield.x=maxfield;Efield.x>-maxfield;Efield.x-=0.0005)
-            {
-                fprintf(stderr,"-");
-                for (k=0;k<MCMinorSteps;k++)
-                    MC_move();
-                printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
-            }
-            for (Efield.x=-maxfield;Efield.x<maxfield;Efield.x+=0.0005)
-            {
-                fprintf(stderr,"+");
-                for (k=0;k<MCMinorSteps;k++)
-                    MC_move();
-                printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
-            }
+        for (Efield.x=maxfield;Efield.x>-maxfield;Efield.x-=0.0005)
+        {
+        fprintf(stderr,"-");
+        for (k=0;k<MCMinorSteps;k++)
+        MC_move();
+        printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
+        }
+        for (Efield.x=-maxfield;Efield.x<maxfield;Efield.x+=0.0005)
+        {
+        fprintf(stderr,"+");
+        for (k=0;k<MCMinorSteps;k++)
+        MC_move();
+        printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
+        }
         }
 
         // P/=(float)MCMegaSteps; //average over our points
@@ -298,7 +301,7 @@ int main(int argc, char *argv[])
 
         fprintf(stderr,"NORK! T: %d E: %f P: %f polarisation(per_site): %f\n",T,Efield.x,P,polarisation()/((float)X*Y));
         printf("T: %d Dipole: %f E: %f P: %f polarisation(per_site): %f\n",T,Dipole,Efield.x,P,polarisation()/((float)X*Y));
-*/
+        */
     } 
     // OK; we're finished...
 
@@ -320,7 +323,7 @@ int main(int argc, char *argv[])
     sprintf(name,"Dipole_pot_xy_T_%04d_DipoleFraction_%f_MC-SVG_final.svg",T,dipole_fraction);
     outputlattice_svg(name);
 
-//    lattice_potential_XY("final_pot_xy.dat");
+    //    lattice_potential_XY("final_pot_xy.dat");
 
     sprintf(name,"Dipole_pot_xy_T_%04d_DipoleFraction_%f.png",T,dipole_fraction);
     outputpotential_png(name); //"final_pot.png");
@@ -385,9 +388,9 @@ void initialise_lattice()
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
             {
-            if (genrand_real1()<dipole_fraction) //occupy fraction of sites...
-                random_sphere_point(& lattice[x][y][z]);
-            else
+                if (genrand_real1()<dipole_fraction) //occupy fraction of sites...
+                    random_sphere_point(& lattice[x][y][z]);
+                else
                 {lattice[x][y][z].x=0.0; lattice[x][y][z].y=0.0; lattice[x][y][z].z=0.0; }
             }
     //Print lattice
@@ -406,7 +409,7 @@ void initialise_lattice_buckled()
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
-                    { lattice[x][y][z].x=x%2; lattice[x][y][z].y=y%2; lattice[x][y][z].z=z%2; }
+            { lattice[x][y][z].x=x%2; lattice[x][y][z].y=y%2; lattice[x][y][z].z=z%2; }
 }
 
 void initialise_lattice_wall()
@@ -418,11 +421,11 @@ void initialise_lattice_wall()
             for (z=0;z<Z;z++)
             { 
                 if (y<Y/2 ^ x>X/2) // bitwise XOR - to make checkerboard
-                    { lattice[x][y][z].x=(2.*((z+y)%2))-1.0; lattice[x][y][z].y=0.0; } // modulo arithmathic burns my brain
+                { lattice[x][y][z].x=(2.*((z+y)%2))-1.0; lattice[x][y][z].y=0.0; } // modulo arithmathic burns my brain
                 else
-                    { lattice[x][y][z].x=0.0; lattice[x][y][z].y=(2.*((x+z)%2))-1.0; } 
+                { lattice[x][y][z].x=0.0; lattice[x][y][z].y=(2.*((x+z)%2))-1.0; } 
                 lattice[x][y][z].z=0.0; 
-//                fprintf(stderr,"Dipole: %d %d %d %f %f %f\n",x,y,z,lattice[x][y][z].x,lattice[x][y][z].y,lattice[x][y][z].z);
+                //                fprintf(stderr,"Dipole: %d %d %d %f %f %f\n",x,y,z,lattice[x][y][z].x,lattice[x][y][z].y,lattice[x][y][z].z);
             }
 }
 
@@ -435,11 +438,11 @@ void initialise_lattice_slip()
             for (z=0;z<Z;z++)
             { 
                 if (x<X/2)
-                    { lattice[x][y][z].x=(2.*((z+y)%2))-1.0; lattice[x][y][z].y=0.0; } // modulo arithmathic burns my brain
+                { lattice[x][y][z].x=(2.*((z+y)%2))-1.0; lattice[x][y][z].y=0.0; } // modulo arithmathic burns my brain
                 else
-                    { lattice[x][y][z].x=(2.*((z+y+1)%2))-1.0; lattice[x][y][z].y=0.0; } // modulo arithmathic burns my brain
+                { lattice[x][y][z].x=(2.*((z+y+1)%2))-1.0; lattice[x][y][z].y=0.0; } // modulo arithmathic burns my brain
                 lattice[x][y][z].z=0.0; 
-//                fprintf(stderr,"Dipole: %d %d %d %f %f %f\n",x,y,z,lattice[x][y][z].x,lattice[x][y][z].y,lattice[x][y][z].z);
+                //                fprintf(stderr,"Dipole: %d %d %d %f %f %f\n",x,y,z,lattice[x][y][z].x,lattice[x][y][z].y,lattice[x][y][z].z);
             }
 }
 
@@ -452,14 +455,27 @@ void initialise_lattice_spectrum()
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
-            // continous set of dipole orientations to test colour output (should
-            // appear as spectrum)
-        {
-            angle=2*M_PI*(x*X+y)/((float)X*Y); 
-            lattice[x][y][z].x = sin(angle);
-            lattice[x][y][z].y = cos(angle);
-            lattice[x][y][z].z = 0.0;
-        }
+                // continous set of dipole orientations to test colour output (should
+                // appear as spectrum)
+            {
+                angle=2*M_PI*(x*X+y)/((float)X*Y); 
+                lattice[x][y][z].x = sin(angle);
+                lattice[x][y][z].y = cos(angle);
+                lattice[x][y][z].z = 0.0;
+            }
+}
+
+void initialise_lattice_slab_delete()
+{
+    int x,y,z;
+    for (x=0;x<6;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+            {
+                lattice[x][y][z].x=0.0;
+                lattice[x][y][z].y=0.0;
+                lattice[x][y][z].z=0.0;
+            }
 }
 
 static int rand_int(int SPAN) // TODO: profile this to make sure it runs at an OK speed.
@@ -477,33 +493,33 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
     // Sum over near neighbours for dipole-dipole interaction
     for (dx=-DipoleCutOff;dx<=DipoleCutOff;dx++)
         for (dy=-DipoleCutOff;dy<=DipoleCutOff;dy++)
-            #if(Z>1) //i.e. 3D in Z
+#if(Z>1) //i.e. 3D in Z
             for (dz=-DipoleCutOff;dz<=DipoleCutOff;dz++) //NB: conditional zDipoleCutOff to allow for 2D version
-            #endif
+#endif
             {
-            if (dx==0 && dy==0 && dz==0)
-                continue; //no infinities / self interactions please!
+                if (dx==0 && dy==0 && dz==0)
+                    continue; //no infinities / self interactions please!
 
-            d=sqrt((float) dx*dx + dy*dy + dz*dz); //that old chestnut; distance in Euler space
+                d=sqrt((float) dx*dx + dy*dy + dz*dz); //that old chestnut; distance in Euler space
 
-            if (d>(float)DipoleCutOff) continue; // Cutoff in d
+                if (d>(float)DipoleCutOff) continue; // Cutoff in d
 
-            testdipole=& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z];
+                testdipole=& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z];
 
-            n.x=(float)dx/d; n.y=(float)dy/d; n.z=(float)dz/d; //normalised diff. vector
+                n.x=(float)dx/d; n.y=(float)dy/d; n.z=(float)dz/d; //normalised diff. vector
 
-            //True dipole like
-            dE+=  Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
-                - Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
+                //True dipole like
+                dE+=  Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
+                    - Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
 
-            // Ferroelectric / Potts model - vector form
-            //            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
-            //                + Dipole * dot(olddipole,testdipole) / (d*d*d);
-            
-            // Now reborn as our cage-strain term!
-            if ((dx*dx+dy*dy+dz*dz)==1) //only nearest neighbour
-                dE+= - CageStrain* dot(newdipole,testdipole)
-                    + CageStrain * dot(olddipole,testdipole); // signs to energetic drive alignment of vectors (dot product = more +ve, dE = -ve)
+                // Ferroelectric / Potts model - vector form
+                //            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
+                //                + Dipole * dot(olddipole,testdipole) / (d*d*d);
+
+                // Now reborn as our cage-strain term!
+                if ((dx*dx+dy*dy+dz*dz)==1) //only nearest neighbour
+                    dE+= - CageStrain* dot(newdipole,testdipole)
+                        + CageStrain * dot(olddipole,testdipole); // signs to energetic drive alignment of vectors (dot product = more +ve, dE = -ve)
 
             }
 
@@ -612,53 +628,53 @@ static double dipole_potential(int x, int y, int z)
 
     for (dx=-MAX;dx<MAX;dx++)
         for (dy=-MAX;dy<MAX;dy++)
-            #if(Z>1) //i.e. 3D in Z
+#if(Z>1) //i.e. 3D in Z
             for (dz=-MAX;dz<MAX;dz++)
-            #endif
-        {
-            if (dx==0 && dy==0 && dz==0)
-                continue; //no infinities / self interactions please!
+#endif
+            {
+                if (dx==0 && dy==0 && dz==0)
+                    continue; //no infinities / self interactions please!
 
-            r.x=(float)(dx); r.y=(float)(dy); r.z=(float)(dz);
+                r.x=(float)(dx); r.y=(float)(dy); r.z=(float)(dz);
 
-            d=sqrt((float) r.x*r.x + r.y*r.y + r.z*r.z); //that old chestnut
+                d=sqrt((float) r.x*r.x + r.y*r.y + r.z*r.z); //that old chestnut
 
-            if (d>(float)MAX) continue; // Cutoff in d
+                if (d>(float)MAX) continue; // Cutoff in d
 
-            // pot(r) = 1/4PiEpsilon * p.r / r^3
-            // Electric dipole potential
-            pot+=dot(& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z] ,& r)/(d*d*d);
-        }
+                // pot(r) = 1/4PiEpsilon * p.r / r^3
+                // Electric dipole potential
+                pot+=dot(& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z] ,& r)/(d*d*d);
+            }
     return(pot);
 }
 
 //Calculate dipole potential at specific location
 /*static double dipole_potential(int x, int y, int z) 
-{
-    int dx,dy,dz;
-    int MAX=10;
-    double pot=0.0;
-    float d;
-    struct dipole r;
+  {
+  int dx,dy,dz;
+  int MAX=10;
+  double pot=0.0;
+  float d;
+  struct dipole r;
 
-    for (dx=0;dx<X;dx++)
-        for (dy=0;dy<X;dy++)
-            for (dz=0;dz<Z;dz++)
-        {
-            if (x-dx==0 && y-dy==0 && z-dz==0)
-                continue; //no infinities / self interactions please!
+  for (dx=0;dx<X;dx++)
+  for (dy=0;dy<X;dy++)
+  for (dz=0;dz<Z;dz++)
+  {
+  if (x-dx==0 && y-dy==0 && z-dz==0)
+  continue; //no infinities / self interactions please!
 
-            r.x=(float)(x-dx); r.y=(float)(y-dy); r.z=(float)(z-dz);
+  r.x=(float)(x-dx); r.y=(float)(y-dy); r.z=(float)(z-dz);
 
-            d=sqrt((float) r.x*r.x + r.y*r.y + r.z*r.z); //that old chestnut
+  d=sqrt((float) r.x*r.x + r.y*r.y + r.z*r.z); //that old chestnut
 
-            //            if (d>(float)MAX) continue; // Cutoff in d
+//            if (d>(float)MAX) continue; // Cutoff in d
 
-            // pot(r) = 1/4PiEpsilon * p.r / r^3
-            // Electric dipole potential
-            pot+=dot(& lattice[dx][dy][dz],& r)/(d*d*d);
-        }
-    return(pot);
+// pot(r) = 1/4PiEpsilon * p.r / r^3
+// Electric dipole potential
+pot+=dot(& lattice[dx][dy][dz],& r)/(d*d*d);
+}
+return(pot);
 }
 */
 
@@ -911,8 +927,8 @@ void outputlattice_xyz(char * filename)
     int x,y,z;
     float r=1.6/2; // half length of C-N molecule
     float d=4.0; // lattice size - for placing molecule
-                // artificially small - to make molecules relatively bigger!
-                // Nb: set to 3.0 to get pymol to draw bonds between aligned MA    
+    // artificially small - to make molecules relatively bigger!
+    // Nb: set to 3.0 to get pymol to draw bonds between aligned MA    
     FILE *fo;
     fo=fopen(filename,"w");
     fprintf(fo,"%d\n\n",X*Y*Z*2); //number of atoms... i.e. lattice sites times 2
@@ -931,7 +947,7 @@ void outputlattice_xyz_overprint(char * filename)
     int x,y,z;
     float r=6.0; // half length of C-N molecule
     float d=6.4; // lattice size - for placing molecule
-    
+
     FILE *fo;
     fo=fopen(filename,"w");
     fprintf(fo,"%d\n\nC 0.0 0.0 0.0\n",1+(X*Y*Z)); //number of atoms...
@@ -966,48 +982,48 @@ void outputlattice_pymol_cgo(char * filename)
 
     for (x=0;x<X;x++) //force same ordering as SVG...
         for (y=0;y<Y;y++)
-        for (z=0;z<Z;z++)
-        {
-            h=M_PI+atan2(lattice[x][y][z].y,lattice[x][y][z].x); //Nb: assumes 0->2PI interval!
-            v=0.5+0.4*lattice[x][y][z].z; //darken towards the south (-z) pole
-            s=0.6-0.6*fabs(lattice[x][y][z].z); //desaturate towards the poles
+            for (z=0;z<Z;z++)
+            {
+                h=M_PI+atan2(lattice[x][y][z].y,lattice[x][y][z].x); //Nb: assumes 0->2PI interval!
+                v=0.5+0.4*lattice[x][y][z].z; //darken towards the south (-z) pole
+                s=0.6-0.6*fabs(lattice[x][y][z].z); //desaturate towards the poles
 
-            // http://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
-            hp=(int)floor(h/(M_PI/3.0)); //radians, woo
-            f=h/(M_PI/3.0)-(float)hp;
+                // http://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
+                hp=(int)floor(h/(M_PI/3.0)); //radians, woo
+                f=h/(M_PI/3.0)-(float)hp;
 
-            p=v*(1.0-s);
-            q=v*(1.0-f*s);
-            t=v*(1.0-(1.0-f)*s);
+                p=v*(1.0-s);
+                q=v*(1.0-f*s);
+                t=v*(1.0-(1.0-f)*s);
 
-            switch (hp){
-                case 0: r=v; g=t; b=p; break;
-                case 1: r=q; g=v; b=p; break;
-                case 2: r=p; g=v; b=t; break;
-                case 3: r=p; g=q; b=v; break;
-                case 4: r=t; g=p; b=v; break;
-                case 5: r=v; g=p; b=q; break;
+                switch (hp){
+                    case 0: r=v; g=t; b=p; break;
+                    case 1: r=q; g=v; b=p; break;
+                    case 2: r=p; g=v; b=t; break;
+                    case 3: r=p; g=q; b=v; break;
+                    case 4: r=t; g=p; b=v; break;
+                    case 5: r=v; g=p; b=q; break;
+                }
+
+                //            fprintf(stderr,"h: %f r: %f g: %f b: %f\n",h,r,g,b);
+
+                if (lattice[x][y][z].x == 0.0 && lattice[x][y][z].y == 0.0 && lattice[x][y][z].z == 0.0)
+                { r=0.0; g=0.0; b=0.0; } // #FADE TO BLACK
+                //zero length dipoles, i.e. absent ones - appear as black pixels
+
+                fprintf(fo,",COLOR, %f, %f, %f,\n",r,g,b);
+                // sphere of colour centered at the site
+                fprintf(fo,"SPHERE, %f, %f, %f, %f\n",x*d,y*d,ZSCALE*z*d,a*d/2);
+
+                // makes a square (plane) of colour at the site
+                //  - presently half works - odd triangle taken out of the square!
+                /*            fprintf(fo,"BEGIN, TRIANGLE_STRIP, NORMAL, 0.0, 0.0, 1.0,\n");
+                              fprintf(fo,"VERTEX, %f, %f, %f,",d*(x-0.5), d*(y-0.5),  ZSCALE*(d*z));
+                              fprintf(fo,"VERTEX, %f, %f, %f,",d*(x+0.5), d*(y-0.5),  ZSCALE*(d*z));
+                              fprintf(fo,"VERTEX, %f, %f, %f,",d*(x+0.5), d*(y+0.5),  ZSCALE*(d*z));
+                              fprintf(fo,"VERTEX, %f, %f, %f,",d*(x-0.5), d*(y+0.5),  ZSCALE*(d*z));
+                              fprintf(fo,"END");*/
             }
-
-            //            fprintf(stderr,"h: %f r: %f g: %f b: %f\n",h,r,g,b);
-
-            if (lattice[x][y][z].x == 0.0 && lattice[x][y][z].y == 0.0 && lattice[x][y][z].z == 0.0)
-            { r=0.0; g=0.0; b=0.0; } // #FADE TO BLACK
-            //zero length dipoles, i.e. absent ones - appear as black pixels
-
-            fprintf(fo,",COLOR, %f, %f, %f,\n",r,g,b);
-            // sphere of colour centered at the site
-            fprintf(fo,"SPHERE, %f, %f, %f, %f\n",x*d,y*d,ZSCALE*z*d,a*d/2);
-           
-            // makes a square (plane) of colour at the site
-            //  - presently half works - odd triangle taken out of the square!
-/*            fprintf(fo,"BEGIN, TRIANGLE_STRIP, NORMAL, 0.0, 0.0, 1.0,\n");
-            fprintf(fo,"VERTEX, %f, %f, %f,",d*(x-0.5), d*(y-0.5),  ZSCALE*(d*z));
-            fprintf(fo,"VERTEX, %f, %f, %f,",d*(x+0.5), d*(y-0.5),  ZSCALE*(d*z));
-            fprintf(fo,"VERTEX, %f, %f, %f,",d*(x+0.5), d*(y+0.5),  ZSCALE*(d*z));
-            fprintf(fo,"VERTEX, %f, %f, %f,",d*(x-0.5), d*(y+0.5),  ZSCALE*(d*z));
-            fprintf(fo,"END");*/
-    }
     fprintf(fo,"]\n");
     fprintf(fo,"cmd.load_cgo(obj,'battenberg')");
 
@@ -1052,14 +1068,14 @@ void outputlattice_dumb_terminal()
 
             fprintf(stderr,"m%c %c[0m",arrow,27);  // prints arrow
             fprintf(stderr,"%c[37m%c[0m",27,27); //RESET
-            
-//            fprintf(stderr,"%c ",arrows[(int)a]); // dumb - just black 'n'
-//            white
+
+            //            fprintf(stderr,"%c ",arrows[(int)a]); // dumb - just black 'n'
+            //            white
         }
 
         // OK - now potential plot :^)
         float potential;
-//        const char * density=".,:;o*O#"; //increasing potential density
+        //        const char * density=".,:;o*O#"; //increasing potential density
         const char * density="012345689";
         fprintf(stderr,"    ");
         for (x=0;x<X;x++)
@@ -1071,12 +1087,12 @@ void outputlattice_dumb_terminal()
             if (fabs(potential)>new_DMAX)
                 new_DMAX=fabs(potential); // used to calibrate scale - technically this changes
             //printf("%f\t",potential); //debug routine to get scale
-            
+
             //fprintf(stderr,"%c[%d",27,31+((int)(8.0*fabs(potential)/DMAX))%8); //8 colours
             //fprintf(stderr,"%c[48;5;%d",27,17+(int)(214.0*fabs(potential)/DMAX)); // Xterm 256 color map - (16..231)
             fprintf(stderr,"%c[48;5;%d",27,232+12+(int)(12.0*potential/DMAX)); // Xterm 256 color map - shades of grey (232..255)
             // https://code.google.com/p/conemu-maximus5/wiki/AnsiEscapeCodes#xterm_256_color_processing_requirements
-        
+
             //if (potential<0.0) // if negative
             //    fprintf(stderr,";7"); // bold
 
@@ -1093,7 +1109,7 @@ void outputlattice_dumb_terminal()
             if (lattice[x][y][z].z> sqrt(2)/2.0) arrow='o'; // override for 'up' (towards you - physics arrow style 'o')
             if (lattice[x][y][z].z<-sqrt(2)/2.0) arrow='x'; // and 'down' (away from you, physics arrow style 'x')
 
-            
+
             fprintf(stderr,"m%c%c%c[0m",density[(int)(8.0*fabs(potential)/DMAX)],arrow,27);
         }
 
