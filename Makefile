@@ -1,3 +1,6 @@
+starrynight-new: starrynight-analysis.c   starrynight-config.c  starrynight-lattice.c  starrynight-main.c
+	gcc -O4 -lm -lconfig -o starrynight starrynight-main.c
+
 starrynight: starrynight.c
 	gcc -O4 -lm -lconfig -o starrynight starrynight.c
 
