@@ -100,6 +100,9 @@ int main(int argc, char *argv[])
 
         for (i=0;i<MCMegaSteps;i++)
         {
+            T=i*10;
+            beta=1/((float)T/300.0);
+
             // Log some data... Nb: Slow as does a NxN summation of lattice energy
             // contributions!
             //        lattice_potential_log(log);
@@ -118,12 +121,13 @@ int main(int argc, char *argv[])
 
 
             // Update the (interactive) user what we're up to
-            fprintf(stderr,".");
-            fprintf(stderr,"\n");
+            //fprintf(stderr,".");
+            //fprintf(stderr,"\n");
             outputlattice_dumb_terminal(); //Party like it's 1980
 
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
-            fprintf(stderr,"In Landau we Trust: %f\n",landau_order());
+            fprintf(stdout,"T: %d Landau: %f\n",T,landau_order());
+            fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
             // Manipulate the run conditions depending on simulation time
             //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
             //        if (i==200) { Efield.z=1.0;}      // relax back to nothing
@@ -131,6 +135,7 @@ int main(int argc, char *argv[])
 
             // Do some MC moves!
 
+            initialise_lattice();
             //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
             for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
                 MC_move();
