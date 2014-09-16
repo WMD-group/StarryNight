@@ -270,7 +270,8 @@ double landau_order()
                 orientation.z+=lattice[x][y][z].z;
             }
 
-    landau=dot(&orientation,&orientation) / ((double)(X*Y*Z));
+    landau=dot(&orientation,&orientation) / (double)(X*Y*Z * X*Y*Z); // u.u = |u|^2, 
+    // so need to divide by N*N to put Landau parameter on range [0;1]
     return(landau);
 }
 
