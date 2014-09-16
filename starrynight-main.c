@@ -33,6 +33,8 @@ int main(int argc, char *argv[])
     int T;
     double P=0.0;
 
+    int tic,toc;
+
     char name[100];
     char const *LOGFILE = NULL; //for output filenames
     // Yes, I know, 50 chars are enough for any segfault ^_^
@@ -100,7 +102,17 @@ int main(int argc, char *argv[])
 
         for (i=0;i<MCMegaSteps;i++)
         {
-            T=i*10;
+            // Alright, this is the plan
+            // First we take our variable
+            // Then we bit reverse it as binary
+            // Pretty confusing, but means it will fill in the temperature
+            // range with maximum coverage, rather than linear ramping
+            unsigned char r=i;
+            r=(r&0xF0)>>4 | (r&0x0F)<<4;
+            r=(r&0xCC)>>2 | (r&0x33)<<2;
+            r=(r&0xAA)>>1 | (r&0x55)<<1;
+
+            T=r*4;
             beta=1/((float)T/300.0);
 
             // Log some data... Nb: Slow as does a NxN summation of lattice energy
@@ -128,6 +140,8 @@ int main(int argc, char *argv[])
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
             fprintf(stdout,"T: %d Landau: %f\n",T,landau_order());
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
+            fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps*X*Y*Z)/(double)(toc-tic));
+            
             // Manipulate the run conditions depending on simulation time
             //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
             //        if (i==200) { Efield.z=1.0;}      // relax back to nothing
@@ -137,8 +151,10 @@ int main(int argc, char *argv[])
 
             initialise_lattice();
             //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
+            tic=time(NULL);
             for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
                 MC_move();
+            toc=time(NULL);
         }
         /*
         // now data collection on equilibriated structure...
