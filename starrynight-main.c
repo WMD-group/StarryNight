@@ -29,12 +29,6 @@ static void MC_move();
 int main(int argc, char *argv[])
 {
     int i,j,k, x,y; //for loop iterators
-    int MCMegaSteps=400;
-    double MCMegaMultiplier=1.0;
-    int MCMinorSteps=0;
-    config_t cfg, *cf; //libconfig config structure
-    const config_setting_t *setting;
-    double tmp;
 
     int T;
     double P=0.0;
@@ -45,64 +39,8 @@ int main(int argc, char *argv[])
 
     fprintf(stderr,"Starry Night - Monte Carlo brushstrokes.\n");
 
-    //Load and parse config file
-    cf = &cfg;
-    config_init(cf);
-
-    if (!config_read_file(cf,"starrynight.cfg")) 
-    {
-        fprintf(stderr, "%s:%d - %s\n",
-                config_error_file(cf),
-                config_error_line(cf),
-                config_error_text(cf));
-        config_destroy(cf);
-        return(EXIT_FAILURE);
-    }
-
-    config_lookup_string(cf,"LOGFILE",&LOGFILE); //library does its own dynamic allocation
-
-    config_lookup_int(cf,"T",&T);
-
-    config_lookup_float(cf,"Efield.x",&tmp);  Efield.x=(float)tmp;
-    config_lookup_float(cf,"Efield.y",&tmp);  Efield.y=(float)tmp;
-    config_lookup_float(cf,"Efield.z",&tmp);  Efield.z=(float)tmp;
-
-    fprintf(stderr,"Efield: x %f y %f z %f\n",Efield.x,Efield.y,Efield.z);
-
-    //    config_lookup_float(cf,"Eangle",&Eangle);
-
-    config_lookup_float(cf,"K",&K);
-    config_lookup_float(cf,"Dipole",&Dipole);
-    config_lookup_float(cf,"CageStrain",&CageStrain);
-
-    /*
-    // read in list of dipoles + prevalence for solid mixture
-    setting = config_lookup(cf, "Dipoles");
-    dipolecount   = config_setting_length(setting);
-    for (i=0;i<dipolecount;i++)
-    dipoles[i].length=config_setting_get_float_elem(setting,i);
-    setting = config_lookup(cf, "Prevalence");
-    dipolecount   = config_setting_length(setting);
-    for (i=0;i<dipolecount;i++)
-    dipoles[i].prevalence=config_setting_get_float_elem(setting,i);
-
-    // stderr printf to check we read correctly
-    for (i=0;i<dipolecount;i++)
-    fprintf(stderr,"Dipole: %d Length: %f Prevalence: %f\n",i,dipoles[i].length, dipoles[i].prevalence);
-    */
-    // above doesn't do anything currently - not sure whether I lost the code
-    // at some point?
-
-    config_lookup_float(cf,"DipoleFraction",&dipole_fraction);
-
-    config_lookup_int(cf,"DipoleCutOff",&DipoleCutOff);
-
-    config_lookup_int(cf,"MCMegaSteps",&MCMegaSteps);
-    config_lookup_float(cf,"MCMegaMultiplier",&MCMegaMultiplier);
-
-    MCMinorSteps=(int)((float)X*(float)Y*MCMegaMultiplier);
-
-    fprintf(stderr,"Config loaded. \n");
+    fprintf(stderr,"Loading config...\n");
+    load_config();
 
     // Now override with command line options if supplied...
     if (argc>1)
@@ -185,7 +123,7 @@ int main(int argc, char *argv[])
             outputlattice_dumb_terminal(); //Party like it's 1980
 
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
-
+            fprintf(stderr,"In Landau we Trust: %f\n",landau_order());
             // Manipulate the run conditions depending on simulation time
             //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
             //        if (i==200) { Efield.z=1.0;}      // relax back to nothing

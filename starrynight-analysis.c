@@ -15,6 +15,8 @@ static void lattice_potential_log(FILE *log);
 void lattice_potential_XY(char * filename);
 void lattice_potential_XYZ(char * filename);
 static double lattice_energy_log(FILE *log);
+double landau_order();
+
 void outputpotential_png(char * filename);
 void outputlattice_pnm(char * filename);
 void outputlattice_ppm_hsv(char * filename);
@@ -250,6 +252,28 @@ fprintf(log,"%lu %f %f %f %f %f %f\n",ACCEPT+REJECT,Efield.x,Eangle,E_dipole,E_s
 return(E_dipole+E_strain+E_field); //FIXME: is this still useful?
 }
 */
+
+double landau_order()
+{
+    int x,y,z;
+    double landau=0.0;
+    struct dipole orientation;
+
+    orientation.x=0.0; orientation.y=0.0; orientation.z=0.0;
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+            { 
+                orientation.x+=lattice[x][y][z].x;
+                orientation.y+=lattice[x][y][z].y;
+                orientation.z+=lattice[x][y][z].z;
+            }
+
+    landau=dot(&orientation,&orientation) / ((double)(X*Y*Z));
+    return(landau);
+}
+
 // TODO: move these output routines to a separate file...
 
 void outputlattice_png(char * filename)
