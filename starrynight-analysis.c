@@ -580,7 +580,8 @@ void outputlattice_dumb_terminal()
     }
     mean=mean/(X*Y);
     variance=variance/(X*Y); 
-    fprintf(stderr,"DMAX: %f new_DMAX: %f variance: %f mean: %f\n",DMAX,new_DMAX,variance,mean);
+    fprintf(stderr,"T: %d DMAX: %f new_DMAX: %f variance: %f mean: %f\n",T,DMAX,new_DMAX,variance,mean);
+    fprintf(stdout,"T: %d DMAX: %f new_DMAX: %f variance: %f mean: %f\n",T,DMAX,new_DMAX,variance,mean);
     DMAX=(new_DMAX+DMAX)/2.0; // mean of old and new (sampled, noisy) value
     DMAX=new_DMAX; // infinite fast following - but leads to fluctuations at steady state
 }

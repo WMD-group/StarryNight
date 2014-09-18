@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
 {
     int i,j,k, x,y; //for loop iterators
 
-    int T;
     double P=0.0;
 
     int tic,toc;
@@ -73,7 +72,7 @@ int main(int argc, char *argv[])
     //initialise_lattice_wall(); //already-paired to test simulator
     //initialise_lattice_slip();
 
-    initialise_lattice_slab_delete();
+    //initialise_lattice_slab_delete(); 
 
     fprintf(stderr,"Lattice initialised.");
 
@@ -115,6 +114,15 @@ int main(int argc, char *argv[])
             T=r*4;
             beta=1/((float)T/300.0);
 
+            // Do some MC moves!
+
+            initialise_lattice();
+            //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
+            tic=time(NULL);
+            for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
+                MC_move();
+            toc=time(NULL);
+ 
             // Log some data... Nb: Slow as does a NxN summation of lattice energy
             // contributions!
             //        lattice_potential_log(log);
@@ -138,6 +146,7 @@ int main(int argc, char *argv[])
             outputlattice_dumb_terminal(); //Party like it's 1980
 
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
+            fprintf(stderr,"T: %d Landau: %f\n",T,landau_order());
             fprintf(stdout,"T: %d Landau: %f\n",T,landau_order());
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
             fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps*X*Y*Z)/(double)(toc-tic));
@@ -147,15 +156,7 @@ int main(int argc, char *argv[])
             //        if (i==200) { Efield.z=1.0;}      // relax back to nothing
             //        if (i==300) {Efield.z=0.0; Efield.x=1.0;}
 
-            // Do some MC moves!
-
-            initialise_lattice();
-            //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
-            tic=time(NULL);
-            for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
-                MC_move();
-            toc=time(NULL);
-        }
+       }
         /*
         // now data collection on equilibriated structure...
 
