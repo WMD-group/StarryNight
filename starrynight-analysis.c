@@ -147,6 +147,7 @@ void lattice_potential_XY(char * filename)
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
             fprintf(fo,"%d %d %f\n",x,y,dipole_potential(x,y,0));
+    fclose(fo);
 }
 
 //Calculates dipole potential across XYZ volume
@@ -161,6 +162,7 @@ void lattice_potential_XYZ(char * filename)
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
                 fprintf(fo,"%d %d %f\n",x,y,dipole_potential(x,y,z));
+    fclose(fo);
 }
 
 
@@ -187,7 +189,7 @@ void outputpotential_png(char * filename)
         }
         fprintf(fo,"\n");
     }
-
+    fclose(fo);
 }
 
 /* This whole function defunct - no longer have angles...
@@ -291,7 +293,7 @@ void outputlattice_png(char * filename)
             fprintf(fo,"%d ",(int)(SHRT_MAX*atan2(lattice[i][k][0].y,lattice[i][k][0].x)/(2*M_PI)));
         fprintf(fo,"\n");
     }
-
+    fclose(fo);
 }
 
 // Outputs a PPM bitmap of lattice dipole orientation on a HSV colourwheel
