@@ -46,6 +46,12 @@ int main(int argc, char *argv[])
     // Now override with command line options if supplied...
     if (argc>1)
     {
+        sscanf(argv[1],"%lf",&dipole_fraction);
+        fprintf(stderr,"Command line DipoleFraction: DipoleFraction = %f\n",dipole_fraction); 
+    }
+/*
+    if (argc>1)
+    {
         sscanf(argv[1],"%d",&T);
         fprintf(stderr,"Command line temperature: T = %d\n",T);
     }
@@ -54,7 +60,8 @@ int main(int argc, char *argv[])
         sscanf(argv[2],"%lf",&Dipole);
         fprintf(stderr,"Command Line Dipole: Dipole = %lf\n",Dipole);
     }
-    sprintf(name,"T_%d_Dipole_%f.log",T,Dipole);
+    */
+    sprintf(name,"T_%d_DipoleFraction_%f.log",T,dipole_fraction);
 
     // If we're going to do some actual science, we better have a logfile...
     FILE *log;
@@ -77,14 +84,14 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Lattice initialised.");
 
     // output initialised lattice - mainly for debugging
-    outputlattice_ppm_hsv("initial.png");
+/*    outputlattice_ppm_hsv("initial.png");
     outputlattice_svg("initial-SVG.svg");
     outputpotential_png("initial_pot.png"); //"final_pot.png");
     outputlattice_xyz("initial_dipoles.xyz");
     outputlattice_xyz_overprint("initial_overprint.xyz");
 
     outputlattice_dumb_terminal(); //Party like it's 1980
-
+*/
     //lattice_potential_XY("initial_pot_xy.dat"); // potential distro
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
@@ -111,7 +118,7 @@ int main(int argc, char *argv[])
             r=(r&0xCC)>>2 | (r&0x33)<<2;
             r=(r&0xAA)>>1 | (r&0x55)<<1;
 
-            T=r*4;
+            T=r*2;
             beta=1/((float)T/300.0);
 
             // Do some MC moves!
@@ -146,11 +153,23 @@ int main(int argc, char *argv[])
             outputlattice_dumb_terminal(); //Party like it's 1980
 
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
-            fprintf(stderr,"T: %d Landau: %f\n",T,landau_order());
+            fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
             fprintf(stdout,"T: %d Landau: %f\n",T,landau_order());
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
             fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps*X*Y*Z)/(double)(toc-tic));
-            
+                
+            sprintf(name,"T_%04d_DipoleFraction_%f.log",T,dipole_fraction);
+            lattice_potential_XYZ(name); 
+
+            sprintf(name,"T_%04d_DipoleFraction_%f_MC-PNG_final.png",T,dipole_fraction);
+            outputlattice_ppm_hsv(name);
+
+            sprintf(name,"T_%04d_DipoleFraction_%f_MC-SVG_final.svg",T,dipole_fraction);
+            outputlattice_svg(name);
+
+            sprintf(name,"T_%04d_DipoleFraction_%f.png",T,dipole_fraction);
+            outputpotential_png(name); //"final_pot.png");
+
             // Manipulate the run conditions depending on simulation time
             //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
             //        if (i==200) { Efield.z=1.0;}      // relax back to nothing
@@ -207,29 +226,17 @@ int main(int argc, char *argv[])
     fprintf(stderr,"\n");
 
     // Final data output / summaries.
-    outputlattice_ppm_hsv("MC-PNG_final.png");
-    outputlattice_svg("MC-SVG_final.svg");
+//    outputlattice_ppm_hsv("MC-PNG_final.png");
+//    outputlattice_svg("MC-SVG_final.svg");
 
     //    lattice_potential_log(log);
-    lattice_angle_log(log);
-
-    sprintf(name,"Dipole_pot_xy_T_%04d_DipoleFraction_%f.log",T,dipole_fraction);
-    lattice_potential_XYZ(name); 
-
-    sprintf(name,"Dipole_pot_xy_T_%04d_DipoleFraction_%f_MC-PNG_final.png",T,dipole_fraction);
-    outputlattice_ppm_hsv(name);
-
-    sprintf(name,"Dipole_pot_xy_T_%04d_DipoleFraction_%f_MC-SVG_final.svg",T,dipole_fraction);
-    outputlattice_svg(name);
+    //lattice_angle_log(log);
 
     //    lattice_potential_XY("final_pot_xy.dat");
 
-    sprintf(name,"Dipole_pot_xy_T_%04d_DipoleFraction_%f.png",T,dipole_fraction);
-    outputpotential_png(name); //"final_pot.png");
-
-    outputlattice_xyz("dipoles.xyz");
-    outputlattice_xyz_overprint("overprint.xyz");
-    outputlattice_pymol_cgo("dipoles.py");
+    //outputlattice_xyz("dipoles.xyz");
+    //outputlattice_xyz_overprint("overprint.xyz");
+    //outputlattice_pymol_cgo("dipoles.py");
 
     fprintf(stderr,"Monte Carlo moves - ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
     fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
