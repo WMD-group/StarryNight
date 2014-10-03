@@ -20,6 +20,9 @@ superparallel: starrynight
 parallel-annamaria: starrynight-new
 	seq 0.9 0.02 1.0 | caffeinate parallel ./starrynight {} | sort -k2 -g > variance.dat
 
+parallel-CageStrain: starrynight-new
+	seq 0 0.5 3.0 | caffeinate parallel ./starrynight {} > landau.dat
+
 all: starrynight
 
 clean:

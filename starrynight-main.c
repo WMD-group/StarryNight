@@ -46,8 +46,8 @@ int main(int argc, char *argv[])
     // Now override with command line options if supplied...
     if (argc>1)
     {
-        sscanf(argv[1],"%lf",&dipole_fraction);
-        fprintf(stderr,"Command line DipoleFraction: DipoleFraction = %f\n",dipole_fraction); 
+        sscanf(argv[1],"%lf",&CageStrain);
+        fprintf(stderr,"Command line DipoleFraction: CageStrain = %f\n",CageStrain); 
     }
 /*
     if (argc>1)
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
             r=(r&0xCC)>>2 | (r&0x33)<<2;
             r=(r&0xAA)>>1 | (r&0x55)<<1;
 
-            T=r*2;
+            T=r*4;
             beta=1/((float)T/300.0);
 
             // Do some MC moves!
@@ -154,20 +154,20 @@ int main(int argc, char *argv[])
 
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
             fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
-            fprintf(stdout,"T: %d Landau: %f\n",T,landau_order());
+            fprintf(stdout,"CageStrain: %f T: %d Landau: %f\n",CageStrain,T,landau_order());
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
             fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps*X*Y*Z)/(double)(toc-tic));
                 
-            sprintf(name,"T_%04d_DipoleFraction_%f.log",T,dipole_fraction);
+            sprintf(name,"T_%04d_Strain_%f.log",T,CageStrain);
             lattice_potential_XYZ(name); 
 
-            sprintf(name,"T_%04d_DipoleFraction_%f_MC-PNG_final.png",T,dipole_fraction);
+            sprintf(name,"T_%04d_Strain_%f_MC-PNG_final.png",T,CageStrain);
             outputlattice_ppm_hsv(name);
 
-            sprintf(name,"T_%04d_DipoleFraction_%f_MC-SVG_final.svg",T,dipole_fraction);
+            sprintf(name,"T_%04d_Strain_%f_MC-SVG_final.svg",T,CageStrain);
             outputlattice_svg(name);
 
-            sprintf(name,"T_%04d_DipoleFraction_%f.png",T,dipole_fraction);
+            sprintf(name,"T_%04d_Strain_%f.png",T,CageStrain);
             outputpotential_png(name); //"final_pot.png");
 
             // Manipulate the run conditions depending on simulation time
