@@ -74,10 +74,12 @@ int main(int argc, char *argv[])
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Twister initialised. ");
 
-    initialise_lattice(); //populate wiht random dipoles
+    //initialise_lattice(); //populate wiht random dipoles
     //initialise_lattice_spectrum(); //dipoles to test output routines
-    //initialise_lattice_wall(); //already-paired to test simulator
-    //initialise_lattice_slip();
+    
+    //initialise_lattice_antiferro_wall(); //already-paired to test simulator
+    initialise_lattice_ferro_wall(); // ferroelectric bi-partition domain; for domain wall creep
+    //initialise_lattice_antiferro_slip();
 
     //initialise_lattice_slab_delete(); 
 
@@ -89,9 +91,9 @@ int main(int argc, char *argv[])
     outputpotential_png("initial_pot.png"); //"final_pot.png");
     outputlattice_xyz("initial_dipoles.xyz");
     outputlattice_xyz_overprint("initial_overprint.xyz");
-
-    outputlattice_dumb_terminal(); //Party like it's 1980
 */
+    outputlattice_dumb_terminal(); //Party like it's 1980
+
     //lattice_potential_XY("initial_pot_xy.dat"); // potential distro
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
@@ -108,6 +110,8 @@ int main(int argc, char *argv[])
 
         for (i=0;i<MCMegaSteps;i++)
         {
+/* Crazy code to iterate through temperatures; dep on i, with good coverage of
+ * range
             // Alright, this is the plan
             // First we take our variable
             // Then we bit reverse it as binary
@@ -119,11 +123,13 @@ int main(int argc, char *argv[])
             r=(r&0xAA)>>1 | (r&0x55)<<1;
 
             T=r*4;
+
             beta=1/((float)T/300.0);
+*/    
 
             // Do some MC moves!
 
-            initialise_lattice();
+//            initialise_lattice();
             //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
             tic=time(NULL);
             for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
@@ -154,7 +160,7 @@ int main(int argc, char *argv[])
 
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
             fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
-            fprintf(stdout,"CageStrain: %f T: %d Landau: %f\n",CageStrain,T,landau_order());
+            fprintf(stdout,"Moves: %d CageStrain: %f T: %d Landau: %f\n",i*(MCMinorSteps/(X*Y*Z)),CageStrain,T,landau_order());
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
             fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps*X*Y*Z)/(double)(toc-tic));
                 

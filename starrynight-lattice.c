@@ -9,8 +9,10 @@
 
 // Prototypes...
 void initialise_lattice();
-void initialise_lattice_wall();
-void initialise_lattice_slip();
+void initialise_lattice_buckled();
+void initialise_lattice_antiferro_wall();
+void initialise_lattice_ferro_wall();
+void initialise_lattice_antiferro_slip();
 void initialise_lattice_spectrum();
 void initialise_lattice_buckled();
 void initialise_lattice_slab_delete();
@@ -49,7 +51,7 @@ void initialise_lattice_buckled()
             { lattice[x][y][z].x=x%2; lattice[x][y][z].y=y%2; lattice[x][y][z].z=z%2; }
 }
 
-void initialise_lattice_wall()
+void initialise_lattice_antiferro_wall()
 {
     int x,y,z;
 
@@ -66,7 +68,21 @@ void initialise_lattice_wall()
             }
 }
 
-void initialise_lattice_slip()
+void initialise_lattice_ferro_wall()
+{
+    int x,y,z;
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+            {
+                if (x<X/2)
+                    { lattice[x][y][z].x=0.0; lattice[x][y][z].y=-1.0; lattice[x][y][z].z=0.0; }
+                else
+                    { lattice[x][y][z].x=0.0; lattice[x][y][z].y= 1.0; lattice[x][y][z].z=0.0; }
+            }
+}
+
+void initialise_lattice_antiferro_slip()
 {
     int x,y,z;
 

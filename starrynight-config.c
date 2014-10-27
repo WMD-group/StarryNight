@@ -7,8 +7,8 @@
  * File begun 16th January 2014
  */
 
-#define X 40 // Malloc is for losers.
-#define Y 40 
+#define X 36 // Malloc is for losers.
+#define Y 10 
 #define Z 1 
 
 int DIM=2; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
@@ -116,7 +116,6 @@ void load_config()
     config_t cfg, *cf; //libconfig config structure
     const config_setting_t *setting;
     double tmp;
-    int T;
 
     char name[100];
     // Yes, I know, 50 chars are enough for any segfault ^_^
