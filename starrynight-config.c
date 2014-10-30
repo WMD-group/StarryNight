@@ -7,11 +7,11 @@
  * File begun 16th January 2014
  */
 
-#define X 36 // Malloc is for losers.
+#define X 30 // Malloc is for losers.
 #define Y 10 
-#define Z 1 
+#define Z 10 
 
-int DIM=2; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
+int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 int T; //global variable so accessible to analysis routines
 
 struct dipole
@@ -175,7 +175,7 @@ void load_config()
     config_lookup_int(cf,"MCMegaSteps",&MCMegaSteps);
     config_lookup_float(cf,"MCMegaMultiplier",&MCMegaMultiplier);
 
-    MCMinorSteps=(int)((float)X*(float)Y*MCMegaMultiplier);
+    MCMinorSteps=(int)((float)X*(float)Y*(float)Z*MCMegaMultiplier);
 
     fprintf(stderr,"Config loaded. \n");
 }
