@@ -110,8 +110,8 @@ int main(int argc, char *argv[])
 
         for (i=0;i<MCMegaSteps;i++)
         {
-/* Crazy code to iterate through temperatures; dep on i, with good coverage of
- * range
+// Crazy code to iterate through temperatures; dep on i, with good coverage of
+//  range
             // Alright, this is the plan
             // First we take our variable
             // Then we bit reverse it as binary
@@ -124,12 +124,11 @@ int main(int argc, char *argv[])
 
             T=r*4;
 
-            beta=1/((float)T/300.0);
-*/    
+            beta=1/((float)T/300.0);  
 
             // Do some MC moves!
 
-//            initialise_lattice();
+            initialise_lattice();
             //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
             tic=time(NULL);
             for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
