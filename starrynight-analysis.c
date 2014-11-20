@@ -16,6 +16,7 @@ void lattice_potential_XY(char * filename);
 void lattice_potential_XYZ(char * filename);
 static double lattice_energy_log(FILE *log);
 double landau_order();
+double radial_order_parameter();
 
 void outputpotential_png(char * filename);
 void outputlattice_pnm(char * filename);
@@ -275,6 +276,57 @@ double landau_order()
     landau=dot(&orientation,&orientation) / (double)(X*Y*Z * X*Y*Z); // u.u = |u|^2, 
     // so need to divide by N*N to put Landau parameter on range [0;1]
     return(landau);
+}
+
+double radial_order_parameter()
+{
+    int x,y,z;
+    int dx,dy,dz;
+    int i;
+
+    int distance_squared;
+    float correlation;
+ 
+    const int CUTOFF=9;
+
+    // define data structures to keep histogram counts in
+    float orientational_correlation[(CUTOFF*CUTOFF)+1];
+    int orientational_count[(CUTOFF*CUTOFF)+1];
+    for (i=0;i<CUTOFF*CUTOFF;i++)
+        { orientational_correlation[i]=0.0; orientational_count[i]=0; }
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+                for (dx=-CUTOFF;dx<=CUTOFF;dx++)
+                    for (dy=-CUTOFF;dy<=CUTOFF;dy++)
+                       for (dz=-CUTOFF;dz<=CUTOFF;dz++)
+                        {
+                            distance_squared=dx*dx + dy*dy + dz*dz; 
+                            if (distance_squared>CUTOFF*CUTOFF) continue; // skip ones that exceed spherical limit of CUTOFF
+
+                            // Correlation function - present just simple dot
+                            // product (not dipole like)
+                            correlation=dot(& lattice[x][y][z],& lattice[(x+dx+X)%X][(y+dy+Y)%Y][(z+dz+Z)%Z]); //complicated modulus arithmatic deals with PBCs
+
+                            // OK; save into histogram
+                            orientational_correlation[distance_squared]+=correlation;
+                            orientational_count[distance_squared]++;
+                        }
+
+    // Weight counts into a RDF
+    printf("# r^2 r orientational_correlation[r^2] orientational_count[r^2] T\n");
+    for (i=0;i<CUTOFF*CUTOFF;i++)
+    {   
+        if (orientational_count[i]>0)
+        {
+            orientational_correlation[i]/=(float)orientational_count[i];
+            printf("%d %f %f %d %d\n",i,sqrt(i),orientational_correlation[i],orientational_count[i],T);
+        }
+    }
+    printf("\n"); //starts as new dataset in GNUPLOT --> discontinuous lines
+    
+    return(0.0); //Ummm
 }
 
 // TODO: move these output routines to a separate file...

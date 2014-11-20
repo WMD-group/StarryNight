@@ -85,6 +85,8 @@ int main(int argc, char *argv[])
 
     fprintf(stderr,"Lattice initialised.");
 
+    printf ("LOCAL ORDER: \n");
+    radial_order_parameter();
     // output initialised lattice - mainly for debugging
 /*    outputlattice_ppm_hsv("initial.png");
     outputlattice_svg("initial-SVG.svg");
@@ -156,6 +158,9 @@ int main(int argc, char *argv[])
             //fprintf(stderr,".");
             //fprintf(stderr,"\n");
             outputlattice_dumb_terminal(); //Party like it's 1980
+            outputlattice_dumb_terminal(); //2nd time so it will calibrate D parameter
+
+            radial_order_parameter();
 
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
             fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
