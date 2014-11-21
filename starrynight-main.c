@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 
     fprintf(stderr,"Lattice initialised.");
 
-    printf ("LOCAL ORDER: \n");
+    fprintf (stderr,"LOCAL ORDER: \n");
     radial_order_parameter();
     // output initialised lattice - mainly for debugging
 /*    outputlattice_ppm_hsv("initial.png");
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
             fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
-            fprintf(stdout,"Moves: %d CageStrain: %f T: %d Landau: %f\n",i*(MCMinorSteps/(X*Y*Z)),CageStrain,T,landau_order());
+//            fprintf(stdout,"Moves: %d CageStrain: %f T: %d Landau: %f\n",i*(MCMinorSteps/(X*Y*Z)),CageStrain,T,landau_order());
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
             fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps*X*Y*Z)/(double)(toc-tic));
                 

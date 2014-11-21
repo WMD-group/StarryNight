@@ -285,15 +285,19 @@ double radial_order_parameter()
     int i;
 
     int distance_squared;
-    float correlation;
+    float FE_correlation,AFE_correlation;
  
     const int CUTOFF=9;
 
+    struct dipole n;
+    float d;
+
     // define data structures to keep histogram counts in
-    float orientational_correlation[(CUTOFF*CUTOFF)+1];
+    float orientational_FE_correlation[(CUTOFF*CUTOFF)+1];
+    float orientational_AFE_correlation[(CUTOFF*CUTOFF)+1];
     int orientational_count[(CUTOFF*CUTOFF)+1];
-    for (i=0;i<CUTOFF*CUTOFF;i++)
-        { orientational_correlation[i]=0.0; orientational_count[i]=0; }
+    for (i=0;i<CUTOFF*CUTOFF;i++) // Zero histogram arrays
+        { orientational_FE_correlation[i]=0.0; orientational_AFE_correlation[i]=0.0; orientational_count[i]=0; }
 
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
@@ -307,21 +311,29 @@ double radial_order_parameter()
 
                             // Correlation function - present just simple dot
                             // product (not dipole like)
-                            correlation=dot(& lattice[x][y][z],& lattice[(x+dx+X)%X][(y+dy+Y)%Y][(z+dz+Z)%Z]); //complicated modulus arithmatic deals with PBCs
+                            FE_correlation=dot(& lattice[x][y][z],& lattice[(x+dx+X)%X][(y+dy+Y)%Y][(z+dz+Z)%Z]); //complicated modulus arithmatic deals with PBCs
+
+                            // Dipole like...
+                            d=sqrt((float) dx*dx + dy*dy + dz*dz);
+                            if(d==0) d=1; // fudge to stop NaN when n-->zero vector
+                            n.x=(float)dx/d; n.y=(float)dy/d; n.z=(float)dz/d; //normalised diff. vector
+                            AFE_correlation=FE_correlation-3*dot(&n,& lattice[x][y][z])*dot(&n,& lattice[(x+dx+X)%X][(y+dy+Y)%Y][(z+dz+Z)%Z]);
 
                             // OK; save into histogram
-                            orientational_correlation[distance_squared]+=correlation;
+                            orientational_FE_correlation[distance_squared]+=FE_correlation;
+                            orientational_AFE_correlation[distance_squared]+=AFE_correlation;
                             orientational_count[distance_squared]++;
                         }
 
     // Weight counts into a RDF
-    printf("# r^2 r orientational_correlation[r^2] orientational_count[r^2] T\n");
+    printf("# r^2 r orientational_FE_correlation[r^2] orientational_AFE_correlation[r^2] orientational_count[r^2] T\n");
     for (i=0;i<CUTOFF*CUTOFF;i++)
     {   
         if (orientational_count[i]>0)
         {
-            orientational_correlation[i]/=(float)orientational_count[i];
-            printf("%d %f %f %d %d\n",i,sqrt(i),orientational_correlation[i],orientational_count[i],T);
+            orientational_FE_correlation[i]/=(float)orientational_count[i];
+            orientational_AFE_correlation[i]/=(float)orientational_count[i]; // Currently this really doesn't add anything... Not a very good metric?
+            printf("%d %f %f %f %d %d\n",i,sqrt(i),orientational_FE_correlation[i],orientational_AFE_correlation[i],orientational_count[i],T);
         }
     }
     printf("\n"); //starts as new dataset in GNUPLOT --> discontinuous lines
@@ -635,7 +647,7 @@ void outputlattice_dumb_terminal()
     mean=mean/(X*Y);
     variance=variance/(X*Y); 
     fprintf(stderr,"dipole_fraction: %f T: %d DMAX: %f new_DMAX: %f variance: %f mean: %f\n",dipole_fraction,T,DMAX,new_DMAX,variance,mean);
-    fprintf(stdout,"CageStrain: %f T: %d DMAX: %f new_DMAX: %f variance: %f mean: %f\n",CageStrain,T,DMAX,new_DMAX,variance,mean);
+    //fprintf(stdout,"CageStrain: %f T: %d DMAX: %f new_DMAX: %f variance: %f mean: %f\n",CageStrain,T,DMAX,new_DMAX,variance,mean);
     DMAX=(new_DMAX+DMAX)/2.0; // mean of old and new (sampled, noisy) value
     DMAX=new_DMAX; // infinite fast following - but leads to fluctuations at steady state
 }
