@@ -228,5 +228,5 @@ set fontpath
 set psdir
 set fit noerrorvariables
 GNUTERM = "x11"
-p "orders.dat" u 2:3:5 w lp palette
+p "radial_order_parameter_1000MC_movesrun.dat" u 2:3:5 w lp palette
 #    EOF
