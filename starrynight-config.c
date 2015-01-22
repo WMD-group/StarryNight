@@ -60,6 +60,7 @@ unsigned long REJECT=0;
 // Prototypes...
 static float dot(struct dipole *a, struct dipole *b);
 static void random_sphere_point(struct dipole *p);
+static void random_X_point(struct dipole *p);
 void initialise_lattice();
 void initialise_lattice_wall();
 void initialise_lattice_slip();
@@ -107,7 +108,41 @@ static void random_sphere_point(struct dipole *p)
     }
 }
 
+// choose random vector on cubic face (X) <001>
+static void random_X_point(struct dipole *p)
+{
+    int i;
+    int x=0,y=0,z=0;
 
+    i=rand_int(6);
+
+    switch(i)
+    {
+        case 0:
+            x=1;
+        break;
+        case 1:
+            x=-1;
+        break;
+        case 2:
+            y=1;
+        break;
+        case 3:
+            y=-1;
+        break;
+        case 4:
+            z=1;
+        break;
+        case 5:
+            z=-1;
+        break;
+    }
+
+    // convert to floating point + pack back into passed structure
+    p->x = (float) x;
+    p->y = (float) y;
+    p->z = (float) z;
+}
 
 void load_config()
 {

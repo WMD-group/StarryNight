@@ -16,12 +16,12 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
+// Prototypes...
+static int rand_int(int SPAN);
+
 #include "starrynight-config.c" //Global variables & config file reader function  
 #include "starrynight-lattice.c" //Lattice initialisation / zeroing / sphere picker fn; dot product
 #include "starrynight-analysis.c" //Analysis functions, and output routines
-
-// Prototypes...
-static int rand_int(int SPAN);
 
 static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole);
 static void MC_move();
@@ -343,7 +343,8 @@ static void MC_move()
     // random new orientation. 
     // Nb: this is the definition of a MC move - might want to consider
     // alternative / global / less disruptive moves as well
-    random_sphere_point(& newdipole);    
+    //random_sphere_point(& newdipole);    
+    random_X_point(& newdipole);
 
     olddipole=& lattice[x][y][z];
 
