@@ -46,8 +46,8 @@ int main(int argc, char *argv[])
     // Now override with command line options if supplied...
     if (argc>1)
     {
-        sscanf(argv[1],"%lf",&CageStrain);
-        fprintf(stderr,"Command line DipoleFraction: CageStrain = %f\n",CageStrain); 
+        sscanf(argv[1],"%d",&T);
+        fprintf(stderr,"Command line Temperature = %d\n",T); 
     }
 /*
     if (argc>1)
@@ -110,8 +110,9 @@ int main(int argc, char *argv[])
     {
         beta=1/((float)T/300.0);
 
-        for (i=0;i<MCMegaSteps;i++)
+//        for (i=0;i<MCMegaSteps;i++)
         {
+/*
 // Crazy code to iterate through temperatures; dep on i, with good coverage of
 //  range
             // Alright, this is the plan
@@ -124,8 +125,8 @@ int main(int argc, char *argv[])
             r=(r&0xCC)>>2 | (r&0x33)<<2;
             r=(r&0xAA)>>1 | (r&0x55)<<1;
 
-            T=r*4;
-
+            T=r*2;
+*/
             beta=1/((float)T/300.0);  
 
             // Do some MC moves!
@@ -343,8 +344,8 @@ static void MC_move()
     // random new orientation. 
     // Nb: this is the definition of a MC move - might want to consider
     // alternative / global / less disruptive moves as well
-    //random_sphere_point(& newdipole);    
-    random_X_point(& newdipole);
+    random_sphere_point(& newdipole);    
+    //random_X_point(& newdipole);
 
     olddipole=& lattice[x][y][z];
 

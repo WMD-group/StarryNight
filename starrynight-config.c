@@ -7,7 +7,7 @@
  * File begun 16th January 2014
  */
 
-#define X 30 // Malloc is for losers.
+#define X 20 // Malloc is for losers.
 #define Y 20 
 #define Z 20 
 
