@@ -104,11 +104,14 @@ int main(int argc, char *argv[])
 
     fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
+    beta=1/((float)T/300.0);
+
     //old code - now read in option, so I can parallise externally
     //    for (Efield.x=0.1; Efield.x<3.0; Efield.x+=0.5)
         for (T=0;T<500;T+=1) //I know, I know... shouldn't hard code this.
     {
-        beta=1/((float)T/300.0);
+//        beta=1/((float)T/300.0); // recalculate beta (used internally) based
+//        on T-dep forloop
 
 //        for (i=0;i<MCMegaSteps;i++)
         {
@@ -127,7 +130,7 @@ int main(int argc, char *argv[])
 
             T=r*2;
 */
-            beta=1/((float)T/300.0);  
+//            beta=1/((float)T/300.0);  
 
             // Do some MC moves!
 
