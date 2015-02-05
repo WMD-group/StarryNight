@@ -7,8 +7,8 @@
  * File begun 16th January 2014
  */
 
-#define X 20 // Malloc is for losers.
-#define Y 20 
+#define X 40 // Malloc is for losers.
+#define Y 40 
 #define Z 20 
 
 int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 

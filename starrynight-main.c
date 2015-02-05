@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 
     //old code - now read in option, so I can parallise externally
     //    for (Efield.x=0.1; Efield.x<3.0; Efield.x+=0.5)
-    //    for (T=0;T<1500;T+=100) //I know, I know... shouldn't hard code this.
+        for (T=0;T<500;T+=1) //I know, I know... shouldn't hard code this.
     {
         beta=1/((float)T/300.0);
 
@@ -131,7 +131,8 @@ int main(int argc, char *argv[])
 
             // Do some MC moves!
 
-            initialise_lattice();
+//            initialise_lattice(); // RESET LATTICE!
+
             //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
             tic=time(NULL);
             for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
@@ -161,7 +162,7 @@ int main(int argc, char *argv[])
             outputlattice_dumb_terminal(); //Party like it's 1980
             outputlattice_dumb_terminal(); //2nd time so it will calibrate D parameter
 
-            radial_order_parameter();
+//            radial_order_parameter(); // outputs directly to Terminal
 
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
             fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
