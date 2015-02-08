@@ -16,12 +16,12 @@
 
 #include "mt19937ar-cok.c" //Code _included_ to allow more global optimisation
 
+// Prototypes...
+static int rand_int(int SPAN);
+
 #include "starrynight-config.c" //Global variables & config file reader function  
 #include "starrynight-lattice.c" //Lattice initialisation / zeroing / sphere picker fn; dot product
 #include "starrynight-analysis.c" //Analysis functions, and output routines
-
-// Prototypes...
-static int rand_int(int SPAN);
 
 static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole);
 static void MC_move();
@@ -46,8 +46,8 @@ int main(int argc, char *argv[])
     // Now override with command line options if supplied...
     if (argc>1)
     {
-        sscanf(argv[1],"%lf",&CageStrain);
-        fprintf(stderr,"Command line DipoleFraction: CageStrain = %f\n",CageStrain); 
+        sscanf(argv[1],"%d",&T);
+        fprintf(stderr,"Command line Temperature = %d\n",T); 
     }
 /*
     if (argc>1)
@@ -104,14 +104,18 @@ int main(int argc, char *argv[])
 
     fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
+    beta=1/((float)T/300.0);
+
     //old code - now read in option, so I can parallise externally
     //    for (Efield.x=0.1; Efield.x<3.0; Efield.x+=0.5)
-    //    for (T=0;T<1500;T+=100) //I know, I know... shouldn't hard code this.
+        for (T=0;T<500;T+=1) //I know, I know... shouldn't hard code this.
     {
-        beta=1/((float)T/300.0);
+//        beta=1/((float)T/300.0); // recalculate beta (used internally) based
+//        on T-dep forloop
 
-        for (i=0;i<MCMegaSteps;i++)
+//        for (i=0;i<MCMegaSteps;i++)
         {
+/*
 // Crazy code to iterate through temperatures; dep on i, with good coverage of
 //  range
             // Alright, this is the plan
@@ -124,13 +128,14 @@ int main(int argc, char *argv[])
             r=(r&0xCC)>>2 | (r&0x33)<<2;
             r=(r&0xAA)>>1 | (r&0x55)<<1;
 
-            T=r*4;
-
-            beta=1/((float)T/300.0);  
+            T=r*2;
+*/
+//            beta=1/((float)T/300.0);  
 
             // Do some MC moves!
 
-            initialise_lattice();
+//            initialise_lattice(); // RESET LATTICE!
+
             //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
             tic=time(NULL);
             for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
@@ -160,7 +165,7 @@ int main(int argc, char *argv[])
             outputlattice_dumb_terminal(); //Party like it's 1980
             outputlattice_dumb_terminal(); //2nd time so it will calibrate D parameter
 
-            radial_order_parameter();
+//            radial_order_parameter(); // outputs directly to Terminal
 
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
             fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
@@ -344,6 +349,7 @@ static void MC_move()
     // Nb: this is the definition of a MC move - might want to consider
     // alternative / global / less disruptive moves as well
     random_sphere_point(& newdipole);    
+    //random_X_point(& newdipole);
 
     olddipole=& lattice[x][y][z];
 

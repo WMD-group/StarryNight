@@ -7,11 +7,11 @@
  * File begun 16th January 2014
  */
 
-#define X 30 // Malloc is for losers.
-#define Y 20 
-#define Z 20 
+#define X 40 // Malloc is for losers.
+#define Y 40 
+#define Z 1 
 
-int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
+int DIM=2; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 int T; //global variable so accessible to analysis routines
 
 struct dipole
@@ -60,6 +60,7 @@ unsigned long REJECT=0;
 // Prototypes...
 static float dot(struct dipole *a, struct dipole *b);
 static void random_sphere_point(struct dipole *p);
+static void random_X_point(struct dipole *p);
 void initialise_lattice();
 void initialise_lattice_wall();
 void initialise_lattice_slip();
@@ -107,7 +108,41 @@ static void random_sphere_point(struct dipole *p)
     }
 }
 
+// choose random vector on cubic face (X) <001>
+static void random_X_point(struct dipole *p)
+{
+    int i;
+    int x=0,y=0,z=0;
 
+    i=rand_int(6);
+
+    switch(i)
+    {
+        case 0:
+            x=1;
+        break;
+        case 1:
+            x=-1;
+        break;
+        case 2:
+            y=1;
+        break;
+        case 3:
+            y=-1;
+        break;
+        case 4:
+            z=1;
+        break;
+        case 5:
+            z=-1;
+        break;
+    }
+
+    // convert to floating point + pack back into passed structure
+    p->x = (float) x;
+    p->y = (float) y;
+    p->z = (float) z;
+}
 
 void load_config()
 {

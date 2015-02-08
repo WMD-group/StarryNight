@@ -23,6 +23,9 @@ parallel-annamaria: starrynight-new
 parallel-CageStrain: starrynight-new
 	seq 0 0.5 3.0 | caffeinate parallel ./starrynight {} > landau.dat
 
+parallel-T: starrynight-new
+	seq 0 75 600 | parallel ./starrynight {} > starrynight-parallel-T.log
+
 all: starrynight
 
 clean:
