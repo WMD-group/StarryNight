@@ -9,6 +9,7 @@
 
 // Prototypes...
 void initialise_lattice();
+void initialise_lattice_ferroelectric();
 void initialise_lattice_buckled();
 void initialise_lattice_antiferro_wall();
 void initialise_lattice_ferro_wall();
@@ -39,6 +40,16 @@ void initialise_lattice()
        printf("\n %f %f %f %f",lattice[i][k].x,lattice[i][k].y,lattice[i][k].z,
        dot(&lattice[i][k],&lattice[i][k]));
        */  
+}
+
+void initialise_lattice_ferroelectric()
+{
+    int x,y,z;
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+            { lattice[x][y][z].x=1.0; lattice[x][y][z].y=0.0; lattice[x][y][z].z=0.0; }
 }
 
 void initialise_lattice_buckled()

@@ -74,17 +74,21 @@ int main(int argc, char *argv[])
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Twister initialised. ");
 
-    //initialise_lattice(); //populate wiht random dipoles
+    initialise_lattice(); //populate wiht random dipoles
     //initialise_lattice_spectrum(); //dipoles to test output routines
     
-    //initialise_lattice_antiferro_wall(); //already-paired to test simulator
-    initialise_lattice_ferro_wall(); // ferroelectric bi-partition domain; for domain wall creep
+//    initialise_lattice_antiferro_wall(); //already-paired to test simulator
+//    initialise_lattice_ferro_wall(); // ferroelectric bi-partition domain; for domain wall creep
     //initialise_lattice_antiferro_slip();
+    //initialise_lattice_ferroelectric(); // Fully aligned.
 
     //initialise_lattice_slab_delete(); 
 
     fprintf(stderr,"Lattice initialised.");
 
+    lattice_Efield_XYZ("initial_lattice_efield.xyz");
+    lattice_potential_XY("initial_lattice_potential.xyz"); // potential distro
+    
     fprintf (stderr,"LOCAL ORDER: \n");
     radial_order_parameter();
     // output initialised lattice - mainly for debugging
@@ -96,7 +100,6 @@ int main(int argc, char *argv[])
 */
     outputlattice_dumb_terminal(); //Party like it's 1980
 
-    //lattice_potential_XY("initial_pot_xy.dat"); // potential distro
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
@@ -110,7 +113,7 @@ int main(int argc, char *argv[])
     //    for (Efield.x=0.1; Efield.x<3.0; Efield.x+=0.5)
         for (T=0;T<500;T+=1) //I know, I know... shouldn't hard code this.
     {
-//        beta=1/((float)T/300.0); // recalculate beta (used internally) based
+        beta=1/((float)T/300.0); // recalculate beta (used internally) based
 //        on T-dep forloop
 
 //        for (i=0;i<MCMegaSteps;i++)
@@ -134,7 +137,7 @@ int main(int argc, char *argv[])
 
             // Do some MC moves!
 
-//            initialise_lattice(); // RESET LATTICE!
+            initialise_lattice(); // RESET LATTICE!
 
             //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
             tic=time(NULL);
@@ -172,7 +175,13 @@ int main(int argc, char *argv[])
 //            fprintf(stdout,"Moves: %d CageStrain: %f T: %d Landau: %f\n",i*(MCMinorSteps/(X*Y*Z)),CageStrain,T,landau_order());
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
             fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps*X*Y*Z)/(double)(toc-tic));
-                
+ 
+            sprintf(name,"T_%04d_lattice_efield.xyz",T);
+            lattice_Efield_XYZ(name);
+
+            sprintf(name,"T_%04d_lattice_potential.xyz",T);
+            lattice_potential_XYZ(name); // potential distro
+    
             sprintf(name,"T_%04d_Strain_%f.log",T,CageStrain);
             lattice_potential_XYZ(name); 
 
