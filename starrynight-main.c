@@ -74,19 +74,20 @@ int main(int argc, char *argv[])
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Twister initialised. ");
 
-    initialise_lattice(); //populate wiht random dipoles
+//    initialise_lattice(); //populate wiht random dipoles
     //initialise_lattice_spectrum(); //dipoles to test output routines
     
-//    initialise_lattice_antiferro_wall(); //already-paired to test simulator
+    //initialise_lattice_antiferro_wall(); //already-paired to test simulator
 //    initialise_lattice_ferro_wall(); // ferroelectric bi-partition domain; for domain wall creep
     //initialise_lattice_antiferro_slip();
-    //initialise_lattice_ferroelectric(); // Fully aligned.
+    initialise_lattice_ferroelectric(); // Fully aligned.
 
     //initialise_lattice_slab_delete(); 
 
     fprintf(stderr,"Lattice initialised.");
 
     lattice_Efield_XYZ("initial_lattice_efield.xyz");
+    lattice_Efieldoffset_XYZ("initial_lattice_efieldoffset.xyz");
     lattice_potential_XY("initial_lattice_potential.xyz"); // potential distro
     
     fprintf (stderr,"LOCAL ORDER: \n");
