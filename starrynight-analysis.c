@@ -11,6 +11,7 @@
 static void lattice_angle_log(FILE *log);
 static double polarisation();
 static double dipole_potential(int x, int y, int z);
+static double dipole_electricfield(int CUTOFF, int x, int y, int z);
 static void lattice_potential_log(FILE *log);
 void lattice_potential_XY(char * filename);
 void lattice_potential_XYZ(char * filename);
@@ -62,15 +63,15 @@ static double polarisation()
 static double dipole_potential(int x, int y, int z) 
 {
     int dx,dy,dz=0;
-    int MAX=10;
+    int MAX=4;
     double pot=0.0;
     float d;
     struct dipole r;
 
-    for (dx=-MAX;dx<MAX;dx++)
-        for (dy=-MAX;dy<MAX;dy++)
+    for (dx=-MAX;dx<=MAX;dx++)
+        for (dy=-MAX;dy<=MAX;dy++)
 #if(Z>1) //i.e. 3D in Z
-            for (dz=-MAX;dz<MAX;dz++)
+            for (dz=-MAX;dz<=MAX;dz++)
 #endif
             {
                 if (dx==0 && dy==0 && dz==0)
@@ -88,36 +89,6 @@ static double dipole_potential(int x, int y, int z)
             }
     return(pot);
 }
-
-//Calculate dipole potential at specific location
-/*static double dipole_potential(int x, int y, int z) 
-  {
-  int dx,dy,dz;
-  int MAX=10;
-  double pot=0.0;
-  float d;
-  struct dipole r;
-
-  for (dx=0;dx<X;dx++)
-  for (dy=0;dy<X;dy++)
-  for (dz=0;dz<Z;dz++)
-  {
-  if (x-dx==0 && y-dy==0 && z-dz==0)
-  continue; //no infinities / self interactions please!
-
-  r.x=(float)(x-dx); r.y=(float)(y-dy); r.z=(float)(z-dz);
-
-  d=sqrt((float) r.x*r.x + r.y*r.y + r.z*r.z); //that old chestnut
-
-//            if (d>(float)MAX) continue; // Cutoff in d
-
-// pot(r) = 1/4PiEpsilon * p.r / r^3
-// Electric dipole potential
-pot+=dot(& lattice[dx][dy][dz],& r)/(d*d*d);
-}
-return(pot);
-}
-*/
 
 //Calculates dipole potential along trace of lattice
 static void lattice_potential_log(FILE *log)
@@ -166,7 +137,176 @@ void lattice_potential_XYZ(char * filename)
     fclose(fo);
 }
 
+static double dipole_electricfieldoffset(int CUTOFF, int x, int y, int z)
+{
+    int dx,dy,dz=0;
+    
+    struct dipole Efield={0.0, 0.0, 0.0};
+    struct dipole Efieldcontribution={0.0, 0.0, 0.0};
+    struct dipole r,n;
 
+    float d;
+    double radial;
+
+    for (dx=-CUTOFF-1;dx<CUTOFF;dx++)
+        for (dy=-CUTOFF-1;dy<CUTOFF;dy++)
+#if(Z>1) //i.e. 3D in Z
+            for (dz=-CUTOFF-1;dz<CUTOFF;dz++)
+#endif
+            {
+//                if (dx==0 && dy==0 && dz==0)
+//                    continue; //no infinities / self interactions please!
+
+                r.x=(float)(dx)+0.5; r.y=(float)(dy)+0.5; r.z=(float)(dz)+0.5;
+
+                d=sqrt((float) r.x*r.x + r.y*r.y + r.z*r.z); //that old chestnut
+
+                if (d>(float)CUTOFF) continue; // Cutoff in d
+
+                // I am so SORRY about what follows; C is not the ideal
+                // language for maths.
+                // We are just calculating the dipole electric field by:
+                // E = ( 1/4PiEpsilon ) * 
+
+                // n = r / d; normalised displacement vector
+                n.x=r.x/d; n.y=r.y/d; n.z=r.z/d;
+
+                // Scalar radial = n.p
+                radial=dot(&n,& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z]);
+                
+                // Vector 3*n*radial - p
+                Efieldcontribution.x=3*n.x*radial - lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z].x;
+                Efieldcontribution.y=3*n.y*radial - lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z].y;
+                Efieldcontribution.z=3*n.z*radial - lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z].z;
+
+                // Divide top half of expression by denominator (d^3)
+                Efieldcontribution.x/=d*d*d;
+                Efieldcontribution.y/=d*d*d;
+                Efieldcontribution.z/=d*d*d;
+
+                // Vector addition of contribution into count
+                Efield.x+=Efieldcontribution.x;
+                Efield.y+=Efieldcontribution.y;
+                Efield.z+=Efieldcontribution.z;
+
+                fprintf(stderr,"Efieldcontribution: r= %f %f %f Efield= %f %f %f mag: %f\n",
+                        r.x, r.y, r.z,
+                        Efieldcontribution.x,Efieldcontribution.y,Efieldcontribution.z,sqrt(dot(&Efieldcontribution,&Efieldcontribution)));
+            }
+
+    Efieldcontribution.x/=4*M_PI;
+    Efieldcontribution.y/=4*M_PI;
+    Efieldcontribution.z/=4*M_PI;
+
+    fprintf(stderr,"\nEfield: %f %f %f mag: %f\n\n",
+            Efield.x,Efield.y,Efield.z,sqrt(dot(&Efield,&Efield)));
+ 
+    return (sqrt(dot(&Efield,&Efield))); // for now return magnitude
+}
+
+
+//Calculates dipole potential across XYZ volume
+void lattice_Efieldoffset_XYZ(char * filename)
+{
+    int x,y,z;
+    FILE *fo;
+    fo=fopen(filename,"w");
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+                fprintf(fo,"%d %d %d %f\n",x,y,z,dipole_electricfieldoffset(2,x,y,z));
+    fclose(fo);
+}
+
+
+static double dipole_electricfield(int CUTOFF, int x, int y, int z)
+{
+    int dx,dy,dz=0;
+    
+    struct dipole Efield={0.0, 0.0, 0.0};
+    struct dipole Efieldcontribution={0.0, 0.0, 0.0};
+    struct dipole r,n;
+
+    float d;
+    double radial;
+
+    for (dx=-CUTOFF;dx<=CUTOFF;dx++)
+        for (dy=-CUTOFF;dy<=CUTOFF;dy++)
+#if(Z>1) //i.e. 3D in Z
+            for (dz=-CUTOFF;dz<=CUTOFF;dz++)
+#endif
+            {
+                if (dx==0 && dy==0 && dz==0)
+                    continue; //no infinities / self interactions please!
+
+                r.x=(float)(dx); r.y=(float)(dy); r.z=(float)(dz);
+
+                d=sqrt((float) r.x*r.x + r.y*r.y + r.z*r.z); //that old chestnut
+
+                if (d>(float)CUTOFF) continue; // Cutoff in d
+
+                // I am so SORRY about what follows; C is not the ideal
+                // language for maths.
+                // We are just calculating the dipole electric field by:
+                // E = ( 1/4PiEpsilon ) * 
+
+                // n = r / d; normalised displacement vector
+                n.x=r.x/d; n.y=r.y/d; n.z=r.z/d;
+
+                // Scalar radial = n.p
+                radial=dot(&n,& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z]);
+                
+                // Vector 3*n*radial - p
+                Efieldcontribution.x=3*n.x*radial - lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z].x;
+                Efieldcontribution.y=3*n.y*radial - lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z].y;
+                Efieldcontribution.z=3*n.z*radial - lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z].z;
+
+                // Divide top half of expression by denominator (d^3)
+                Efieldcontribution.x/=d*d*d;
+                Efieldcontribution.y/=d*d*d;
+                Efieldcontribution.z/=d*d*d;
+
+                // Vector addition of contribution into count
+                Efield.x+=Efieldcontribution.x;
+                Efield.y+=Efieldcontribution.y;
+                Efield.z+=Efieldcontribution.z;
+
+/*                fprintf(stderr,"Efieldcontribution: r= %d %d %d Efield= %f %f %f mag: %f\n",
+                        dx,dy,dz,
+                        Efieldcontribution.x,Efieldcontribution.y,Efieldcontribution.z,sqrt(dot(&Efieldcontribution,&Efieldcontribution)));
+            */
+            }
+
+    Efieldcontribution.x/=4*M_PI;
+    Efieldcontribution.y/=4*M_PI;
+    Efieldcontribution.z/=4*M_PI;
+
+    // Kronecker delta contribution from dipole at distance=0
+    Efield.x-= 1/3.0 * lattice[x][y][z].x;
+    Efield.y-= 1/3.0 * lattice[x][y][z].y;
+    Efield.z-= 1/3.0 * lattice[x][y][z].z;
+
+/*    fprintf(stderr,"\nEfield: %f %f %f mag: %f\n\n",
+            Efield.x,Efield.y,Efield.z,sqrt(dot(&Efield,&Efield)));
+ */
+    return (sqrt(dot(&Efield,&Efield))); // for now return magnitude
+}
+
+
+//Calculates dipole potential across XYZ volume
+void lattice_Efield_XYZ(char * filename)
+{
+    int x,y,z;
+    FILE *fo;
+    fo=fopen(filename,"w");
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+                fprintf(fo,"%d %d %d %f\n",x,y,z,dipole_electricfield(2,x,y,z));
+    fclose(fo);
+}
 
 void outputpotential_png(char * filename)
 {
