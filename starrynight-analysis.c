@@ -49,13 +49,13 @@ static double polarisation()
     int x,y,z;
     struct dipole n;
 
-    n.x=1.0; n.y=0.0; n.z=0.0;
+    n.x=1.0; n.y=0.0; n.z=0.0; // Unit vector; ^x
 
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
                 P+=dot(&lattice[x][y][z],&n); //dipole response in direction of Efield
-
+    P=P/(double)(X*Y*Z);
     return(P);
 }
 
@@ -304,7 +304,7 @@ void lattice_Efield_XYZ(char * filename)
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
-                fprintf(fo,"%d %d %d %f\n",x,y,z,dipole_electricfield(2,x,y,z));
+                fprintf(fo,"%d %d %d %f\n",x,y,z,dipole_electricfield(4,x,y,z));
     fclose(fo);
 }
 
