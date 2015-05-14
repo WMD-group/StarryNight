@@ -74,24 +74,27 @@ int main(int argc, char *argv[])
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Twister initialised. ");
 
-//    initialise_lattice(); //populate wiht random dipoles
+    //initialise_lattice(); //populate wiht random dipoles
     //initialise_lattice_spectrum(); //dipoles to test output routines
     
-    //initialise_lattice_antiferro_wall(); //already-paired to test simulator
+    initialise_lattice_antiferro_wall(); //already-paired to test simulator
 //    initialise_lattice_ferro_wall(); // ferroelectric bi-partition domain; for domain wall creep
     //initialise_lattice_antiferro_slip();
-    initialise_lattice_ferroelectric(); // Fully aligned.
+//    initialise_lattice_ferroelectric(); // Fully aligned.
 
     //initialise_lattice_slab_delete(); 
 
     fprintf(stderr,"Lattice initialised.");
 
     lattice_Efield_XYZ("initial_lattice_efield.xyz");
-    lattice_Efieldoffset_XYZ("initial_lattice_efieldoffset.xyz");
+//    lattice_Efieldoffset_XYZ("initial_lattice_efieldoffset.xyz");
     lattice_potential_XY("initial_lattice_potential.xyz"); // potential distro
+    outputlattice_svg("initial-SVG.svg");
+    outputpotential_png("initial_pot.png"); //"final_pot.png");
+    outputlattice_xyz("initial_dipoles.xyz");
     
     fprintf (stderr,"LOCAL ORDER: \n");
-    radial_order_parameter();
+//    radial_order_parameter();
     // output initialised lattice - mainly for debugging
 /*    outputlattice_ppm_hsv("initial.png");
     outputlattice_svg("initial-SVG.svg");
@@ -110,10 +113,22 @@ int main(int argc, char *argv[])
 
     beta=1/((float)T/300.0);
 
+    // Equilibriated before Hysterisis scan
+    for (k=0;k<MCMinorSteps*10;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
+         MC_move();
+ 
+    lattice_Efield_XYZ("equilib_lattice_efield.xyz");
+    outputlattice_svg("equilib-SVG.svg");
+    outputpotential_png("equilib_pot.png"); //"final_pot.png");
+ 
     //old code - now read in option, so I can parallise externally
-    //    for (Efield.x=0.1; Efield.x<3.0; Efield.x+=0.5)
-        for (T=0;T<500;T+=1) //I know, I know... shouldn't hard code this.
+    double AMP; double PHASE;
+    for (AMP=0.01; AMP<=0.05; AMP+=0.01)
+        for (PHASE=0; PHASE<=2*M_PI; PHASE+=M_PI/16) // DOESN'T SAW TOOTH CURRENTLY!
+    //    for (T=0;T<500;T+=1) //I know, I know... shouldn't hard code this.
     {
+        Efield.x=AMP*sin(PHASE);
+
         beta=1/((float)T/300.0); // recalculate beta (used internally) based
 //        on T-dep forloop
 
@@ -138,7 +153,7 @@ int main(int argc, char *argv[])
 
             // Do some MC moves!
 
-            initialise_lattice(); // RESET LATTICE!
+//            initialise_lattice(); // RESET LATTICE!
 
             //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
             tic=time(NULL);
@@ -172,10 +187,13 @@ int main(int argc, char *argv[])
 //            radial_order_parameter(); // outputs directly to Terminal
 
             fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
-            fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
+//            fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
 //            fprintf(stdout,"Moves: %d CageStrain: %f T: %d Landau: %f\n",i*(MCMinorSteps/(X*Y*Z)),CageStrain,T,landau_order());
+  fprintf(stderr,"\n");
+            fprintf(stdout, "T: %d Efield: x %f Polar: %f\n",T,Efield.x,polarisation());
+fprintf(stderr,"\n");
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
-            fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps*X*Y*Z)/(double)(toc-tic));
+            fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic));
  
             sprintf(name,"T_%04d_lattice_efield.xyz",T);
             lattice_Efield_XYZ(name);
