@@ -141,11 +141,13 @@ int main(int argc, char *argv[])
 //            initialise_lattice(); // RESET LATTICE!
 
             //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
-            tic=time(NULL);
+            tic=clock();
             for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
                 MC_move();
-            toc=time(NULL);
- 
+            toc=clock();
+
+//            fprintf(stderr,"Clocks: tic: %d toc: %d\n",tic,toc);
+
             // Log some data... Nb: Slow as does a NxN summation of lattice energy
             // contributions!
             //        lattice_potential_log(log);
@@ -178,7 +180,8 @@ int main(int argc, char *argv[])
             fprintf(stdout, "T: %d Efield: x %f Polar: %f\n",T,Efield.x,polarisation());
 fprintf(stderr,"\n");
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
-            fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic));
+            
+            fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic)*(double)CLOCKS_PER_SEC);
  
             sprintf(name,"T_%04d_lattice_efield.xyz",T);
             lattice_Efield_XYZ(name);
