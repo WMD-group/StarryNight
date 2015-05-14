@@ -8,17 +8,19 @@
  */
 
 // Prototypes...
-void initialise_lattice();
-void initialise_lattice_ferroelectric();
+//  These are the backend functions; initialise_lattice is a pointer which
+//  points to the chosen one.
+void initialise_lattice_random();         // randomly sampled lattice
+void initialise_lattice_ferroelectric();  // fully aligned lattice in --X-->
+void initialise_lattice_buckled();        // 3D checkboard pattern in +-X,Y,Z
+void initialise_lattice_antiferro_wall(); // anti-ferroelectric bi-partition domain; for domain wall creep
+void initialise_lattice_ferro_wall();     // ferroelectric bi-partition domain; for domain wall creep
+void initialise_lattice_antiferro_slip(); // anti-ferroelectric domains shifted by one unit to one another 
+void initialise_lattice_spectrum();       // continuously varying angle dipoles; to test HSV colour output routines
 void initialise_lattice_buckled();
-void initialise_lattice_antiferro_wall();
-void initialise_lattice_ferro_wall();
-void initialise_lattice_antiferro_slip();
-void initialise_lattice_spectrum();
-void initialise_lattice_buckled();
-void initialise_lattice_slab_delete();
+void initialise_lattice_slab_delete();    // currently hardcoded to delete a slab of dipoles --> vacuum / surface calculations
 
-void initialise_lattice()
+void initialise_lattice_random()
 {
     int x,y,z;
     float angle;

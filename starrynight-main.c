@@ -28,15 +28,12 @@ static void MC_move();
 
 int main(int argc, char *argv[])
 {
-    int i,j,k, x,y; //for loop iterators
+    int i,j,k, x,y; // for loop iterators
+    int tic,toc;    // keep track of time for user interface; how many MC moves per second
 
-    double P=0.0;
-
-    int tic,toc;
-
-    char name[100];
+    char name[100]; 
     char const *LOGFILE = NULL; //for output filenames
-    // Yes, I know, 50 chars are enough for any segfault ^_^
+    // Yes, I know, 100 chars are enough for any segfault ^_^
 
     fprintf(stderr,"Starry Night - Monte Carlo brushstrokes.\n");
 
@@ -47,12 +44,6 @@ int main(int argc, char *argv[])
     if (argc>1)
     {
         sscanf(argv[1],"%d",&T);
-        fprintf(stderr,"Command line Temperature = %d\n",T); 
-    }
-/*
-    if (argc>1)
-    {
-        sscanf(argv[1],"%d",&T);
         fprintf(stderr,"Command line temperature: T = %d\n",T);
     }
     if (argc>2)
@@ -60,9 +51,9 @@ int main(int argc, char *argv[])
         sscanf(argv[2],"%lf",&Dipole);
         fprintf(stderr,"Command Line Dipole: Dipole = %lf\n",Dipole);
     }
-    */
+    
+    // LOGFILE ;;; FIXME: Not used much at present (historic but sensible)
     sprintf(name,"T_%d_DipoleFraction_%f.log",T,dipole_fraction);
-
     // If we're going to do some actual science, we better have a logfile...
     FILE *log;
     LOGFILE=name;
@@ -72,18 +63,13 @@ int main(int argc, char *argv[])
     //Fire up the twister!
     init_genrand(0xDEADBEEF); //314159265);  // reproducible data :)
     //init_genrand(time(NULL)); // seeded with current time
-    fprintf(stderr,"Twister initialised. ");
+    fprintf(stderr,"Mersenne Twister initialised. ");
 
-    //initialise_lattice(); //populate wiht random dipoles
-    //initialise_lattice_spectrum(); //dipoles to test output routines
-    
-    initialise_lattice_antiferro_wall(); //already-paired to test simulator
-//    initialise_lattice_ferro_wall(); // ferroelectric bi-partition domain; for domain wall creep
-    //initialise_lattice_antiferro_slip();
-//    initialise_lattice_ferroelectric(); // Fully aligned.
+    void (*initialise_lattice)() =  & initialise_lattice_random; // C-function pointer to chosen initial lattice
+    // FIXME: C Foo might confuse people? Explain more? Turn into a config
+    // option?
 
-    //initialise_lattice_slab_delete(); 
-
+    initialise_lattice(); //populate with random dipoles
     fprintf(stderr,"Lattice initialised.");
 
     lattice_Efield_XYZ("initial_lattice_efield.xyz");
@@ -121,7 +107,6 @@ int main(int argc, char *argv[])
     outputlattice_svg("equilib-SVG.svg");
     outputpotential_png("equilib_pot.png"); //"final_pot.png");
  
-    //old code - now read in option, so I can parallise externally
     double AMP; double PHASE;
     for (AMP=0.01; AMP<=0.05; AMP+=0.01)
         for (PHASE=0; PHASE<=2*M_PI; PHASE+=M_PI/16) // DOESN'T SAW TOOTH CURRENTLY!
@@ -132,7 +117,7 @@ int main(int argc, char *argv[])
         beta=1/((float)T/300.0); // recalculate beta (used internally) based
 //        on T-dep forloop
 
-//        for (i=0;i<MCMegaSteps;i++)
+        for (i=0;i<MCMegaSteps;i++)
         {
 /*
 // Crazy code to iterate through temperatures; dep on i, with good coverage of
@@ -217,52 +202,7 @@ fprintf(stderr,"\n");
             //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
             //        if (i==200) { Efield.z=1.0;}      // relax back to nothing
             //        if (i==300) {Efield.z=0.0; Efield.x=1.0;}
-
-       }
-        /*
-        // now data collection on equilibriated structure...
-
-        P=0.0;
-
-        for (i=0;i<10;i++)
-        {
-        P+=polarisation();
-        for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
-        MC_move();
-        fprintf(stderr,","); 
         }
-        // hard coded for loops for Hysterisis exploration
-        P/=10;
-
-        double maxfield=Efield.x;
-        //    for (maxfield=10.0;maxfield<10.001;maxfield=maxfield+1.0)
-        for (i=0;i<0;i++) // hysterisis loop counter
-        { 
-        for (Efield.x=maxfield;Efield.x>-maxfield;Efield.x-=0.0005)
-        {
-        fprintf(stderr,"-");
-        for (k=0;k<MCMinorSteps;k++)
-        MC_move();
-        printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
-        }
-        for (Efield.x=-maxfield;Efield.x<maxfield;Efield.x+=0.0005)
-        {
-        fprintf(stderr,"+");
-        for (k=0;k<MCMinorSteps;k++)
-        MC_move();
-        printf("T: %d Efield.x: %f Polar: %f\n",T,Efield.x,polarisation());
-        }
-        }
-
-        // P/=(float)MCMegaSteps; //average over our points
-        P/=(float)X*Y;          // per lattice site
-        // P/=-(float)Efield.x;     // by Electric Field
-        // P*=Dipole;
-        // See 6.5 (p 167) in Zangwill Modern Electrodynamics
-
-        fprintf(stderr,"NORK! T: %d E: %f P: %f polarisation(per_site): %f\n",T,Efield.x,P,polarisation()/((float)X*Y));
-        printf("T: %d Dipole: %f E: %f P: %f polarisation(per_site): %f\n",T,Dipole,Efield.x,P,polarisation()/((float)X*Y));
-        */
     } 
     // OK; we're finished...
 
