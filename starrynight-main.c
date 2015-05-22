@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Mersenne Twister initialised. ");
 
-    void (*initialise_lattice)() =  & initialise_lattice_random; // C-function pointer to chosen initial lattice
+    void (*initialise_lattice)() =  & initialise_lattice_antiferro_wall; // C-function pointer to chosen initial lattice
     // FIXME: C Foo might confuse people? Explain more? Turn into a config
     // option?
 
@@ -140,8 +140,8 @@ int main(int argc, char *argv[])
 
 //            initialise_lattice(); // RESET LATTICE!
 
-            //#pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
             tic=clock();
+//            #pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
             for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
                 MC_move();
             toc=clock();
@@ -243,6 +243,8 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
     struct dipole *testdipole, n;
 
     // Sum over near neighbours for dipole-dipole interaction
+
+#pragma omp parallel for reduction(+:dE)
     for (dx=-DipoleCutOff;dx<=DipoleCutOff;dx++)
         for (dy=-DipoleCutOff;dy<=DipoleCutOff;dy++)
 #if(Z>1) //i.e. 3D in Z
