@@ -169,7 +169,6 @@ int main(int argc, char *argv[])
             //fprintf(stderr,".");
             //fprintf(stderr,"\n");
             outputlattice_dumb_terminal(); //Party like it's 1980
-            outputlattice_dumb_terminal(); //2nd time so it will calibrate D parameter
 
 //            radial_order_parameter(); // outputs directly to Terminal
 

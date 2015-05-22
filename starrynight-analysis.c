@@ -413,7 +413,7 @@ double landau_order()
                 orientation.z+=lattice[x][y][z].z;
             }
 
-    landau=dot(&orientation,&orientation) / (double)(X*Y*Z * X*Y*Z); // u.u = |u|^2, 
+    landau=dot(&orientation,&orientation) / (double)(X*Y*Z)*(double)(X*Y*Z); // u.u = |u|^2, 
     // so need to divide by N*N to put Landau parameter on range [0;1]
     return(landau);
 }
@@ -707,11 +707,25 @@ void outputlattice_dumb_terminal()
     int x,y;
     float a;
     int z=0;
+    
     float new_DMAX=0.0; //used to calibrate next colour scale, based on present maxima of data
+    float potential;
     float variance=0.0; // sum of potential^2
     float mean=0.0;
 
     fprintf(stderr,"%*s%*s\n",X+3, "DIPOLES", (2*X)+4,"POTENTIAL"); //padded labels
+
+    // pre-compute maximum potential; for calibrating the scale
+    for (y=0;y<Y;y++)
+        for (x=0;x<X;x++)
+        {
+            potential=dipole_potential(x,y,z);
+
+            if (fabs(potential)>new_DMAX)
+                new_DMAX=fabs(potential); // used to calibrate scale - technically this changes
+        }
+    // OK; we now know new_DMAX
+    DMAX=new_DMAX; // Nb: this code previous updated on every loop, so it can be used to gently track the progress...
 
     for (y=0;y<Y;y++)
     {
@@ -743,7 +757,6 @@ void outputlattice_dumb_terminal()
         }
 
         // OK - now potential plot :^)
-        float potential;
         //        const char * density=".,:;o*O#"; //increasing potential density
         const char * density="012345689";
         fprintf(stderr,"    ");
