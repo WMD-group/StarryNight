@@ -23,6 +23,8 @@ static int rand_int(int SPAN);
 #include "starrynight-lattice.c" //Lattice initialisation / zeroing / sphere picker fn; dot product
 #include "starrynight-analysis.c" //Analysis functions, and output routines
 
+static void gen_neighbour();
+
 static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole);
 static void MC_move();
 
@@ -64,6 +66,8 @@ int main(int argc, char *argv[])
     init_genrand(0xDEADBEEF); //314159265);  // reproducible data :)
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Mersenne Twister initialised. ");
+
+    gen_neighbour(); //generate neighbour list for fast iteration in energy calculator
 
     void (*initialise_lattice)() =  & initialise_lattice_antiferro_wall; // C-function pointer to chosen initial lattice
     // FIXME: C Foo might confuse people? Explain more? Turn into a config
@@ -108,8 +112,8 @@ int main(int argc, char *argv[])
     outputpotential_png("equilib_pot.png"); //"final_pot.png");
  
     double AMP; double PHASE;
-    for (AMP=0.01; AMP<=0.05; AMP+=0.01)
-        for (PHASE=0; PHASE<=2*M_PI; PHASE+=M_PI/16) // DOESN'T SAW TOOTH CURRENTLY!
+//    for (AMP=0.01; AMP<=0.05; AMP+=0.01)
+//        for (PHASE=0; PHASE<=2*M_PI; PHASE+=M_PI/16) // DOESN'T SAW TOOTH CURRENTLY!
     //    for (T=0;T<500;T+=1) //I know, I know... shouldn't hard code this.
     {
         Efield.x=AMP*sin(PHASE);
@@ -234,16 +238,24 @@ static int rand_int(int SPAN) // TODO: profile this to make sure it runs at an O
     return((int)( (unsigned long) genrand_int32() % (unsigned long)SPAN));
 }
 
-static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole)
+// The following code builds a neighbour list for evaluation of energy;
+//   this should result in a speedup as it avoids the for loops + 'ifs' during
+//   MC
+
+struct {
+    int dx;
+    int dy;
+    int dz;
+    float d;
+} neighbours[10000];
+int neighbour=0; //count of neighbours
+
+static void gen_neighbour()
 {
+
     int dx,dy,dz=0;
     float d;
-    double dE=0.0;
-    struct dipole *testdipole, n;
-
-    // Sum over near neighbours for dipole-dipole interaction
-
-#pragma omp parallel for reduction(+:dE)
+ 
     for (dx=-DipoleCutOff;dx<=DipoleCutOff;dx++)
         for (dy=-DipoleCutOff;dy<=DipoleCutOff;dy++)
 #if(Z>1) //i.e. 3D in Z
@@ -256,6 +268,46 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
                 d=sqrt((float) dx*dx + dy*dy + dz*dz); //that old chestnut; distance in Euler space
 
                 if (d>(float)DipoleCutOff) continue; // Cutoff in d
+
+                // store precomputed list of neighbours
+                neighbours[neighbour].dx=dx; neighbours[neighbour].dy=dy; neighbours[neighbour].dz=dz;
+                neighbours[neighbour].d=d;
+                neighbour++;
+            }
+    fprintf(stderr,"Neighbour list generated: %d neighbours.\n",neighbour);
+}
+
+static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole)
+{
+    int dx,dy,dz=0;
+    float d;
+    double dE=0.0;
+    struct dipole *testdipole, n;
+
+    // Sum over near neighbours for dipole-dipole interaction
+/*
+#pragma omp parallel for reduction(+:dE) 
+    for (dx=-DipoleCutOff;dx<=DipoleCutOff;dx++)
+        for (dy=-DipoleCutOff;dy<=DipoleCutOff;dy++)
+#if(Z>1) //i.e. 3D in Z
+            for (dz=-DipoleCutOff;dz<=DipoleCutOff;dz++) //NB: conditional zDipoleCutOff to allow for 2D version
+#endif
+            {
+                if (dx==0 && dy==0 && dz==0)
+                    continue; //no infinities / self interactions please!
+
+                d=sqrt((float) dx*dx + dy*dy + dz*dz); //that old chestnut; distance in Euler space
+
+                if (d>(float)DipoleCutOff) continue; // Cutoff in d
+*/
+    int i;
+    #pragma omp parallel for private(dx,dy,dz,d,n) reduction(+:dE) schedule(static,1)
+// NB: Works, but only modest speed gains!
+    for (i=0;i<neighbour;i++)
+    {
+        // read in dirn to neighbours + precomputed values
+        dx=neighbours[i].dx; dy=neighbours[i].dy; dz=neighbours[i].dz;
+        d=neighbours[i].d;
 
                 testdipole=& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z];
 
