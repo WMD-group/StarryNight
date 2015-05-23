@@ -4,11 +4,11 @@ starrynight: starrynight-analysis.c   starrynight-config.c  starrynight-lattice.
 starrynight-openmp: starrynight-analysis.c   starrynight-config.c  starrynight-lattice.c  starrynight-main.c
 	gcc -O4 -lm -lconfig -fopenmp -o starrynight starrynight-main.c
 
-profile: starrynight.c
-	gcc -lm -lconfig -o starrynight starrynight.c -pg
+profile: starrynight-analysis.c   starrynight-config.c  starrynight-lattice.c  starrynight-main.c
+	gcc -lm -lconfig -o starrynight starrynight-main.c -pg
 
-starrynight-mac-openmp: starrynight.c
-	/usr/local/bin/gcc-4.8 -O4 -lm -lconfig -fopenmp -lgomp -o starrynight starrynight.c
+starrynight-mac-openmp: starrynight-analysis.c   starrynight-config.c  starrynight-lattice.c  starrynight-main.c 
+	/usr/local/bin/gcc-4.8 -O4 -lm -lconfig -fopenmp -lgomp -o starrynight starrynight-main.c
 
 parallel: starrynight
 	seq 0 100 1000 | parallel  ./starrynight {}  | sort -k2 -g > T-dep.dat
