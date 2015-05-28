@@ -64,7 +64,7 @@ static double polarisation()
 static double dipole_potential(int x, int y, int z) 
 {
     int dx,dy,dz=0;
-    int MAX=4;
+    int MAX=6;
     double pot=0.0;
     float d;
     struct dipole r;
@@ -103,8 +103,9 @@ static void recombination_calculator(FILE *log)
 
     double BETA=1/(0.025); // 1/ (k_b T) in eV
     double potentialeV=0.165; // convert internal units --> eV / V for pot
-    potentialeV/=20; // dielectric constant: screens electrostatic potential
+    potentialeV/=2; // dielectric constant: screens electrostatic potential
 
+    Ze=Zh=0.0;
     for (x=0;x<X;x++) 
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
@@ -119,9 +120,9 @@ static void recombination_calculator(FILE *log)
 //    Ze/=X*Y*Z;
 //    Zh/=X*Y*Z;
 
-//    fprintf(log,"Partition function, Ze: %f Zh: %f\n",Ze,Zh);
+    fprintf(stderr,"Partition function, Ze: %f Zh: %f\n",Ze,Zh);
 
-    double DMAX=0.0,RMAX=0.0;
+    double eMAX=0.0,hMAX=0.0,RMAX=0.0;
 
     for (x=0;x<X;x++) 
         for (y=0;y<Y;y++)
@@ -130,8 +131,14 @@ static void recombination_calculator(FILE *log)
                 // Fermi dirac distributions from bottom of potential energy
                 // surf
                 pot=potentialeV*dipole_potential(x,y,z);
-                electrons[x][y][z]=exp(-pot*BETA)/Ze;
-                holes    [x][y][z]=exp(pot*BETA)/Zh;
+                
+                electrons[x][y][z]=1.0/(exp(-pot*BETA)+1.0)/Ze;
+                holes    [x][y][z]=1.0/(exp(pot*BETA)+1.0)/Zh;
+
+//                electrons[x][y][z]=exp(-pot*BETA)/Ze;
+//                holes    [x][y][z]=exp(pot*BETA)/Zh;
+
+
                 recombination[x][y][z]=electrons[x][y][z]*holes[x][y][z];
 /*                
                 fprintf(stderr,"x: %d y: %d z: %d pot: %e e: %e h: %e e*h: %e\n",x,y,z,
@@ -139,8 +146,8 @@ static void recombination_calculator(FILE *log)
                         electrons[x][y][z],holes[x][y][z],electrons[x][y][z]*holes[x][y][z]);
 */
 
-                if (electrons[x][y][0]>DMAX) DMAX=electrons[x][y][0];
-                if (holes[x][y][0]>DMAX) DMAX=holes[x][y][0];
+                if (electrons[x][y][0]>eMAX) eMAX=electrons[x][y][0];
+                if (holes[x][y][0]>hMAX) hMAX=holes[x][y][0];
                 if (recombination[x][y][0]>RMAX) RMAX=recombination[x][y][0];
 
                 electron_total+=electrons[x][y][z];
@@ -156,35 +163,36 @@ static void recombination_calculator(FILE *log)
 //    fprintf(stderr,"    ");
 //    float DMAX=1.0/(X*Y*Z);
     fprintf(stderr,"%*s%*s\n",X+3, "ELECTRONS", (2*X)+4,"HOLES"); //padded labels
-    fprintf(stderr,"Density MAX: %f\n",DMAX);
+    fprintf(stderr,"Density eMAX: %f hMAX: %f\n",eMAX,hMAX);
     for (y=0;y<Y;y++)
     {
         for (x=0;x<X;x++)
         {
 
-            int greycode=(int)(23.0/DMAX*electrons[x][y][0]);
+            int greycode=(int)(23.0/eMAX*electrons[x][y][0]);
             fprintf(stderr,"%c[48;5;%d",27,232+greycode); // Xterm 256 color map - shades of grey (232..255)
             // https://code.google.com/p/conemu-maximus5/wiki/AnsiEscapeCodes#xterm_256_color_processing_requirements
-            greycode=(int)(8.0/DMAX*electrons[x][y][0]);
+            greycode=(int)(8.0/eMAX*electrons[x][y][0]);
             fprintf(stderr,"m%c%c%c[0m",greycode+'0','.',27);
         }
         fprintf(stderr,"    ");
         for (x=0;x<X;x++)
         {
 
-            int greycode=(int)(23.0/DMAX*holes[x][y][0]);
+            int greycode=(int)(23.0/hMAX*holes[x][y][0]);
             fprintf(stderr,"%c[48;5;%d",27,232+greycode); // Xterm 256 color map - shades of grey (232..255)
             // https://code.google.com/p/conemu-maximus5/wiki/AnsiEscapeCodes#xterm_256_color_processing_requirements
-            greycode=(int)(8.0/DMAX*holes[x][y][0]);
+            greycode=(int)(8.0/hMAX*holes[x][y][0]);
             fprintf(stderr,"m%c%c%c[0m",greycode+'0','.',27);
         }
         fprintf(stderr,"\n");
     }
 
     fprintf(stderr,"RMAX: %e\n",RMAX);
-    fprintf(stderr,"%*s\n",X+3, "RECOMBINATION");
+    fprintf(stderr,"%*s\n",2+X+X+X, "<<< RECOMBINATION <<<");
     for (y=0;y<Y;y++)
     {
+        fprintf(stderr,"%*s",2+X," ");
         for (x=0;x<X;x++)
         {
             int greycode=(int)(23.0*recombination[x][y][0]/RMAX);

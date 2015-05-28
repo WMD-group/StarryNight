@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 
     gen_neighbour(); //generate neighbour list for fast iteration in energy calculator
 
-    void (*initialise_lattice)() =  & initialise_lattice_antiferro_slip; // C-function pointer to chosen initial lattice
+    void (*initialise_lattice)() =  & initialise_lattice_antiferro_wall ; // C-function pointer to chosen initial lattice
     // FIXME: C Foo might confuse people? Explain more? Turn into a config
     // option?
 
