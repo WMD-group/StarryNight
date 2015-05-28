@@ -9,7 +9,7 @@
 
 #define X 20 // Malloc is for losers.
 #define Y 20 
-#define Z 20 
+#define Z 100 
 
 int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 int T; //global variable so accessible to analysis routines
@@ -47,8 +47,9 @@ int DipoleCutOff=3;
 
 // These variables from the old main
 int MCMegaSteps=400;
+int MCEqmSteps=10;
 double MCMegaMultiplier=1.0;
-int MCMinorSteps=0;
+long long int MCMinorSteps=0;
 char const *LOGFILE = NULL; //for output filenames
 //END OF SIMULATION PARAMETERS
 
@@ -207,8 +208,10 @@ void load_config()
 
     config_lookup_int(cf,"DipoleCutOff",&DipoleCutOff);
 
-    config_lookup_int(cf,"MCMegaSteps",&MCMegaSteps);
-    config_lookup_float(cf,"MCMegaMultiplier",&MCMegaMultiplier);
+    config_lookup_int(cf,"MCEqmSteps",&MCEqmSteps);
+
+    config_lookup_int(cf,"MCMegaSteps",&MCMegaSteps); 
+    config_lookup_float(cf,"MCMoves",&MCMegaMultiplier);
 
     MCMinorSteps=(int)((float)X*(float)Y*(float)Z*MCMegaMultiplier);
 

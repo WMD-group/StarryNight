@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     }
     
     // LOGFILE ;;; FIXME: Not used much at present (historic but sensible)
-    sprintf(name,"T_%d_DipoleFraction_%f.log",T,dipole_fraction);
+    sprintf(name,"Recombination_T_%04d.log",T);
     // If we're going to do some actual science, we better have a logfile...
     FILE *log;
     LOGFILE=name;
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 
     gen_neighbour(); //generate neighbour list for fast iteration in energy calculator
 
-    void (*initialise_lattice)() =  & initialise_lattice_antiferro_wall; // C-function pointer to chosen initial lattice
+    void (*initialise_lattice)() =  & initialise_lattice_antiferro_slip; // C-function pointer to chosen initial lattice
     // FIXME: C Foo might confuse people? Explain more? Turn into a config
     // option?
 
@@ -82,6 +82,8 @@ int main(int argc, char *argv[])
     outputlattice_svg("initial-SVG.svg");
     outputpotential_png("initial_pot.png"); //"final_pot.png");
     outputlattice_xyz("initial_dipoles.xyz");
+ 
+    fprintf(stderr,"Intial lattice recombination: \n");
     
     fprintf (stderr,"LOCAL ORDER: \n");
 //    radial_order_parameter();
@@ -93,7 +95,7 @@ int main(int argc, char *argv[])
     outputlattice_xyz_overprint("initial_overprint.xyz");
 */
     outputlattice_dumb_terminal(); //Party like it's 1980
-
+    recombination_calculator(stderr);
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
@@ -104,19 +106,20 @@ int main(int argc, char *argv[])
     beta=1/((float)T/300.0);
 
     // Equilibriated before Hysterisis scan
-    for (k=0;k<MCMinorSteps*10;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
+    fprintf(stderr,"Equilibriation MC moves... %d\n",MCMinorSteps*MCEqmSteps);
+    for (k=0;k<MCMinorSteps*MCEqmSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
          MC_move();
  
     lattice_Efield_XYZ("equilib_lattice_efield.xyz");
     outputlattice_svg("equilib-SVG.svg");
     outputpotential_png("equilib_pot.png"); //"final_pot.png");
  
-    double AMP; double PHASE;
+//    double AMP; double PHASE;
 //    for (AMP=0.01; AMP<=0.05; AMP+=0.01)
 //        for (PHASE=0; PHASE<=2*M_PI; PHASE+=M_PI/16) // DOESN'T SAW TOOTH CURRENTLY!
     //    for (T=0;T<500;T+=1) //I know, I know... shouldn't hard code this.
     {
-        Efield.x=AMP*sin(PHASE);
+//        Efield.x=AMP*sin(PHASE);
 
         beta=1/((float)T/300.0); // recalculate beta (used internally) based
 //        on T-dep forloop
@@ -173,6 +176,7 @@ int main(int argc, char *argv[])
             //fprintf(stderr,".");
             //fprintf(stderr,"\n");
             outputlattice_dumb_terminal(); //Party like it's 1980
+            recombination_calculator(log);
 
 //            radial_order_parameter(); // outputs directly to Terminal
 
@@ -186,22 +190,19 @@ fprintf(stderr,"\n");
             
             fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic)*(double)CLOCKS_PER_SEC);
  
-            sprintf(name,"T_%04d_lattice_efield.xyz",T);
+            sprintf(name,"T_%04d_i_%03d_lattice_efield.xyz",T,i);
             lattice_Efield_XYZ(name);
 
-            sprintf(name,"T_%04d_lattice_potential.xyz",T);
+            sprintf(name,"T_%04d_i_%03d_lattice_potential.xyz",T,i);
             lattice_potential_XYZ(name); // potential distro
     
-            sprintf(name,"T_%04d_Strain_%f.log",T,CageStrain);
-            lattice_potential_XYZ(name); 
-
-            sprintf(name,"T_%04d_Strain_%f_MC-PNG_final.png",T,CageStrain);
+            sprintf(name,"T_%04d_i_%03d_MC-PNG_final.png",T,i);
             outputlattice_ppm_hsv(name);
 
-            sprintf(name,"T_%04d_Strain_%f_MC-SVG_final.svg",T,CageStrain);
+            sprintf(name,"T_%04d_i_%03d_MC-SVG_final.svg",T,i);
             outputlattice_svg(name);
 
-            sprintf(name,"T_%04d_Strain_%f.png",T,CageStrain);
+            sprintf(name,"T_%04d_i_%03d_potential.png",T,i);
             outputpotential_png(name); //"final_pot.png");
 
             // Manipulate the run conditions depending on simulation time
