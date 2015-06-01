@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     outputlattice_xyz_overprint("initial_overprint.xyz");
 */
     outputlattice_dumb_terminal(); //Party like it's 1980
-    recombination_calculator(stderr);
+//    recombination_calculator(stderr);
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 

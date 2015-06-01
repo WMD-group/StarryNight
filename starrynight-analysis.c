@@ -111,8 +111,11 @@ static void recombination_calculator(FILE *log)
             for (z=0;z<Z;z++)
             {
                 pot=potentialeV*dipole_potential(x,y,z);
-                Ze+=exp(-pot*BETA);
-                Zh+=exp(pot*BETA); // holes float...
+                //Ze+=exp(-pot*BETA);
+               // Zh+=exp(pot*BETA); // holes float...
+
+               Ze+=1.0/(exp(-pot*BETA)+1.0);
+               Zh+=1.0/(exp(pot*BETA)+1.0); // holes float...
             }
 
     // set density = 1 per site on average
@@ -159,6 +162,7 @@ static void recombination_calculator(FILE *log)
             T,X*Y*Z*totalrecombination,electron_total,hole_total);
 
     // Plot densities holes / e
+    //  EVERYTHING BELOW HERE SHOULD BE OUTPUT; NOT PHYSICS
     const char * density="012345689";
 //    fprintf(stderr,"    ");
 //    float DMAX=1.0/(X*Y*Z);
@@ -172,7 +176,7 @@ static void recombination_calculator(FILE *log)
             int greycode=(int)(23.0/eMAX*electrons[x][y][0]);
             fprintf(stderr,"%c[48;5;%d",27,232+greycode); // Xterm 256 color map - shades of grey (232..255)
             // https://code.google.com/p/conemu-maximus5/wiki/AnsiEscapeCodes#xterm_256_color_processing_requirements
-            greycode=(int)(8.0/eMAX*electrons[x][y][0]);
+            greycode=(int)(10.0/eMAX*electrons[x][y][0]);
             fprintf(stderr,"m%c%c%c[0m",greycode+'0','.',27);
         }
         fprintf(stderr,"    ");
@@ -182,7 +186,7 @@ static void recombination_calculator(FILE *log)
             int greycode=(int)(23.0/hMAX*holes[x][y][0]);
             fprintf(stderr,"%c[48;5;%d",27,232+greycode); // Xterm 256 color map - shades of grey (232..255)
             // https://code.google.com/p/conemu-maximus5/wiki/AnsiEscapeCodes#xterm_256_color_processing_requirements
-            greycode=(int)(8.0/hMAX*holes[x][y][0]);
+            greycode=(int)(10.0/hMAX*holes[x][y][0]);
             fprintf(stderr,"m%c%c%c[0m",greycode+'0','.',27);
         }
         fprintf(stderr,"\n");
@@ -197,7 +201,7 @@ static void recombination_calculator(FILE *log)
         {
             int greycode=(int)(23.0*recombination[x][y][0]/RMAX);
             fprintf(stderr,"%c[48;5;%d",27,232+greycode); 
-            greycode=(int)(8.0*recombination[x][y][0]/RMAX);
+            greycode=(int)(10.0*recombination[x][y][0]/RMAX);
             fprintf(stderr,"m%c%c%c[0m",greycode+'0','.',27);
 //        fprintf(stderr,"%e ",recombination[x][y][0]/RMAX);
         }
