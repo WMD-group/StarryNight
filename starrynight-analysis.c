@@ -160,6 +160,7 @@ static void recombination_calculator(FILE *log)
 
     fprintf(log,"T: %d Recombi: %e Total electron: %f Total hole: %f\n",
             T,X*Y*Z*totalrecombination,electron_total,hole_total);
+    fflush(log); //flush output buffer; commits writes to OS / disk.
 
     // Plot densities holes / e
     //  EVERYTHING BELOW HERE SHOULD BE OUTPUT; NOT PHYSICS
@@ -256,7 +257,7 @@ void lattice_potential_XYZ(char * filename)
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
-                fprintf(fo,"%d %d %f\n",x,y,dipole_potential(x,y,z));
+                fprintf(fo,"%d %d %d %f\n",x,y,z,dipole_potential(x,y,z));
     fclose(fo);
 }
 
