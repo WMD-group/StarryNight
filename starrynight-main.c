@@ -23,6 +23,8 @@ static int rand_int(int SPAN);
 #include "starrynight-lattice.c" //Lattice initialisation / zeroing / sphere picker fn; dot product
 #include "starrynight-analysis.c" //Analysis functions, and output routines
 
+static void gen_neighbour();
+
 static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole);
 static void MC_move();
 
@@ -53,7 +55,7 @@ int main(int argc, char *argv[])
     }
     
     // LOGFILE ;;; FIXME: Not used much at present (historic but sensible)
-    sprintf(name,"T_%d_DipoleFraction_%f.log",T,dipole_fraction);
+    sprintf(name,"Recombination_T_%04d.log",T);
     // If we're going to do some actual science, we better have a logfile...
     FILE *log;
     LOGFILE=name;
@@ -65,7 +67,9 @@ int main(int argc, char *argv[])
     //init_genrand(time(NULL)); // seeded with current time
     fprintf(stderr,"Mersenne Twister initialised. ");
 
-    void (*initialise_lattice)() =  & initialise_lattice_antiferro_wall; // C-function pointer to chosen initial lattice
+    gen_neighbour(); //generate neighbour list for fast iteration in energy calculator
+
+    void (*initialise_lattice)() =  & initialise_lattice_antiferro_wall ; // C-function pointer to chosen initial lattice
     // FIXME: C Foo might confuse people? Explain more? Turn into a config
     // option?
 
@@ -78,6 +82,8 @@ int main(int argc, char *argv[])
     outputlattice_svg("initial-SVG.svg");
     outputpotential_png("initial_pot.png"); //"final_pot.png");
     outputlattice_xyz("initial_dipoles.xyz");
+ 
+    fprintf(stderr,"Intial lattice recombination: \n");
     
     fprintf (stderr,"LOCAL ORDER: \n");
 //    radial_order_parameter();
@@ -89,7 +95,7 @@ int main(int argc, char *argv[])
     outputlattice_xyz_overprint("initial_overprint.xyz");
 */
     outputlattice_dumb_terminal(); //Party like it's 1980
-
+//    recombination_calculator(stderr);
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
@@ -100,19 +106,20 @@ int main(int argc, char *argv[])
     beta=1/((float)T/300.0);
 
     // Equilibriated before Hysterisis scan
-    for (k=0;k<MCMinorSteps*10;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
+    fprintf(stderr,"Equilibriation MC moves... %d\n",MCMinorSteps*MCEqmSteps);
+    for (k=0;k<MCMinorSteps*MCEqmSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
          MC_move();
  
     lattice_Efield_XYZ("equilib_lattice_efield.xyz");
     outputlattice_svg("equilib-SVG.svg");
     outputpotential_png("equilib_pot.png"); //"final_pot.png");
  
-    double AMP; double PHASE;
-    for (AMP=0.01; AMP<=0.05; AMP+=0.01)
-        for (PHASE=0; PHASE<=2*M_PI; PHASE+=M_PI/16) // DOESN'T SAW TOOTH CURRENTLY!
+//    double AMP; double PHASE;
+//    for (AMP=0.01; AMP<=0.05; AMP+=0.01)
+//        for (PHASE=0; PHASE<=2*M_PI; PHASE+=M_PI/16) // DOESN'T SAW TOOTH CURRENTLY!
     //    for (T=0;T<500;T+=1) //I know, I know... shouldn't hard code this.
     {
-        Efield.x=AMP*sin(PHASE);
+//        Efield.x=AMP*sin(PHASE);
 
         beta=1/((float)T/300.0); // recalculate beta (used internally) based
 //        on T-dep forloop
@@ -169,6 +176,7 @@ int main(int argc, char *argv[])
             //fprintf(stderr,".");
             //fprintf(stderr,"\n");
             outputlattice_dumb_terminal(); //Party like it's 1980
+            recombination_calculator(log);
 
 //            radial_order_parameter(); // outputs directly to Terminal
 
@@ -182,22 +190,19 @@ fprintf(stderr,"\n");
             
             fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic)*(double)CLOCKS_PER_SEC);
  
-            sprintf(name,"T_%04d_lattice_efield.xyz",T);
+            sprintf(name,"T_%04d_i_%03d_lattice_efield.xyz",T,i);
             lattice_Efield_XYZ(name);
 
-            sprintf(name,"T_%04d_lattice_potential.xyz",T);
+            sprintf(name,"T_%04d_i_%03d_lattice_potential.xyz",T,i);
             lattice_potential_XYZ(name); // potential distro
     
-            sprintf(name,"T_%04d_Strain_%f.log",T,CageStrain);
-            lattice_potential_XYZ(name); 
-
-            sprintf(name,"T_%04d_Strain_%f_MC-PNG_final.png",T,CageStrain);
+            sprintf(name,"T_%04d_i_%03d_MC-PNG_final.png",T,i);
             outputlattice_ppm_hsv(name);
 
-            sprintf(name,"T_%04d_Strain_%f_MC-SVG_final.svg",T,CageStrain);
+            sprintf(name,"T_%04d_i_%03d_MC-SVG_final.svg",T,i);
             outputlattice_svg(name);
 
-            sprintf(name,"T_%04d_Strain_%f.png",T,CageStrain);
+            sprintf(name,"T_%04d_i_%03d_potential.png",T,i);
             outputpotential_png(name); //"final_pot.png");
 
             // Manipulate the run conditions depending on simulation time
@@ -234,16 +239,24 @@ static int rand_int(int SPAN) // TODO: profile this to make sure it runs at an O
     return((int)( (unsigned long) genrand_int32() % (unsigned long)SPAN));
 }
 
-static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole)
+// The following code builds a neighbour list for evaluation of energy;
+//   this should result in a speedup as it avoids the for loops + 'ifs' during
+//   MC
+
+struct {
+    int dx;
+    int dy;
+    int dz;
+    float d;
+} neighbours[10000];
+int neighbour=0; //count of neighbours
+
+static void gen_neighbour()
 {
+
     int dx,dy,dz=0;
     float d;
-    double dE=0.0;
-    struct dipole *testdipole, n;
-
-    // Sum over near neighbours for dipole-dipole interaction
-
-#pragma omp parallel for reduction(+:dE)
+ 
     for (dx=-DipoleCutOff;dx<=DipoleCutOff;dx++)
         for (dy=-DipoleCutOff;dy<=DipoleCutOff;dy++)
 #if(Z>1) //i.e. 3D in Z
@@ -256,6 +269,46 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
                 d=sqrt((float) dx*dx + dy*dy + dz*dz); //that old chestnut; distance in Euler space
 
                 if (d>(float)DipoleCutOff) continue; // Cutoff in d
+
+                // store precomputed list of neighbours
+                neighbours[neighbour].dx=dx; neighbours[neighbour].dy=dy; neighbours[neighbour].dz=dz;
+                neighbours[neighbour].d=d;
+                neighbour++;
+            }
+    fprintf(stderr,"Neighbour list generated: %d neighbours.\n",neighbour);
+}
+
+static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole)
+{
+    int dx,dy,dz=0;
+    float d;
+    double dE=0.0;
+    struct dipole *testdipole, n;
+
+    // Sum over near neighbours for dipole-dipole interaction
+/*
+#pragma omp parallel for reduction(+:dE) 
+    for (dx=-DipoleCutOff;dx<=DipoleCutOff;dx++)
+        for (dy=-DipoleCutOff;dy<=DipoleCutOff;dy++)
+#if(Z>1) //i.e. 3D in Z
+            for (dz=-DipoleCutOff;dz<=DipoleCutOff;dz++) //NB: conditional zDipoleCutOff to allow for 2D version
+#endif
+            {
+                if (dx==0 && dy==0 && dz==0)
+                    continue; //no infinities / self interactions please!
+
+                d=sqrt((float) dx*dx + dy*dy + dz*dz); //that old chestnut; distance in Euler space
+
+                if (d>(float)DipoleCutOff) continue; // Cutoff in d
+*/
+    int i;
+    #pragma omp parallel for private(dx,dy,dz,d,n) reduction(+:dE) schedule(static,1)
+// NB: Works, but only modest speed gains!
+    for (i=0;i<neighbour;i++)
+    {
+        // read in dirn to neighbours + precomputed values
+        dx=neighbours[i].dx; dy=neighbours[i].dy; dz=neighbours[i].dz;
+        d=neighbours[i].d;
 
                 testdipole=& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z];
 

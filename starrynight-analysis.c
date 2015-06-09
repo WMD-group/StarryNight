@@ -11,6 +11,7 @@
 static void lattice_angle_log(FILE *log);
 static double polarisation();
 static double dipole_potential(int x, int y, int z);
+static void recombination_calculator(FILE *log);
 static double dipole_electricfield(int CUTOFF, int x, int y, int z);
 static void lattice_potential_log(FILE *log);
 void lattice_potential_XY(char * filename);
@@ -63,7 +64,7 @@ static double polarisation()
 static double dipole_potential(int x, int y, int z) 
 {
     int dx,dy,dz=0;
-    int MAX=4;
+    int MAX=6;
     double pot=0.0;
     float d;
     struct dipole r;
@@ -88,6 +89,129 @@ static double dipole_potential(int x, int y, int z)
                 pot+=dot(& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z] ,& r)/(d*d*d);
             }
     return(pot);
+}
+
+//Funky recombination model
+static void recombination_calculator(FILE *log)
+{
+    double MINPOT=1e6,MAXPOT=-1e6;
+    double pot;
+    double electrons[X][Y][Z],holes[X][Y][Z], recombination[X][Y][Z];
+    double Ze=0.0, Zh=0.0; // PARTITION FUNCTIONS <<< WHERE THE MAGIC HAPPENS <<<
+    double electron_total=0.0, hole_total=0.0, totalrecombination=0.0;
+    int x,y,z;
+
+    double BETA=1/(0.025); // 1/ (k_b T) in eV
+    double potentialeV=0.165; // convert internal units --> eV / V for pot
+    potentialeV/=2; // dielectric constant: screens electrostatic potential
+
+    Ze=Zh=0.0;
+    for (x=0;x<X;x++) 
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+            {
+                pot=potentialeV*dipole_potential(x,y,z);
+                //Ze+=exp(-pot*BETA);
+               // Zh+=exp(pot*BETA); // holes float...
+
+               Ze+=1.0/(exp(-pot*BETA)+1.0);
+               Zh+=1.0/(exp(pot*BETA)+1.0); // holes float...
+            }
+
+    // set density = 1 per site on average
+    // Thus no distribution in electrostatic potential, recombination=1*1
+//    Ze/=X*Y*Z;
+//    Zh/=X*Y*Z;
+
+    fprintf(stderr,"Partition function, Ze: %f Zh: %f\n",Ze,Zh);
+
+    double eMAX=0.0,hMAX=0.0,RMAX=0.0;
+
+    for (x=0;x<X;x++) 
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+            {
+                // Fermi dirac distributions from bottom of potential energy
+                // surf
+                pot=potentialeV*dipole_potential(x,y,z);
+                
+                electrons[x][y][z]=1.0/(exp(-pot*BETA)+1.0)/Ze;
+                holes    [x][y][z]=1.0/(exp(pot*BETA)+1.0)/Zh;
+
+//                electrons[x][y][z]=exp(-pot*BETA)/Ze;
+//                holes    [x][y][z]=exp(pot*BETA)/Zh;
+
+
+                recombination[x][y][z]=electrons[x][y][z]*holes[x][y][z];
+/*                
+                fprintf(stderr,"x: %d y: %d z: %d pot: %e e: %e h: %e e*h: %e\n",x,y,z,
+                        pot,
+                        electrons[x][y][z],holes[x][y][z],electrons[x][y][z]*holes[x][y][z]);
+*/
+
+                if (electrons[x][y][0]>eMAX) eMAX=electrons[x][y][0];
+                if (holes[x][y][0]>hMAX) hMAX=holes[x][y][0];
+                if (recombination[x][y][0]>RMAX) RMAX=recombination[x][y][0];
+
+                electron_total+=electrons[x][y][z];
+                    hole_total+=holes[x][y][z];
+                totalrecombination+=electrons[x][y][z]*holes[x][y][z];
+            }
+
+    fprintf(log,"T: %d Recombi: %e Total electron: %f Total hole: %f\n",
+            T,X*Y*Z*totalrecombination,electron_total,hole_total);
+    fflush(log); //flush output buffer; commits writes to OS / disk.
+
+    // Plot densities holes / e
+    //  EVERYTHING BELOW HERE SHOULD BE OUTPUT; NOT PHYSICS
+    const char * density="012345689";
+//    fprintf(stderr,"    ");
+//    float DMAX=1.0/(X*Y*Z);
+    fprintf(stderr,"%*s%*s\n",X+3, "ELECTRONS", (2*X)+4,"HOLES"); //padded labels
+    fprintf(stderr,"Density eMAX: %f hMAX: %f\n",eMAX,hMAX);
+    for (y=0;y<Y;y++)
+    {
+        for (x=0;x<X;x++)
+        {
+
+            int greycode=(int)(23.0/eMAX*electrons[x][y][0]);
+            fprintf(stderr,"%c[48;5;%d",27,232+greycode); // Xterm 256 color map - shades of grey (232..255)
+            // https://code.google.com/p/conemu-maximus5/wiki/AnsiEscapeCodes#xterm_256_color_processing_requirements
+            greycode=(int)(10.0/eMAX*electrons[x][y][0]);
+            fprintf(stderr,"m%c%c%c[0m",greycode+'0','.',27);
+        }
+        fprintf(stderr,"    ");
+        for (x=0;x<X;x++)
+        {
+
+            int greycode=(int)(23.0/hMAX*holes[x][y][0]);
+            fprintf(stderr,"%c[48;5;%d",27,232+greycode); // Xterm 256 color map - shades of grey (232..255)
+            // https://code.google.com/p/conemu-maximus5/wiki/AnsiEscapeCodes#xterm_256_color_processing_requirements
+            greycode=(int)(10.0/hMAX*holes[x][y][0]);
+            fprintf(stderr,"m%c%c%c[0m",greycode+'0','.',27);
+        }
+        fprintf(stderr,"\n");
+    }
+
+    fprintf(stderr,"RMAX: %e\n",RMAX);
+    fprintf(stderr,"%*s\n",2+X+X+X, "<<< RECOMBINATION <<<");
+    for (y=0;y<Y;y++)
+    {
+        fprintf(stderr,"%*s",2+X," ");
+        for (x=0;x<X;x++)
+        {
+            int greycode=(int)(23.0*recombination[x][y][0]/RMAX);
+            fprintf(stderr,"%c[48;5;%d",27,232+greycode); 
+            greycode=(int)(10.0*recombination[x][y][0]/RMAX);
+            fprintf(stderr,"m%c%c%c[0m",greycode+'0','.',27);
+//        fprintf(stderr,"%e ",recombination[x][y][0]/RMAX);
+        }
+        fprintf(stderr,"\n");
+    }
+
+    // echo recombination rate to stderr to go below e-/h+ densities
+    fprintf(stderr,"T: %d Recombi: %e Total electron: %f Total hole: %f\n",
+            T,X*Y*Z*totalrecombination,electron_total,hole_total);
 }
 
 //Calculates dipole potential along trace of lattice
@@ -133,7 +257,7 @@ void lattice_potential_XYZ(char * filename)
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
-                fprintf(fo,"%d %d %f\n",x,y,dipole_potential(x,y,z));
+                fprintf(fo,"%d %d %d %f\n",x,y,z,dipole_potential(x,y,z));
     fclose(fo);
 }
 
@@ -772,7 +896,7 @@ void outputlattice_dumb_terminal()
 
             //fprintf(stderr,"%c[%d",27,31+((int)(8.0*fabs(potential)/DMAX))%8); //8 colours
             //fprintf(stderr,"%c[48;5;%d",27,17+(int)(214.0*fabs(potential)/DMAX)); // Xterm 256 color map - (16..231)
-            fprintf(stderr,"%c[48;5;%d",27,232+12+(int)(12.0*potential/DMAX)); // Xterm 256 color map - shades of grey (232..255)
+            fprintf(stderr,"%c[48;5;%d",27,232+12+(int)(11.0*potential/DMAX)); // Xterm 256 color map - shades of grey (232..255)
             // https://code.google.com/p/conemu-maximus5/wiki/AnsiEscapeCodes#xterm_256_color_processing_requirements
 
             //if (potential<0.0) // if negative
