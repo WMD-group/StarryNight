@@ -50,8 +50,8 @@ int main(int argc, char *argv[])
     }
     if (argc>2)
     {
-        sscanf(argv[2],"%lf",&Dipole);
-        fprintf(stderr,"Command Line Dipole: Dipole = %lf\n",Dipole);
+        sscanf(argv[2],"%lf",&CageStrain);
+        fprintf(stderr,"Command Line CageStrain: CageStrain = %lf\n",CageStrain);
     }
     
     // LOGFILE ;;; FIXME: Not used much at present (historic but sensible)
@@ -99,16 +99,20 @@ int main(int argc, char *argv[])
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
-    fprintf(stderr,"'.' is %d MC moves attempted.\n",MCMinorSteps);
+    fprintf(stderr,"'.' is %e MC moves attempted.\n",(double)MCMinorSteps);
 
     fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
     beta=1/((float)T/300.0);
 
     // Equilibriated before Hysterisis scan
-    fprintf(stderr,"Equilibriation MC moves... %d\n",MCMinorSteps*MCEqmSteps);
-    for (k=0;k<MCMinorSteps*MCEqmSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
-         MC_move();
+    fprintf(stderr,"Equilibriation MC moves... %e\n",(double)MCMinorSteps*(double)MCEqmSteps);
+    for (i=0;i<MCEqmSteps;i++)
+    {
+        fprintf(stderr,",");
+        for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
+            MC_move();
+    }
  
     lattice_Efield_XYZ("equilib_lattice_efield.xyz");
     outputlattice_svg("equilib-SVG.svg");
