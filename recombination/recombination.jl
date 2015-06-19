@@ -23,11 +23,17 @@ pot*=factor
 pot/=ɛr
 N=length(pot) # number of elements
 
-function partition(f)
-    Zh=sum(f(-pot))
-    Ze=sum(f(pot))
-    ρh=(1/Zh) * f(-pot)
-    ρe=(1/Ze) * f(pot)
+N=1000
+#En=0.13*randn(N) # Normal distribution
+En=0.13*sin(range(0,N)) # Sinusoidal variations
+
+function recombination(kernel)
+    # Calculate partition function by sum over state energies
+    Zh=sum(kernel(-pot))
+    Ze=sum(kernel(pot))
+    # Charge densities from partition fn.
+    ρh=(1/Zh) * kernel(-pot)
+    ρe=(1/Ze) * kernel(pot)
 
     @printf "Zh: %e Ze: %e e: %e h: %e\n" Zh Ze sum(ρe) sum(ρh)
     # Factors of N make these values independent of number of elements in the
@@ -39,9 +45,9 @@ function partition(f)
 end
 
 println("Boltzmann statistics...")
-partition( x -> exp(-β*x) )
+recombination( En -> exp(-β*En) )
 println("Fermi-Dirac statistics...")
-partition( x -> 1./(exp(β*x) + 1.0) )
+recombination( En -> 1./(exp(β*En) + 1.0) )
 println("Fermi-Dirac, chem pot = 1.0 eV...")
-partition( x -> 1./(exp(β*(x+1.0)) + 1.0) )
+recombination( En -> 1./(exp(β*(En+1.0)) + 1.0) )
 
