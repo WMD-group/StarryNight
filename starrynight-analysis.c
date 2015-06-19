@@ -102,7 +102,7 @@ static void recombination_calculator(FILE *log)
 
     double BETA=1/(0.025); // 1/ (k_b T) in eV
     double potentialeV=0.165; // convert internal units --> eV / V for pot
-    potentialeV/=2; // dielectric constant: screens electrostatic potential
+    potentialeV/=5; // dielectric constant: screens electrostatic potential
 
     // PARTITION FUNCTIONS <<< WHERE THE MAGIC HAPPENS <<<
     double ZBe=0.0, ZBh=0.0;
@@ -127,7 +127,8 @@ static void recombination_calculator(FILE *log)
 //    Ze/=X*Y*Z;
 //    Zh/=X*Y*Z;
 
-    fprintf(log,"T: %d ZBe: %f ZBh: %f ZFDe: %f ZFDh: %f\n",T,ZBe,ZBh,ZFDe,ZFDh);
+    fprintf(log,"T: %d ZBe: %e ZBh: %e ZFDe: %e ZFDh: %e R_Boltz: %e ",
+            T,ZBe,ZBh,ZFDe,ZFDh,(X*Y*Z)*(X*Y*Z)/(ZBe*ZBh));
 
     double eMAX=0.0,hMAX=0.0,RMAX=0.0;
 
@@ -164,7 +165,7 @@ static void recombination_calculator(FILE *log)
                 totalrecombination+=electrons[x][y][z]*holes[x][y][z];
             }
 
-    fprintf(log,"FD-Recombi: %e FD-Total-electron: %f FD-Total-hole: %f\n",
+    fprintf(log,"R_FD: %e FD-Total-electron: %e FD-Total-hole: %e\n",
             X*Y*Z*totalrecombination,electron_total,hole_total);
     fflush(log); //flush output buffer; commits writes to OS / disk.
 

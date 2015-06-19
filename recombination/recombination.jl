@@ -1,12 +1,14 @@
 #Read in potential...
 
 lattice=readdlm(ARGS[1])
-pot=lattice[:,4] # just potential, in eV
+pot=lattice[:,4] # just potential, in internal units of Starrynight
+
+T=300           # Temperature; Kelvin
 
 kb=8.6173324E-5 # in units of eV
-β=1/(kb*300)    # Thermodynamic Beta; units
+β=1/(kb*T)      # Thermodynamic Beta; units
 
-Å=1E-10
+Å=1E-10 # Angstrom
 r=6.29Å # Sensible figure for MA for consistency; AW
 D=3.336E-30 #Debye in SI
 ε0=8.854E-12 #Units: C2N−1m−2
@@ -21,11 +23,15 @@ pot*=factor
 # Apply effective dielectric screening...
 ɛr=4.5
 pot/=ɛr
+
 N=length(pot) # number of elements
 
+@printf "OK; data loaded and converted to Volts. Variance: %e SD: %e\n\n" var(pot) std(pot)
+print(hist(pot,50))
+
 N=1000
-#En=0.13*randn(N) # Normal distribution
-En=0.13*sin(range(0,N)) # Sinusoidal variations
+#pot=0.13*randn(N) # Normal distribution
+#pot=0.13*sin(range(0,N)) # Sinusoidal variations
 
 function recombination(kernel)
     # Calculate partition function by sum over state energies

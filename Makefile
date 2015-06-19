@@ -14,7 +14,7 @@ parallel: starrynight
 	seq 0 50 1000 | parallel  ./starrynight {}  
 
 superparallel: starrynight
-	awk 'BEGIN{for (i=0;i<1000;i=i+50) { for (j=0.0;j<=2.0;j=j+1.0) printf ("%f %f\n",i,j); }}' \
+	awk 'BEGIN{for (i=0;i<1000;i=i+20) { for (j=0.0;j<=4.0;j=j+1.0) printf ("%f %f\n",i,j); }}' \
 		| parallel --colsep ' ' ./starrynight {1} {2}  > aggregate.dat
 
 parallel-annamaria: starrynight-new
