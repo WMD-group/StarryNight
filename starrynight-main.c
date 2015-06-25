@@ -26,7 +26,10 @@ static int rand_int(int SPAN);
 static void gen_neighbour();
 
 static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole);
+
+static void MC_moves(int moves);
 static void MC_move();
+static void MC_move_openmp();
 
 int main(int argc, char *argv[])
 {
@@ -107,8 +110,7 @@ int main(int argc, char *argv[])
     for (i=0;i<MCEqmSteps;i++)
     {
         fprintf(stderr,",");
-        for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
-            MC_move();
+        MC_moves(MCMinorSteps);
     }
  
     if(CalculateEfield) lattice_Efield_XYZ("equilib_lattice_efield.xyz");
@@ -148,9 +150,7 @@ int main(int argc, char *argv[])
 
 //            initialise_lattice(); // RESET LATTICE!
             tic=clock();
-//            #pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
-            for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
-                MC_move();
+            MC_moves(MCMinorSteps);
             toc=clock();
 
 //            fprintf(stderr,"Clocks: tic: %d toc: %d\n",tic,toc);
@@ -292,7 +292,7 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
 
     // Sum over near neighbours for dipole-dipole interaction
     int i;
-//    #pragma omp parallel for private(dx,dy,dz,d,n) reduction(+:dE) schedule(static,1)
+    #pragma omp parallel for private(dx,dy,dz,d,n) reduction(+:dE) schedule(static,1)
 // NB: Works, but only modest speed gains!
     for (i=0;i<neighbour;i++)
     {
@@ -341,6 +341,14 @@ dE+= (olddipole->length * testdipole->length) *
     return(dE); 
 }
 
+static void MC_moves(int moves)
+{
+    int i;
+    //moves/=8; //hard coded domain decomp.
+    for (i=0;i<moves;i++)
+        MC_move();
+}
+
 static void MC_move()
 {
     int x, y, z;
@@ -383,3 +391,59 @@ static void MC_move()
         REJECT++;
 }
 
+static void MC_move_openmp()
+{
+    int rx, ry, rz;
+    int DDx=2, DDy=2, DDz=2; //domain decomposition in X,Y,Z
+    struct dipole newdipole, *olddipole;
+
+    // Choose random dipole / lattice location
+
+    // within segmented domains
+    rx=rand_int(X/DDx);
+    ry=rand_int(Y/DDy);
+    rz=rand_int(Z/DDz);
+
+    //if (lattice[x][y][z].length==0.0) return; //dipole zero length .'. not present
+    // random new orientation. 
+    // Nb: this is the definition of a MC move - might want to consider
+    // alternative / global / less disruptive moves as well
+    if (ConstrainToX)
+        random_X_point(& newdipole); //consider any <100> vector
+    else
+        random_sphere_point(& newdipole);    
+
+    int Dx,Dy,Dz; //iterature over domains
+    #pragma omp parallel for firstprivate(newdipole,olddipole) collapse(3) schedule(static,1)
+    for (Dx=0;Dx<DDx;Dx++)
+        for (Dy=0;Dy<DDy;Dy++)
+            for (Dz=0;Dz<DDz;Dz++)
+{
+    float dE=0.0;
+    int x,y,z;
+    // move into our constrained domain
+    x=rx+Dx*(X/DDx);
+    y=ry+Dy*(Y/DDy);
+    z=rz+Dz*(Z/DDz);
+
+    newdipole.length = lattice[x][y][z].length; // preserve length / i.d. of dipole
+    olddipole=& lattice[x][y][z];
+
+    //calc site energy
+    dE=site_energy(x,y,z, & newdipole,olddipole);
+
+#pragma omp critical
+    if (dE < 0.0 || exp(-dE * beta) > genrand_real2() )
+    {
+        lattice[x][y][z].x=newdipole.x;
+        lattice[x][y][z].y=newdipole.y;
+        lattice[x][y][z].z=newdipole.z;
+//      lattice[x][y][z].length=newdipole.length; // never changes with current
+//      algorithms.
+
+   //     ACCEPT++;
+    }
+   // else
+   //     REJECT++;
+}
+}
