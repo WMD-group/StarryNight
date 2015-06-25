@@ -292,7 +292,7 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
 
     // Sum over near neighbours for dipole-dipole interaction
     int i;
-    #pragma omp parallel for private(dx,dy,dz,d,n) reduction(+:dE) schedule(static,1)
+//    #pragma omp parallel for private(dx,dy,dz,d,n) reduction(+:dE) schedule(static,1)
 // NB: Works, but only modest speed gains!
     for (i=0;i<neighbour;i++)
     {
@@ -344,7 +344,6 @@ dE+= (olddipole->length * testdipole->length) *
 static void MC_move()
 {
     int x, y, z;
-    float d;
     float dE=0.0;
     struct dipole newdipole, *olddipole;
 
@@ -354,7 +353,7 @@ static void MC_move()
     y=rand_int(Y);
     z=rand_int(Z);
 
-    if (lattice[x][y][z].x==0.0 && lattice[x][y][z].y==0.0 && lattice[x][y][z].z==0.0) return; //dipole zero length .'. not present
+    if (lattice[x][y][z].length==0.0) return; //dipole zero length .'. not present
 
     // random new orientation. 
     // Nb: this is the definition of a MC move - might want to consider
