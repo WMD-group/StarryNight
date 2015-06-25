@@ -97,25 +97,29 @@ static void recombination_calculator(FILE *log)
     double MINPOT=1e6,MAXPOT=-1e6;
     double pot;
     double electrons[X][Y][Z],holes[X][Y][Z], recombination[X][Y][Z];
-    double Ze=0.0, Zh=0.0; // PARTITION FUNCTIONS <<< WHERE THE MAGIC HAPPENS <<<
     double electron_total=0.0, hole_total=0.0, totalrecombination=0.0;
     int x,y,z;
 
     double BETA=1/(0.025); // 1/ (k_b T) in eV
     double potentialeV=0.165; // convert internal units --> eV / V for pot
-    potentialeV/=2; // dielectric constant: screens electrostatic potential
+    potentialeV/=5; // dielectric constant: screens electrostatic potential
 
-    Ze=Zh=0.0;
+    // PARTITION FUNCTIONS <<< WHERE THE MAGIC HAPPENS <<<
+    double ZBe=0.0, ZBh=0.0;
+    double ZFDe=0.0, ZFDh=0.0;
+
     for (x=0;x<X;x++) 
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
             {
                 pot=potentialeV*dipole_potential(x,y,z);
-                //Ze+=exp(-pot*BETA);
-               // Zh+=exp(pot*BETA); // holes float...
+                // Boltzmann statistics
+                ZBe+=exp(-pot*BETA);
+                ZBh+=exp(pot*BETA); // holes float...
 
-               Ze+=1.0/(exp(-pot*BETA)+1.0);
-               Zh+=1.0/(exp(pot*BETA)+1.0); // holes float...
+                // Fermi-Dirac statistics
+                ZFDe+=1.0/(exp(-pot*BETA)+1.0);
+                ZFDh+=1.0/(exp(pot*BETA)+1.0); // holes float...
             }
 
     // set density = 1 per site on average
@@ -123,10 +127,13 @@ static void recombination_calculator(FILE *log)
 //    Ze/=X*Y*Z;
 //    Zh/=X*Y*Z;
 
-    fprintf(stderr,"Partition function, Ze: %f Zh: %f\n",Ze,Zh);
+    fprintf(log,"T: %d ZBe: %e ZBh: %e ZFDe: %e ZFDh: %e R_Boltz: %e ",
+            T,ZBe,ZBh,ZFDe,ZFDh,(X*Y*Z)*(X*Y*Z)/(ZBe*ZBh));
 
     double eMAX=0.0,hMAX=0.0,RMAX=0.0;
 
+    // Calculate densities of electrons and holes through the lattice; 
+    // multiply these together for the total recombination
     for (x=0;x<X;x++) 
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
@@ -135,12 +142,12 @@ static void recombination_calculator(FILE *log)
                 // surf
                 pot=potentialeV*dipole_potential(x,y,z);
                 
-                electrons[x][y][z]=1.0/(exp(-pot*BETA)+1.0)/Ze;
-                holes    [x][y][z]=1.0/(exp(pot*BETA)+1.0)/Zh;
+                electrons[x][y][z]=1.0/(exp(-pot*BETA)+1.0)/ZFDe;
+                holes    [x][y][z]=1.0/(exp(pot*BETA)+1.0)/ZFDh;
 
-//                electrons[x][y][z]=exp(-pot*BETA)/Ze;
-//                holes    [x][y][z]=exp(pot*BETA)/Zh;
-
+                // Boltzmann
+//                electrons[x][y][z]=exp(-pot*BETA)/ZBe;
+//                holes    [x][y][z]=exp(pot*BETA)/ZBh;
 
                 recombination[x][y][z]=electrons[x][y][z]*holes[x][y][z];
 /*                
@@ -158,12 +165,14 @@ static void recombination_calculator(FILE *log)
                 totalrecombination+=electrons[x][y][z]*holes[x][y][z];
             }
 
-    fprintf(log,"T: %d Recombi: %e Total electron: %f Total hole: %f\n",
-            T,X*Y*Z*totalrecombination,electron_total,hole_total);
+    fprintf(log,"R_FD: %e FD-Total-electron: %e FD-Total-hole: %e\n",
+            X*Y*Z*totalrecombination,electron_total,hole_total);
     fflush(log); //flush output buffer; commits writes to OS / disk.
 
     // Plot densities holes / e
+    
     //  EVERYTHING BELOW HERE SHOULD BE OUTPUT; NOT PHYSICS
+
     const char * density="012345689";
 //    fprintf(stderr,"    ");
 //    float DMAX=1.0/(X*Y*Z);

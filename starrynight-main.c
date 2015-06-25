@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     int i,j,k, x,y; // for loop iterators
     int tic,toc;    // keep track of time for user interface; how many MC moves per second
 
-    char name[100]; 
+    char name[100],prefix[100]; 
     char const *LOGFILE = NULL; //for output filenames
     // Yes, I know, 100 chars are enough for any segfault ^_^
 
@@ -50,12 +50,12 @@ int main(int argc, char *argv[])
     }
     if (argc>2)
     {
-        sscanf(argv[2],"%lf",&Dipole);
-        fprintf(stderr,"Command Line Dipole: Dipole = %lf\n",Dipole);
+        sscanf(argv[2],"%lf",&CageStrain);
+        fprintf(stderr,"Command Line CageStrain: CageStrain = %lf\n",CageStrain);
     }
     
     // LOGFILE ;;; FIXME: Not used much at present (historic but sensible)
-    sprintf(name,"Recombination_T_%04d.log",T);
+    sprintf(name,"Recombination_T_%04d_CageStrain_%f.log",T,CageStrain);
     // If we're going to do some actual science, we better have a logfile...
     FILE *log;
     LOGFILE=name;
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
     lattice_Efield_XYZ("initial_lattice_efield.xyz");
 //    lattice_Efieldoffset_XYZ("initial_lattice_efieldoffset.xyz");
-    lattice_potential_XY("initial_lattice_potential.xyz"); // potential distro
+    lattice_potential_XYZ("initial_lattice_potential.xyz"); // potential distro
     outputlattice_svg("initial-SVG.svg");
     outputpotential_png("initial_pot.png"); //"final_pot.png");
     outputlattice_xyz("initial_dipoles.xyz");
@@ -99,16 +99,20 @@ int main(int argc, char *argv[])
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
-    fprintf(stderr,"'.' is %d MC moves attempted.\n",MCMinorSteps);
+    fprintf(stderr,"'.' is %e MC moves attempted.\n",(double)MCMinorSteps);
 
     fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
     beta=1/((float)T/300.0);
 
     // Equilibriated before Hysterisis scan
-    fprintf(stderr,"Equilibriation MC moves... %d\n",MCMinorSteps*MCEqmSteps);
-    for (k=0;k<MCMinorSteps*MCEqmSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
-         MC_move();
+    fprintf(stderr,"Equilibriation MC moves... %e\n",(double)MCMinorSteps*(double)MCEqmSteps);
+    for (i=0;i<MCEqmSteps;i++)
+    {
+        fprintf(stderr,",");
+        for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
+            MC_move();
+    }
  
     lattice_Efield_XYZ("equilib_lattice_efield.xyz");
     outputlattice_svg("equilib-SVG.svg");
@@ -189,20 +193,22 @@ fprintf(stderr,"\n");
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
             
             fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic)*(double)CLOCKS_PER_SEC);
- 
-            sprintf(name,"T_%04d_i_%03d_lattice_efield.xyz",T,i);
+
+            sprintf(prefix,"T_%04d_i_%03d_CageStrain_%f",T,i,CageStrain);
+
+            sprintf(name,"%s_lattice_efield.xyz",prefix);
             lattice_Efield_XYZ(name);
 
-            sprintf(name,"T_%04d_i_%03d_lattice_potential.xyz",T,i);
+            sprintf(name,"%s_lattice_potential.xyz",prefix);
             lattice_potential_XYZ(name); // potential distro
     
-            sprintf(name,"T_%04d_i_%03d_MC-PNG_final.png",T,i);
+            sprintf(name,"%s_MC-PNG_final.png",prefix);
             outputlattice_ppm_hsv(name);
 
-            sprintf(name,"T_%04d_i_%03d_MC-SVG_final.svg",T,i);
+            sprintf(name,"%s_MC-SVG_final.svg",prefix);
             outputlattice_svg(name);
 
-            sprintf(name,"T_%04d_i_%03d_potential.png",T,i);
+            sprintf(name,"%s_potential.png",prefix);
             outputpotential_png(name); //"final_pot.png");
 
             // Manipulate the run conditions depending on simulation time
