@@ -76,12 +76,12 @@ int main(int argc, char *argv[])
     initialise_lattice(); //populate with random dipoles
     fprintf(stderr,"Lattice initialised.");
 
-    lattice_Efield_XYZ("initial_lattice_efield.xyz");
-//    lattice_Efieldoffset_XYZ("initial_lattice_efieldoffset.xyz");
-    if(SavePotentialXYZ) lattice_potential_XYZ("initial_lattice_potential.xyz"); // potential distro
+    if(CalculateEfield) lattice_Efield_XYZ("initial_lattice_efield.xyz");
+    if(CalculateEfield) lattice_Efieldoffset_XYZ("initial_lattice_efieldoffset.xyz");
+    if(CalculatePotential) lattice_potential_XYZ("initial_lattice_potential.xyz"); // potential distro
     if(SaveDipolesSVG) outputlattice_svg("initial-SVG.svg");
-    outputpotential_png("initial_pot.png"); //"final_pot.png");
-    outputlattice_xyz("initial_dipoles.xyz");
+    if(CalculatePotential) outputpotential_png("initial_pot.png"); //"final_pot.png");
+    if(SaveDipolesXYZ) outputlattice_xyz("initial_dipoles.xyz");
  
     fprintf(stderr,"Intial lattice recombination: \n");
     
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     if(CalculateRadialOrderParameter) radial_order_parameter();
     // output initialised lattice - mainly for debugging
     if(SaveDipolesPNG) outputlattice_ppm_hsv("initial.png");
-    if(SavePotentialXYZ) outputpotential_png("initial_pot.png"); //"final_pot.png");
+    if(CalculatePotential) outputpotential_png("initial_pot.png"); //"final_pot.png");
     //outputlattice_xyz("initial_dipoles.xyz");
     //outputlattice_xyz_overprint("initial_overprint.xyz");
     
@@ -113,9 +113,9 @@ int main(int argc, char *argv[])
             MC_move();
     }
  
-    if(SavePotentialXYZ) lattice_Efield_XYZ("equilib_lattice_efield.xyz");
+    if(CalculateEfield) lattice_Efield_XYZ("equilib_lattice_efield.xyz");
     if(SaveDipolesSVG)   outputlattice_svg("equilib-SVG.svg");
-    if(SavePotentialXYZ) outputpotential_png("equilib_pot.png"); //"final_pot.png");
+    if(CalculatePotential) outputpotential_png("equilib_pot.png"); //"final_pot.png");
  
 //    double AMP; double PHASE;
 //    for (AMP=0.01; AMP<=0.05; AMP+=0.01)
@@ -195,10 +195,10 @@ fprintf(stderr,"\n");
             sprintf(prefix,"T_%04d_i_%03d_CageStrain_%f",T,i,CageStrain);
 
             sprintf(name,"%s_lattice_efield.xyz",prefix);
-            if(SavePotentialXYZ) lattice_Efield_XYZ(name);
+            if(CalculateEfield) lattice_Efield_XYZ(name);
 
             sprintf(name,"%s_lattice_potential.xyz",prefix);
-            if(SavePotentialXYZ) lattice_potential_XYZ(name); // potential distro
+            if(CalculatePotential) lattice_potential_XYZ(name); // potential distro
     
             sprintf(name,"%s_MC-PNG_final.png",prefix);
             if(SaveDipolesPNG) outputlattice_ppm_hsv(name);
@@ -207,7 +207,7 @@ fprintf(stderr,"\n");
             if(SaveDipolesSVG) outputlattice_svg(name);
 
             sprintf(name,"%s_potential.png",prefix);
-            if(SavePotentialXYZ) outputpotential_png(name); //"final_pot.png");
+            if(CalculatePotential) outputpotential_png(name); //"final_pot.png");
 
             // Manipulate the run conditions depending on simulation time
             //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND

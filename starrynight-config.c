@@ -72,9 +72,12 @@ int DisplayDumbTerminal=true;
 int CalculateRecombination=true;
 int CalculateRadialOrderParameter=false;
       
+int CalculatePotential=false;
+int CalculateEfield=false;
+
+int SaveDipolesXYZ=false;
 int SaveDipolesPNG=false;
 int SaveDipolesSVG=false;
-int SavePotentialXYZ=false;
 
 //END OF SIMULATION PARAMETERS
 // {{ Except for the ones hardcoded into the algorithm :^) }}
@@ -154,11 +157,12 @@ void load_config()
     config_lookup_bool(cf,"CalculateRecombination",&CalculateRecombination);
     config_lookup_bool(cf,"CalculateRadialOrderParameter",&CalculateRadialOrderParameter);
       
-    config_lookup_bool(cf,"SaveDipolesPNG",&SaveDipolesPNG);
+    config_lookup_bool(cf,"CalculatePotential",&CalculatePotential);
+    config_lookup_bool(cf,"CalculateEfield",&CalculateEfield);
+    
     config_lookup_bool(cf,"SaveDipolesSVG",&SaveDipolesSVG);
-    config_lookup_bool(cf,"SavePotentialXYZ",&SavePotentialXYZ);
-
-
+    config_lookup_bool(cf,"SaveDipolesPNG",&SaveDipolesPNG);
+    config_lookup_bool(cf,"SaveDipolesXYZ",&SaveDipolesXYZ);
 
     fprintf(stderr,"Config loaded. \n");
 }
