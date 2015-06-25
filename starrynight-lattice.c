@@ -148,6 +148,10 @@ void solid_solution()
     int x,y,z;
     int i;
     float sample;
+    int DipoleHisto[10],count=0;
+
+    for (i=0;i<dipolecount;i++)
+        DipoleHisto[i]=0;
 
     for (x=0;x<X;x++)
         for (y=0;y<Y;y++)
@@ -160,9 +164,16 @@ void solid_solution()
                 // Otherwise step through to next on list, taking away
                 // prevalence from this random number
                 for (i=0; sample>dipoles[i].prevalence; sample-=dipoles[i].prevalence, i++);
-                fprintf(stderr,"SolidSoln: %d %d %d Chosing %f\n",x,y,z,dipoles[i].length);
+//                fprintf(stderr,"SolidSoln: %d %d %d Chosing %f\n",x,y,z,dipoles[i].length);
                 // set dipole length to sampled value
                 lattice[x][y][z].length=dipoles[i].length;
+
+                DipoleHisto[i]++; count++;
             }
+
+    fprintf(stderr,"\nSolid Solution: ");
+    for (i=0;i<dipolecount;i++)
+        fprintf(stderr,"    Dipole %d: Length: %f Count: %d",i,dipoles[i].length,DipoleHisto[i]);
+    fprintf(stderr,"\nTotal dipoles allocated: %d X*Y*Z: %d (numbers should agree)\n",count,X*Y*Z);
 }
 

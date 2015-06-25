@@ -25,6 +25,8 @@ struct dipole
     float x,y,z;
     float length; //length of dipole, to allow for solid state mixture (MA, FA, Ammonia, etc.)
 } lattice[X][Y][Z];
+// Nb: would be trivial to make this a runtime option with memory allocation;
+// BUT - this way the X,Y,Z are constants and can be inspected
 
 struct mixture
 {
@@ -32,7 +34,6 @@ struct mixture
     float prevalence;
 } dipoles[10];
 int dipolecount=0;
-
 
 // Prototypes...
 static float dot(struct dipole *a, struct dipole *b);
