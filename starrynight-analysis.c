@@ -219,8 +219,10 @@ static void recombination_calculator(FILE *log)
     }
 
     // echo recombination rate to stderr to go below e-/h+ densities
-    fprintf(stderr,"T: %d Recombi: %e Total electron: %f Total hole: %f\n",
-            T,X*Y*Z*totalrecombination,electron_total,hole_total);
+    fprintf(stderr,"T: %d ZBe: %e ZBh: %e ZFDe: %e ZFDh: %e R_Boltz: %e \n",
+            T,ZBe,ZBh,ZFDe,ZFDh,(X*Y*Z)*(X*Y*Z)/(ZBe*ZBh));
+    fprintf(stderr,"R_FD: %e FD-Total-electron: %e FD-Total-hole: %e\n",
+            X*Y*Z*totalrecombination,electron_total,hole_total);
 }
 
 //Calculates dipole potential along trace of lattice

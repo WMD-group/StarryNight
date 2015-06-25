@@ -71,7 +71,9 @@ char const *LOGFILE = NULL; //for output filenames
 int DisplayDumbTerminal=true;
 int CalculateRecombination=true;
 int CalculateRadialOrderParameter=false;
-      
+
+int ConstrainToX=false;
+
 int CalculatePotential=false;
 int CalculateEfield=false;
 
@@ -140,6 +142,8 @@ void load_config()
     */
     // above doesn't do anything currently - not sure whether I lost the code
     // at some point?
+
+    config_lookup_bool(cf,"ConstrainToX",&ConstrainToX);
 
     config_lookup_float(cf,"DipoleFraction",&dipole_fraction);
 

@@ -54,9 +54,8 @@ int main(int argc, char *argv[])
         fprintf(stderr,"Command Line CageStrain: CageStrain = %lf\n",CageStrain);
     }
     
-    // LOGFILE ;;; FIXME: Not used much at present (historic but sensible)
+    // LOGFILE -- If we're going to do some actual science, we better have one...
     sprintf(name,"Recombination_T_%04d_CageStrain_%f.log",T,CageStrain);
-    // If we're going to do some actual science, we better have a logfile...
     FILE *log;
     LOGFILE=name;
     log=fopen(LOGFILE,"w");
@@ -65,16 +64,17 @@ int main(int argc, char *argv[])
     //Fire up the twister!
     init_genrand(0xDEADBEEF); //314159265);  // reproducible data :)
     //init_genrand(time(NULL)); // seeded with current time
-    fprintf(stderr,"Mersenne Twister initialised. ");
+    fprintf(stderr,"Mersenne Twister initialised...\t");
 
     gen_neighbour(); //generate neighbour list for fast iteration in energy calculator
+    fprintf(stderr,"Neighbour list generated...\t");
 
     void (*initialise_lattice)() =  & initialise_lattice_antiferro_wall ; // C-function pointer to chosen initial lattice
     // FIXME: C Foo might confuse people? Explain more? Turn into a config
     // option?
 
     initialise_lattice(); //populate with random dipoles
-    fprintf(stderr,"Lattice initialised.");
+    fprintf(stderr,"Lattice initialised...");
 
     if(CalculateEfield) lattice_Efield_XYZ("initial_lattice_efield.xyz");
     if(CalculateEfield) lattice_Efieldoffset_XYZ("initial_lattice_efieldoffset.xyz");
@@ -83,9 +83,6 @@ int main(int argc, char *argv[])
     if(CalculatePotential) outputpotential_png("initial_pot.png"); //"final_pot.png");
     if(SaveDipolesXYZ) outputlattice_xyz("initial_dipoles.xyz");
  
-    fprintf(stderr,"Intial lattice recombination: \n");
-    
-    fprintf (stderr,"LOCAL ORDER: \n");
     if(CalculateRadialOrderParameter) radial_order_parameter();
     // output initialised lattice - mainly for debugging
     if(SaveDipolesPNG) outputlattice_ppm_hsv("initial.png");
@@ -99,8 +96,6 @@ int main(int argc, char *argv[])
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
     fprintf(stderr,"'.' is %e MC moves attempted.\n",(double)MCMinorSteps);
-
-    fprintf(log,"# ACCEPT+REJECT, Efield, Eangle, E_dipole, E_strain, E_field, (E_dipole+E_strain+E_field)\n");
 
     beta=1/((float)T/300.0);
 
@@ -143,13 +138,12 @@ int main(int argc, char *argv[])
             r=(r&0xAA)>>1 | (r&0x55)<<1;
 
             T=r*2;
-*/
-//            beta=1/((float)T/300.0);  
+            beta=1/((float)T/300.0);  
+*/  
 
             // Do some MC moves!
 
 //            initialise_lattice(); // RESET LATTICE!
-
             tic=clock();
 //            #pragma omp parallel for //SEGFAULTS :) - non threadsafe code everywhere
             for (k=0;k<MCMinorSteps;k++) //let's hope the compiler inlines this to avoid stack abuse. Alternatively move core loop to MC_move fn?
@@ -223,7 +217,7 @@ fprintf(stderr,"\n");
 //    outputlattice_ppm_hsv("MC-PNG_final.png");
 //    outputlattice_svg("MC-SVG_final.svg");
 
-    //    lattice_potential_log(log);
+    //lattice_potential_log(log);
     //lattice_angle_log(log);
 
     //    lattice_potential_XY("final_pot_xy.dat");
@@ -279,7 +273,7 @@ static void gen_neighbour()
                 neighbours[neighbour].d=d;
                 neighbour++;
             }
-    fprintf(stderr,"Neighbour list generated: %d neighbours.\n",neighbour);
+    fprintf(stderr,"Neighbour list generated: %d neighbours with %d DipoleCutOff.\n",neighbour,DipoleCutOff);
 }
 
 static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole)
@@ -289,22 +283,11 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
     double dE=0.0;
     struct dipole *testdipole, n;
 
+    // This now iterates over the neighbour list of neighbours[0..neighbour]
+    // Which contains all the precomputed dx,dy,dz for a spherical cutoff, and
+    // the sqrt distances etc.
+
     // Sum over near neighbours for dipole-dipole interaction
-/*
-#pragma omp parallel for reduction(+:dE) 
-    for (dx=-DipoleCutOff;dx<=DipoleCutOff;dx++)
-        for (dy=-DipoleCutOff;dy<=DipoleCutOff;dy++)
-#if(Z>1) //i.e. 3D in Z
-            for (dz=-DipoleCutOff;dz<=DipoleCutOff;dz++) //NB: conditional zDipoleCutOff to allow for 2D version
-#endif
-            {
-                if (dx==0 && dy==0 && dz==0)
-                    continue; //no infinities / self interactions please!
-
-                d=sqrt((float) dx*dx + dy*dy + dz*dz); //that old chestnut; distance in Euler space
-
-                if (d>(float)DipoleCutOff) continue; // Cutoff in d
-*/
     int i;
     #pragma omp parallel for private(dx,dy,dz,d,n) reduction(+:dE) schedule(static,1)
 // NB: Works, but only modest speed gains!
@@ -338,15 +321,8 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
         - dot(olddipole, & Efield);
     //fprintf(stderr,"%f\n",dot(newdipole, & Efield));
 
-    // interaction with strain of cage modelled as cos^2 function (low energy
-    // is diagonal with MA ion along hypotenuse)
-    //    dE += + K*cos(2*newangle)*cos(2*newangle)
-    //          - K*cos(2*oldangle)*cos(2*oldangle);
-
-    // This is to replicate nice cos^2 (angle) effect in dot products.
-    // There must be a more sensible way - if only I could remember my AS
-    // double-angle formulae!
-
+    if (K>0.0) // rarely used anymore; 2D lattice epitaxial strain term
+    {
     // along .x projection, squared
     n.x=1.0; n.y=0.0; n.z=0.0;
     dE +=   - K*fabs(dot(newdipole,&n))
@@ -355,7 +331,7 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
     n.x=0.0; n.y=1.0; n.z=0.0;
     dE +=   - K*fabs(dot(newdipole,&n))
         + K*fabs(dot(olddipole,&n));
-
+    }
     return(dE); 
 }
 
@@ -377,8 +353,10 @@ static void MC_move()
     // random new orientation. 
     // Nb: this is the definition of a MC move - might want to consider
     // alternative / global / less disruptive moves as well
-    random_sphere_point(& newdipole);    
-    //random_X_point(& newdipole);
+    if (ConstrainToX)
+        random_X_point(& newdipole); //consider any <100> vector
+    else
+        random_sphere_point(& newdipole);    
 
     olddipole=& lattice[x][y][z];
 
