@@ -21,7 +21,10 @@ factor=1/(4*pi*ε0) * (D1*r)/(r^3)
 pot*=factor
 
 # Apply effective dielectric screening...
-ɛr=4.5
+# Calculated value DFT: 5.6 --> 6.5 (dep. on MA alignment)
+# See: APL Mat. 1, 042111 (2013); http://dx.doi.org/10.1063/1.4824147
+# Measured value, Ellipso in NIR: 5.0
+ɛr=5.0
 pot/=ɛr
 
 N=length(pot) # number of elements
