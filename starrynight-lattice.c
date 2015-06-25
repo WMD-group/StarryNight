@@ -20,6 +20,8 @@ void initialise_lattice_spectrum();       // continuously varying angle dipoles;
 void initialise_lattice_buckled();
 void initialise_lattice_slab_delete();    // currently hardcoded to delete a slab of dipoles --> vacuum / surface calculations
 
+void solid_solution();  // apply mix of dipoles / gaps; for Relaxor ferroelectrics...
+
 void initialise_lattice_random()
 {
     int x,y,z;
@@ -30,10 +32,7 @@ void initialise_lattice_random()
         for (y=0;y<Y;y++)
             for (z=0;z<Z;z++)
             {
-                if (genrand_real1()<dipole_fraction) //occupy fraction of sites...
-                    random_sphere_point(& lattice[x][y][z]);
-                else
-                {lattice[x][y][z].x=0.0; lattice[x][y][z].y=0.0; lattice[x][y][z].z=0.0; }
+                random_sphere_point(& lattice[x][y][z]);
             }
     //Print lattice
     /*
@@ -144,4 +143,26 @@ void initialise_lattice_slab_delete()
             }
 }
 
+void solid_solution()
+{
+    int x,y,z;
+    int i;
+    float sample;
+
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+            for (z=0;z<Z;z++)
+            {
+                // sample is on {0..1}
+                sample=genrand_real1();
+                // go through dipoles list; if sample < prevalence, chose this
+                // dipole
+                // Otherwise step through to next on list, taking away
+                // prevalence from this random number
+                for (i=0; sample>dipoles[i].prevalence; sample-=dipoles[i].prevalence, i++);
+                fprintf(stderr,"SolidSoln: %d %d %d Chosing %f\n",x,y,z,dipoles[i].length);
+                // set dipole length to sampled value
+                lattice[x][y][z].length=dipoles[i].length;
+            }
+}
 

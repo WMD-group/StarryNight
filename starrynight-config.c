@@ -53,10 +53,10 @@ double beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
 struct dipole Efield; //now a vector, still k_B.T units per lattice unit
 
 double K=1.0; //elastic coupling constant for dipole moving within cage
-double Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
+//double Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
 double CageStrain=1.0; // as above
 
-double dipole_fraction=1.0; //fraction of sites to be occupied by dipoles
+//double dipole_fraction=1.0; //fraction of sites to be occupied by dipoles
 int DipoleCutOff=3;
 
 // These variables control the number of loops
@@ -122,10 +122,10 @@ void load_config()
     //    config_lookup_float(cf,"Eangle",&Eangle);
 
     config_lookup_float(cf,"K",&K);
-    config_lookup_float(cf,"Dipole",&Dipole);
+//    config_lookup_float(cf,"Dipole",&Dipole); DEPRECATED - see below for list
     config_lookup_float(cf,"CageStrain",&CageStrain);
 
-    /*
+    
     // read in list of dipoles + prevalence for solid mixture
     setting = config_lookup(cf, "Dipoles");
     dipolecount   = config_setting_length(setting);
@@ -139,13 +139,14 @@ void load_config()
     // stderr printf to check we read correctly
     for (i=0;i<dipolecount;i++)
     fprintf(stderr,"Dipole: %d Length: %f Prevalence: %f\n",i,dipoles[i].length, dipoles[i].prevalence);
-    */
+    
     // above doesn't do anything currently - not sure whether I lost the code
     // at some point?
 
     config_lookup_bool(cf,"ConstrainToX",&ConstrainToX);
 
-    config_lookup_float(cf,"DipoleFraction",&dipole_fraction);
+//    config_lookup_float(cf,"DipoleFraction",&dipole_fraction); DEPRECATED
+//    - now done with Dipoles above
 
     config_lookup_int(cf,"DipoleCutOff",&DipoleCutOff);
 

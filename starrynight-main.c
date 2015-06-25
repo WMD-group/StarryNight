@@ -76,6 +76,9 @@ int main(int argc, char *argv[])
     initialise_lattice(); //populate with random dipoles
     fprintf(stderr,"Lattice initialised...");
 
+    solid_solution(); //populate dipole strengths on top of this
+    fprintf(stderr,"Solid solution formed...");
+
     if(CalculateEfield) lattice_Efield_XYZ("initial_lattice_efield.xyz");
     if(CalculateEfield) lattice_Efieldoffset_XYZ("initial_lattice_efieldoffset.xyz");
     if(CalculatePotential) lattice_potential_XYZ("initial_lattice_potential.xyz"); // potential distro
@@ -176,7 +179,7 @@ int main(int argc, char *argv[])
             if(CalculateRecombination) recombination_calculator(log);
             if(CalculateRadialOrderParameter) radial_order_parameter(); // outputs directly to Terminal
 
-            fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
+            //fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
 //            fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
 //            fprintf(stdout,"Moves: %d CageStrain: %f T: %d Landau: %f\n",i*(MCMinorSteps/(X*Y*Z)),CageStrain,T,landau_order());
   fprintf(stderr,"\n");
@@ -301,9 +304,12 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
 
                 n.x=(float)dx/d; n.y=(float)dy/d; n.z=(float)dz/d; //normalised diff. vector
 
-                //True dipole like
-                dE+=  Dipole * ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) / (d*d*d)
-                    - Dipole * ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) / (d*d*d); 
+    //True dipole like
+dE+= (olddipole->length * testdipole->length) * 
+    (
+        ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) -
+        ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) 
+    ) / (d*d*d); 
 
                 // Ferroelectric / Potts model - vector form
                 //            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
@@ -358,6 +364,7 @@ static void MC_move()
     else
         random_sphere_point(& newdipole);    
 
+    newdipole.length = lattice[x][y][z].length; // preserve length / i.d. of dipole
     olddipole=& lattice[x][y][z];
 
     //calc site energy
@@ -368,6 +375,8 @@ static void MC_move()
         lattice[x][y][z].x=newdipole.x;
         lattice[x][y][z].y=newdipole.y;
         lattice[x][y][z].z=newdipole.z;
+//      lattice[x][y][z].length=newdipole.length; // never changes with current
+//      algorithms.
 
         ACCEPT++;
     }

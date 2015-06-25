@@ -86,7 +86,8 @@ static double dipole_potential(int x, int y, int z)
 
                 // pot(r) = 1/4PiEpsilon * p.r / r^3
                 // Electric dipole potential
-                pot+=dot(& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z] ,& r)/(d*d*d);
+                pot+=lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z].length *
+                    dot(& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z] ,& r)/(d*d*d);
             }
     return(pot);
 }
@@ -875,14 +876,21 @@ void outputlattice_dumb_terminal()
             // directions, not oscillating either side of N,NE,E... etc.
             if (a>2.0) a=a-2.0; //wrap around so values always show.
             a*=4; //pieces of eight
+
+            // Empty site --> colour white
+            if (lattice[x][y][z].length==0.0) a=7; 
+
             fprintf (stderr,"%c[%d",27,31+((int)a)%8 ); // Sets colour of output routine
             if (a<4.0)                                  // makes colour bold / normal depending on arrow orientation
                 fprintf(stderr,";7");
+            
             char arrow=arrows[(int)a];
+            // Pointing towards you / into screen; --> o and x
             if (lattice[x][y][z].z> sqrt(2)/2.0) arrow='o';
             if (lattice[x][y][z].z<-sqrt(2)/2.0) arrow='x';
 
-            if (lattice[x][y][z].x==0.0 && lattice[x][y][z].y==0.0 && lattice[x][y][z].z==0.0) arrow='*'; 
+            // Empty site --> 
+            if (lattice[x][y][z].length==0.0) arrow='#';
 
             fprintf(stderr,"m%c %c[0m",arrow,27);  // prints arrow
             fprintf(stderr,"%c[37m%c[0m",27,27); //RESET
@@ -934,7 +942,7 @@ void outputlattice_dumb_terminal()
     }
     mean=mean/(X*Y);
     variance=variance/(X*Y); 
-    fprintf(stderr,"dipole_fraction: %f T: %d DMAX: %f new_DMAX: %f variance: %f mean: %f\n",dipole_fraction,T,DMAX,new_DMAX,variance,mean);
+    fprintf(stderr,"T: %d DMAX: %f new_DMAX: %f variance: %f mean: %f\n",T,DMAX,new_DMAX,variance,mean);
     //fprintf(stdout,"CageStrain: %f T: %d DMAX: %f new_DMAX: %f variance: %f mean: %f\n",CageStrain,T,DMAX,new_DMAX,variance,mean);
     DMAX=(new_DMAX+DMAX)/2.0; // mean of old and new (sampled, noisy) value
     DMAX=new_DMAX; // infinite fast following - but leads to fluctuations at steady state
