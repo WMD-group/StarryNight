@@ -338,6 +338,11 @@ dE+= (olddipole->length * testdipole->length) *
     dE +=   - K*fabs(dot(newdipole,&n))
         + K*fabs(dot(olddipole,&n));
     }
+
+    // point charge at centre of space
+//    n.x=x-(X/2); n.y=y-(Y/2); n.z=z-(Z/2);
+//    dE += 1.0 * (dot(newdipole,&n) - dot(olddipole,&n) ) / ((x-X/2)^2 - (y-Y/2)^2 - (z-Z/2)^2);
+    
     return(dE); 
 }
 
