@@ -182,12 +182,12 @@ int main(int argc, char *argv[])
             //fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
 //            fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
 //            fprintf(stdout,"Moves: %d CageStrain: %f T: %d Landau: %f\n",i*(MCMinorSteps/(X*Y*Z)),CageStrain,T,landau_order());
-  fprintf(stderr,"\n");
-            fprintf(stdout, "T: %d Efield: x %f Polar: %f\n",T,Efield.x,polarisation());
-fprintf(stderr,"\n");
+            //fprintf(stderr,"\n");
+            //fprintf(stdout, "T: %d Efield: x %f Polar: %f\n",T,Efield.x,polarisation());
+            //fprintf(stderr,"\n");
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
             
-            fprintf(stderr,"MC Moves: %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic)*(double)CLOCKS_PER_SEC);
+            fprintf(stderr,"MC Moves (per second): %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic)*(double)CLOCKS_PER_SEC);
 
             sprintf(prefix,"T_%04d_i_%03d_CageStrain_%f",T,i,CageStrain);
 

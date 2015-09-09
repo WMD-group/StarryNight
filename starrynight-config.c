@@ -9,9 +9,9 @@
 
 #include <stdbool.h>
 
-#define X 24 // Malloc is for losers.
-#define Y 24 
-#define Z 80 
+#define X 32 // Malloc is for losers.
+#define Y 32 
+#define Z 1 
 
 int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
 int T; //global variable so accessible to analysis routines
