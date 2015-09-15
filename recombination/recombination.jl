@@ -1,5 +1,7 @@
 module recombination
 
+using StatsBase
+
 #Read in potential...
 function starrynight_read_potential(filename)
     lattice=readdlm(filename)
@@ -34,6 +36,8 @@ function starrynight_read_potential(filename)
     @printf "OK; data loaded and converted to Volts. Variance: %e SD: %e\n\n" var(pot) std(pot)
     print(hist(pot,50))
 
+    describe(pot)
+
     return N, pot
 end
 
@@ -56,6 +60,13 @@ function calc_recombination(N,pot,kernel)
     @printf "R=N*sum(ρe.*ρh): %e" N*sum(ρh.*ρe)
     println()
     println()
+end
+
+function calc_mobility(N,pot)
+    potsorted=sort(pot)
+    trap=potsorted[N//4]-potsorted[1] # Diff in energy between deepest point and first quartile, 25% CDF
+    @printf "Trap Depth: %e Bottom(eV): %e 25(eV): %e\n" trap potsorted[1] potsorted[N//4]
+    # OK; now need some FD distribution to get trapped vs. free charges.
 end
 
 end 

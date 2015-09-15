@@ -18,3 +18,5 @@ recombination.calc_recombination(N, pot, En -> 1./(exp(β*En) + 1.0) )
 println("Fermi-Dirac, chem pot = 1.0 eV...")
 recombination.calc_recombination(N, pot, En -> 1./(exp(β*(En+1.0)) + 1.0) )
 
+recombination.calc_mobility(N,pot)
+
