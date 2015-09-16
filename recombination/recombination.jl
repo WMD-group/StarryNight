@@ -2,21 +2,24 @@ module recombination
 
 using StatsBase
 
+# Physical constants / units
+const kb=8.6173324E-5 # in units of eV
+const ε0=8.854E-12 #Units: C2N−1m−2
+const D=3.336E-30 #Debye in SI
+
+const Å=1E-10 # Angstrom
+
+# Specific to MAPI
+const r=6.29Å # Sensible figure for MA for consistency; AW
+const D1=2.18D #Methyl-Ammonia; b3lyp/6-31g*
+
 #Read in potential...
 function starrynight_read_potential(filename)
     lattice=readdlm(filename)
     pot=lattice[:,4] # just potential, in internal units of Starrynight
 
     T=300           # Temperature; Kelvin
-
-    kb=8.6173324E-5 # in units of eV
     β=1/(kb*T)      # Thermodynamic Beta; units
-
-    Å=1E-10 # Angstrom
-    r=6.29Å # Sensible figure for MA for consistency; AW
-    D=3.336E-30 #Debye in SI
-    ε0=8.854E-12 #Units: C2N−1m−2
-    D1=2.18D #Methyl-Ammonia; b3lyp/6-31g*
 
     # OK; let's calc Dipole Potential with simple form, contribution from one dipole at distance 1
     factor=1/(4*pi*ε0) * (D1*r)/(r^3)
@@ -67,6 +70,11 @@ function calc_mobility(N,pot)
     trap=potsorted[N//4]-potsorted[1] # Diff in energy between deepest point and first quartile, 25% CDF
     @printf "Trap Depth: %e Bottom(eV): %e 25(eV): %e\n" trap potsorted[1] potsorted[N//4]
     # OK; now need some FD distribution to get trapped vs. free charges.
+
+    T=300           # Temperature; Kelvin
+    β=1/(kb*T)      # Thermodynamic Beta; units
+
+    @printf "Boltzmann ratio given trap depth @ 300 K %e \n" exp(trap*β)
 end
 
 end 
