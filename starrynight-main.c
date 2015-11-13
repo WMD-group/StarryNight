@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
             // Do some MC moves!
 
 //            initialise_lattice(); // RESET LATTICE!
-            tic=clock();
+            tic=clock(); // measured in CLOCKS_PER_SECs of a second
             MC_moves(MCMinorSteps);
             toc=clock();
 

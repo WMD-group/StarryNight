@@ -119,8 +119,9 @@ static void recombination_calculator(FILE *log)
                 ZBh+=exp(pot*BETA); // holes float...
 
                 // Fermi-Dirac statistics
-                ZFDe+=1.0/(exp(-pot*BETA)+1.0);
-                ZFDh+=1.0/(exp(pot*BETA)+1.0); // holes float...
+                // NB: sign reversed as 1/exp() c.f. Boltzmann
+                ZFDe+=1.0/(exp(pot*BETA)+1.0);
+                ZFDh+=1.0/(exp(-pot*BETA)+1.0); // holes float...
             }
 
     // set density = 1 per site on average
@@ -143,8 +144,8 @@ static void recombination_calculator(FILE *log)
                 // surf
                 pot=potentialeV*dipole_potential(x,y,z);
                 
-                electrons[x][y][z]=1.0/(exp(-pot*BETA)+1.0)/ZFDe;
-                holes    [x][y][z]=1.0/(exp(pot*BETA)+1.0)/ZFDh;
+                electrons[x][y][z]=1.0/(exp(pot*BETA)+1.0)/ZFDe;
+                holes    [x][y][z]=1.0/(exp(-pot*BETA)+1.0)/ZFDh;
 
                 // Boltzmann
 //                electrons[x][y][z]=exp(-pot*BETA)/ZBe;
