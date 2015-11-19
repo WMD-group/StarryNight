@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         sscanf(argv[2],"%lf",&CageStrain);
         fprintf(stderr,"Command Line CageStrain: CageStrain = %lf\n",CageStrain);
     }
-    
+
     // LOGFILE -- If we're going to do some actual science, we better have one...
     sprintf(name,"Recombination_T_%04d_CageStrain_%f.log",T,CageStrain);
     FILE *log;
@@ -81,14 +81,14 @@ int main(int argc, char *argv[])
     if(SaveDipolesSVG) outputlattice_svg("initial-SVG.svg");
     if(CalculatePotential) outputpotential_png("initial_pot.png"); //"final_pot.png");
     if(SaveDipolesXYZ) outputlattice_xyz("initial_dipoles.xyz");
- 
+
     if(CalculateRadialOrderParameter) radial_order_parameter();
     // output initialised lattice - mainly for debugging
     if(SaveDipolesPNG) outputlattice_ppm_hsv("initial.png");
     if(CalculatePotential) outputpotential_png("initial_pot.png"); //"final_pot.png");
     //outputlattice_xyz("initial_dipoles.xyz");
     //outputlattice_xyz_overprint("initial_overprint.xyz");
-    
+
     if (DisplayDumbTerminal) outputlattice_dumb_terminal(); //Party like it's 1980
     if (CalculateRecombination) recombination_calculator(stderr);
 
@@ -105,26 +105,26 @@ int main(int argc, char *argv[])
         fprintf(stderr,",");
         MC_moves(MCMinorSteps);
     }
- 
+
     if(CalculateEfield) lattice_Efield_XYZ("equilib_lattice_efield.xyz");
     if(SaveDipolesSVG)   outputlattice_svg("equilib-SVG.svg");
     if(CalculatePotential) outputpotential_png("equilib_pot.png"); //"final_pot.png");
- 
-//    double AMP; double PHASE;
-//    for (AMP=0.01; AMP<=0.05; AMP+=0.01)
-//        for (PHASE=0; PHASE<=2*M_PI; PHASE+=M_PI/16) // DOESN'T SAW TOOTH CURRENTLY!
+
+    //    double AMP; double PHASE;
+    //    for (AMP=0.01; AMP<=0.05; AMP+=0.01)
+    //        for (PHASE=0; PHASE<=2*M_PI; PHASE+=M_PI/16) // DOESN'T SAW TOOTH CURRENTLY!
     //    for (T=0;T<500;T+=1) //I know, I know... shouldn't hard code this.
     {
-//        Efield.x=AMP*sin(PHASE);
+        //        Efield.x=AMP*sin(PHASE);
 
         beta=1/((float)T/300.0); // recalculate beta (used internally) based
-//        on T-dep forloop
+        //        on T-dep forloop
 
         for (i=0;i<MCMegaSteps;i++)
         {
-/*
-// Crazy code to iterate through temperatures; dep on i, with good coverage of
-//  range
+            /*
+            // Crazy code to iterate through temperatures; dep on i, with good coverage of
+            //  range
             // Alright, this is the plan
             // First we take our variable
             // Then we bit reverse it as binary
@@ -137,16 +137,16 @@ int main(int argc, char *argv[])
 
             T=r*2;
             beta=1/((float)T/300.0);  
-*/  
+            */  
 
             // Do some MC moves!
 
-//            initialise_lattice(); // RESET LATTICE!
+            //            initialise_lattice(); // RESET LATTICE!
             tic=clock(); // measured in CLOCKS_PER_SECs of a second
             MC_moves(MCMinorSteps);
             toc=clock();
 
-//            fprintf(stderr,"Clocks: tic: %d toc: %d\n",tic,toc);
+            //            fprintf(stderr,"Clocks: tic: %d toc: %d\n",tic,toc);
 
             // Log some data... Nb: Slow as does a NxN summation of lattice energy
             // contributions!
@@ -173,13 +173,13 @@ int main(int argc, char *argv[])
             if(CalculateRadialOrderParameter) radial_order_parameter(); // outputs directly to Terminal
 
             //fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
-//            fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
-//            fprintf(stdout,"Moves: %d CageStrain: %f T: %d Landau: %f\n",i*(MCMinorSteps/(X*Y*Z)),CageStrain,T,landau_order());
+            //            fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
+            //            fprintf(stdout,"Moves: %d CageStrain: %f T: %d Landau: %f\n",i*(MCMinorSteps/(X*Y*Z)),CageStrain,T,landau_order());
             //fprintf(stderr,"\n");
             //fprintf(stdout, "T: %d Efield: x %f Polar: %f\n",T,Efield.x,polarisation());
             //fprintf(stderr,"\n");
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
-            
+
             fprintf(stderr,"MC Moves (per second): %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic)*(double)CLOCKS_PER_SEC);
 
             sprintf(prefix,"T_%04d_i_%03d_CageStrain_%f",T,i,CageStrain);
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
 
             sprintf(name,"%s_lattice_potential.xyz",prefix);
             if(CalculatePotential) lattice_potential_XYZ(name); // potential distro
-    
+
             sprintf(name,"%s_MC-PNG_final.png",prefix);
             if(SaveDipolesPNG) outputlattice_ppm_hsv(name);
 
@@ -210,8 +210,8 @@ int main(int argc, char *argv[])
     fprintf(stderr,"\n");
 
     // Final data output / summaries.
-//    outputlattice_ppm_hsv("MC-PNG_final.png");
-//    outputlattice_svg("MC-SVG_final.svg");
+    //    outputlattice_ppm_hsv("MC-PNG_final.png");
+    //    outputlattice_svg("MC-SVG_final.svg");
 
     //lattice_potential_log(log);
     //lattice_angle_log(log);

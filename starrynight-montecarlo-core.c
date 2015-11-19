@@ -9,11 +9,8 @@
 
 // Prototypes...
 static int rand_int(int SPAN);
-
 static void gen_neighbour();
-
 static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole);
-
 static void MC_moves(int moves);
 static void MC_move();
 static void MC_move_openmp();
@@ -40,7 +37,7 @@ static void gen_neighbour()
 
     int dx,dy,dz=0;
     float d;
- 
+
     for (dx=-DipoleCutOff;dx<=DipoleCutOff;dx++)
         for (dy=-DipoleCutOff;dy<=DipoleCutOff;dy++)
 #if(Z>1) //i.e. 3D in Z
@@ -75,35 +72,35 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
 
     // Sum over near neighbours for dipole-dipole interaction
     int i;
-    #pragma omp parallel for private(dx,dy,dz,d,n) reduction(+:dE) schedule(static,1)
-// NB: Works, but only modest speed gains!
+#pragma omp parallel for private(dx,dy,dz,d,n) reduction(+:dE) schedule(static,1)
+    // NB: Works, but only modest speed gains!
     for (i=0;i<neighbour;i++)
     {
         // read in dirn to neighbours + precomputed values
         dx=neighbours[i].dx; dy=neighbours[i].dy; dz=neighbours[i].dz;
         d=neighbours[i].d;
 
-                testdipole=& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z];
+        testdipole=& lattice[(X+x+dx)%X][(Y+y+dy)%Y][(Z+z+dz)%Z];
 
-                n.x=(float)dx/d; n.y=(float)dy/d; n.z=(float)dz/d; //normalised diff. vector
+        n.x=(float)dx/d; n.y=(float)dy/d; n.z=(float)dz/d; //normalised diff. vector
 
-    //True dipole like
-dE+= (olddipole->length * testdipole->length) * 
-    (
-        ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) -
-        ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) 
-    ) / (d*d*d); 
+        //True dipole like
+        dE+= (olddipole->length * testdipole->length) * 
+            (
+             ( dot(newdipole,testdipole) - 3*dot(&n,newdipole)*dot(&n,testdipole) ) -
+             ( dot(olddipole,testdipole) - 3*dot(&n,olddipole)*dot(&n,testdipole) ) 
+            ) / (d*d*d); 
 
-                // Ferroelectric / Potts model - vector form
-                //            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
-                //                + Dipole * dot(olddipole,testdipole) / (d*d*d);
+        // Ferroelectric / Potts model - vector form
+        //            dE+= - Dipole * dot(newdipole,testdipole) / (d*d*d)
+        //                + Dipole * dot(olddipole,testdipole) / (d*d*d);
 
-                // Now reborn as our cage-strain term!
-                if ((dx*dx+dy*dy+dz*dz)==1) //only nearest neighbour
-                    dE+= - CageStrain* dot(newdipole,testdipole)
-                        + CageStrain * dot(olddipole,testdipole); // signs to energetic drive alignment of vectors (dot product = more +ve, dE = -ve)
+        // Now reborn as our cage-strain term!
+        if ((dx*dx+dy*dy+dz*dz)==1) //only nearest neighbour
+            dE+= - CageStrain* dot(newdipole,testdipole)
+                + CageStrain * dot(olddipole,testdipole); // signs to energetic drive alignment of vectors (dot product = more +ve, dE = -ve)
 
-            }
+    }
 
     // Interaction of dipole with (unshielded) E-field
     dE+= + dot(newdipole, & Efield)
@@ -112,20 +109,20 @@ dE+= (olddipole->length * testdipole->length) *
 
     if (K>0.0) // rarely used anymore; 2D lattice epitaxial strain term
     {
-    // along .x projection, squared
-    n.x=1.0; n.y=0.0; n.z=0.0;
-    dE +=   - K*fabs(dot(newdipole,&n))
-        + K*fabs(dot(olddipole,&n));
-    // along .y projection, squared
-    n.x=0.0; n.y=1.0; n.z=0.0;
-    dE +=   - K*fabs(dot(newdipole,&n))
-        + K*fabs(dot(olddipole,&n));
+        // along .x projection, squared
+        n.x=1.0; n.y=0.0; n.z=0.0;
+        dE +=   - K*fabs(dot(newdipole,&n))
+            + K*fabs(dot(olddipole,&n));
+        // along .y projection, squared
+        n.x=0.0; n.y=1.0; n.z=0.0;
+        dE +=   - K*fabs(dot(newdipole,&n))
+            + K*fabs(dot(olddipole,&n));
     }
 
     // point charge at centre of space
-//    n.x=x-(X/2); n.y=y-(Y/2); n.z=z-(Z/2);
-//    dE += 1.0 * (dot(newdipole,&n) - dot(olddipole,&n) ) / ((x-X/2)^2 - (y-Y/2)^2 - (z-Z/2)^2);
-    
+    //    n.x=x-(X/2); n.y=y-(Y/2); n.z=z-(Z/2);
+    //    dE += 1.0 * (dot(newdipole,&n) - dot(olddipole,&n) ) / ((x-X/2)^2 - (y-Y/2)^2 - (z-Z/2)^2);
+
     return(dE); 
 }
 
@@ -170,8 +167,8 @@ static void MC_move()
         lattice[x][y][z].x=newdipole.x;
         lattice[x][y][z].y=newdipole.y;
         lattice[x][y][z].z=newdipole.z;
-//      lattice[x][y][z].length=newdipole.length; // never changes with current
-//      algorithms.
+        //      lattice[x][y][z].length=newdipole.length; // never changes with current
+        //      algorithms.
 
         ACCEPT++;
     }
