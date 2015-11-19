@@ -470,69 +470,6 @@ void outputpotential_png(char * filename)
     fclose(fo);
 }
 
-/* This whole function defunct - no longer have angles...
-   static double lattice_energy_log(FILE *log)
-   {
-   int x,y,dx,dy;
-   double E_dipole=0.0,E_strain=0.0,E_field=0.0;
-   double d,oldangle,testangle,n;
-
-   for (x=0;x<X;x++)
-   for (y=0;y<Y;y++)
-   {
-
-// NB: just copied + pasted this code :| - should probably generalise to
-// a function, otherwise variations in cutoff / Hamiltonian will have to be in
-// two places, ugh.
-oldangle=lattice[x][y].angle;
-
-// Sum over near neighbours for dipole-dipole interaction
-for (dx=-2;dx<=2;dx++)
-for (dy=-2;dy<=2;dy++)
-{
-if (dx==0 && dy==0)
-continue; //no infinities / self interactions please!
-
-d=sqrt((float) dx*dx + dy*dy); //that old chestnut
-
-if (d>2.0) continue; // Cutoff in d
-
-testangle=lattice[(X+x+dx)%X][(Y+y+dy)%Y].angle;
-
-//it goes without saying that the following line is the single
-//most important in the program... Energy calculation!
-n=atan2((float)dy,(float)dx); //angle of normal vector between test points
-// Anti-ferroelectric (dipole like)
-//  - this now contains a lot of trig to do the dot products. Maybe
-//  faster to generate the vectors and do it component wise?
-E_dipole+=   Dipole * ( cos(oldangle-testangle) - 3.* cos(n-oldangle) * cos(n-testangle) ) /(d*d*d) ;
-
-// Ferroelectric / Potts model
-//            dE+=  - Dipole * cos(newangle-testangle)/(d*d*d);
-
-// TODO: Calculate lattice electric field profile as a result of
-// dipoles. Integrate out to full size of lattice? Seems a bit
-// heavy handed. Same cut-offs as used in dipole calculation??
-
-
-}
-
-// Interaction of dipole with (unshielded) E-field
-//            E_field+=  Efield*cos(oldangle-Eangle);
-
-//Interaction with cage
-E_strain+=  K*sin(2*oldangle)*sin(2*oldangle);
-}
-
-
-//    fprintf(stderr,"Energy of lattice: %f\n",E);
-
-fprintf(log,"%lu %f %f %f %f %f %f\n",ACCEPT+REJECT,Efield.x,Eangle,E_dipole,E_strain,E_field,E_dipole+E_strain+E_field);
-
-return(E_dipole+E_strain+E_field); //FIXME: is this still useful?
-}
-*/
-
 double landau_order()
 {
     int x,y,z;
