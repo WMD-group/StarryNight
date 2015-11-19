@@ -13,7 +13,14 @@
 #define Y 32 
 #define Z 1 
 
-int DIM=3; //currently just whether the dipoles can point in Z-axis (still a 2D slab) 
+int DIM=2; // if DIM==2, the dipoles are constrained to the XY plane
+// i.e. a model for dipoles in the Tetragonal phase of MAPI near the
+// Orthorhombic-Tetagonal phase transition, where they are constrained to be
+// within the tetragonal plane
+// if DIM==3, full freedom over the sphere is considered
+// i.e. a model for the Tetra phase near the end of its second order transition
+// to a fully cubic phase
+
 int T; //global variable so accessible to analysis routines
 
 unsigned long ACCEPT=0; //counters for MC moves
