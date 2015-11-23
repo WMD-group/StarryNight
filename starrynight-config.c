@@ -9,11 +9,11 @@
 
 #include <stdbool.h>
 
-#define X 32 // Malloc is for losers.
-#define Y 32 
-#define Z 1 
+#define X 20 // Malloc is for losers.
+#define Y 20 
+#define Z 20 
 
-int DIM=2; // if DIM==2, the dipoles are constrained to the XY plane
+int DIM=3; // if DIM==2, the dipoles are constrained to the XY plane
 // i.e. a model for dipoles in the Tetragonal phase of MAPI near the
 // Orthorhombic-Tetagonal phase transition, where they are constrained to be
 // within the tetragonal plane

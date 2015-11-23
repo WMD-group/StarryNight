@@ -65,16 +65,16 @@ function calc_recombination(N,pot,kernel)
     println()
 end
 
-function calc_mobility(N,pot)
-    potsorted=sort(pot)
-    trap=potsorted[N//4]-potsorted[1] # Diff in energy between deepest point and first quartile, 25% CDF
-    @printf "Trap Depth: %e Bottom(eV): %e 25(eV): %e\n" trap potsorted[1] potsorted[N//4]
+function calc_mobility(N::Int,pot)
+    potsorted=sort(reshape(pot,length(pot)))
+    trap=potsorted[div(N,4)]-potsorted[1] # Diff in energy between deepest point and first quartile, 25% CDF
+    @printf "Trap Depth: %e Bottom(eV): %e 25\%%(eV): %e\n" trap potsorted[1] potsorted[div(N,4)]
     # OK; now need some FD distribution to get trapped vs. free charges.
 
     T=300           # Temperature; Kelvin
     β=1/(kb*T)      # Thermodynamic Beta; units
 
-    @printf "Boltzmann ratio given trap depth @ 300 K %e \n" exp(trap*β)
+    @printf "Boltzmann ratio given trap 0->25\%% trap depth @ 300 K %e \n" exp(trap*β)
 end
 
 end 
