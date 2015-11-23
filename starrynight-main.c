@@ -27,7 +27,7 @@ static int rand_int(int SPAN);
 int main(int argc, char *argv[])
 {
     int i,j,k, x,y; // for loop iterators
-    int tic,toc;    // keep track of time for user interface; how many MC moves per second
+    int tic,toc,goes;    // keep track of time for user interface; how many MC moves per second
 
     char name[100],prefix[100]; 
     char const *LOGFILE = NULL; //for output filenames
@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
     load_config();
 
     // Now override with command line options if supplied...
+    //  This enables simple parallel via the Makefile and 'GNU Parallel'
     if (argc>1)
     {
         sscanf(argv[1],"%d",&T);
@@ -180,7 +181,6 @@ int main(int argc, char *argv[])
             //fprintf(stderr,"\n");
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
 
-            fprintf(stderr,"MC Moves (per second): %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic)*(double)CLOCKS_PER_SEC);
 
             sprintf(prefix,"T_%04d_i_%03d_CageStrain_%f",T,i,CageStrain);
 
@@ -198,6 +198,10 @@ int main(int argc, char *argv[])
 
             sprintf(name,"%s_potential.png",prefix);
             if(CalculatePotential) outputpotential_png(name); //"final_pot.png");
+            
+            goes=clock();
+            fprintf(stderr,"MC Moves (per second): %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic)*(double)CLOCKS_PER_SEC);
+            fprintf(stderr,"Output routines: %f s ; Efficiency of MC moves vs. analysis %.2f\%%\n",(double)(goes-toc)/(double)CLOCKS_PER_SEC,100.0*(double)(toc-tic)/(double)(goes-tic));
 
             // Manipulate the run conditions depending on simulation time
             //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
