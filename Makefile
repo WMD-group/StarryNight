@@ -11,7 +11,7 @@ starrynight-mac-openmp: starrynight-analysis.c   starrynight-config.c  starrynig
 	/usr/local/bin/gcc-4.8 -O4 -lm -lconfig -fopenmp -lgomp -o starrynight starrynight-main.c
 
 parallel: starrynight
-	seq 0 50 1000 | parallel  ./starrynight {}  
+	seq 0 10 1000 | parallel  ./starrynight {}  
 
 superparallel: starrynight
 	awk 'BEGIN{for (i=0;i<1000;i=i+20) { for (j=0.0;j<=4.0;j=j+1.0) printf ("%f %f\n",i,j); }}' \

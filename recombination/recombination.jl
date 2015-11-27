@@ -23,7 +23,7 @@ function starrynight_read_potential(filename)
 
     # OK; let's calc Dipole Potential with simple form, contribution from one dipole at distance 1
     factor=1/(4*pi*ε0) * (D1*r)/(r^3)
-    @printf "Conversion factor from Starrynight potential internal units --> V : %f\n" factor
+    @printf STDERR "Conversion factor from Starrynight potential internal units --> V : %f\n" factor
     # Scale from Starrynight potential --> volts
     pot*=factor
 
@@ -31,12 +31,12 @@ function starrynight_read_potential(filename)
     # Calculated value DFT: 5.6 --> 6.5 (dep. on MA alignment)
     # See: APL Mat. 1, 042111 (2013); http://dx.doi.org/10.1063/1.4824147
     # Measured value, Ellipso in NIR: 5.0
-    ɛr=5.0
+    ɛr=4.1
     pot/=ɛr
 
     N=length(pot) # number of elements
 
-    @printf "OK; data loaded and converted to Volts. Variance: %e SD: %e\n\n" var(pot) std(pot)
+    @printf STDERR "OK; data loaded and converted to Volts. Variance: %e SD: %e\n\n" var(pot) std(pot)
     print(hist(pot,50))
 
     describe(pot)
@@ -56,13 +56,12 @@ function calc_recombination(N,pot,kernel)
     ρh=(1/Zh) * kernel(-pot)
     ρe=(1/Ze) * kernel(pot)
 
-    @printf "Zh: %e Ze: %e e: %e h: %e\n" Zh Ze sum(ρe) sum(ρh)
+    @printf STDERR "Zh: %e Ze: %e e: %e h: %e\n" Zh Ze sum(ρe) sum(ρh)
     # Factors of N make these values independent of number of elements in the
     # potential, self-consistent, and equal to R=1 for a flat potential.
-    @printf "R=N*N/(Zh*Ze): %e\t" N*N/(Zh*Ze)
-    @printf "R=N*sum(ρe.*ρh): %e" N*sum(ρh.*ρe)
-    println()
-    println()
+    @printf STDERR "R=N*N/(Zh*Ze): %e\t" N*N/(Zh*Ze)
+    @printf STDERR "R=N*sum(ρe.*ρh): %e" N*sum(ρh.*ρe)
+    return N*sum(ρh.*ρe)
 end
 
 function calc_mobility(N::Int,pot)

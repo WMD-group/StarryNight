@@ -34,7 +34,10 @@ pot=reshape(pot,n,n,n)
 #pot=zeros(n,n,n)
 #pot[n/2,n/2,n/2]=1.0
 
-pot=imfilter_gaussian(pot,[5.0,5.0,5.0])
-#print(pot)
 
-potential_statistics(N,pot)
+#print(pot)
+for i=0:0.05:10
+    println(STDERR,"Gaussian filter with Sigma=$i")
+    R=recombination.calc_recombination(N,imfilter_gaussian(pot,[i,i,i]), En -> 1./(exp(β*(En+1.0)) + 1.0) )
+    println("$i $R")
+end
