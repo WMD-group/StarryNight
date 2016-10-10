@@ -1,15 +1,18 @@
+SRCs= src/mt19937ar-cok.c                src/starrynight-config.c           src/starrynight-main.c             src/xorshift1024star.c \
+	  src/starrynight-analysis.c         src/starrynight-lattice.c          src/starrynight-montecarlo-core.c  src/xorshift128plus.c
+
 # Code compilation
-starrynight: starrynight-analysis.c   starrynight-config.c  starrynight-lattice.c  starrynight-main.c
-	gcc -O4 -lm -lconfig -o starrynight starrynight-main.c
+starrynight: $(SRCs) 
+	gcc -O4 -lm -lconfig -o starrynight src/starrynight-main.c
 
-starrynight-openmp: starrynight-analysis.c   starrynight-config.c  starrynight-lattice.c  starrynight-main.c
-	gcc -O4 -lm -lconfig -fopenmp -o starrynight starrynight-main.c
+starrynight-openmp: ${SRCs} 
+	gcc -O4 -lm -lconfig -fopenmp -o starrynight src/starrynight-main.c
 
-starrynight-mac-openmp: starrynight-analysis.c   starrynight-config.c  starrynight-lattice.c  starrynight-main.c 
-	/usr/local/bin/gcc-4.8 -O4 -lm -lconfig -fopenmp -lgomp -o starrynight starrynight-main.c
+starrynight-mac-openmp: ${SRCs}
+	/usr/local/bin/gcc-4.8 -O4 -lm -lconfig -fopenmp -lgomp -o starrynight src/starrynight-main.c
 
-profile: starrynight-analysis.c   starrynight-config.c  starrynight-lattice.c  starrynight-main.c
-	gcc -lm -lconfig -o starrynight starrynight-main.c -pg
+profile: ${SRCs} 
+	gcc -lm -lconfig -o starrynight src/starrynight-main.c -pg
 
 all: starrynight
 
