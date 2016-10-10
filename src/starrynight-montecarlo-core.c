@@ -20,16 +20,19 @@ static int rand_int(int SPAN) // TODO: profile this to make sure it runs at an O
     return((int)( (unsigned long) genrand_int32() % (unsigned long)SPAN));
 }
 
-// The following code builds a neighbour list for evaluation of energy;
-//   this should result in a speedup as it avoids the for loops + 'ifs' during
-//   MC
 
+// The following code builds a neighbour list (of the delta dx,dy,dzs) for
+// speedy evaluation of energy; results in a speedup as it avoids the for loops
+// + 'ifs' during Monte Carlo; instead you just pull the deltas from the lookup
+// table
+
+const int MAXNEIGHBOURS=10000;
 struct {
     int dx;
     int dy;
     int dz;
     float d;
-} neighbours[10000];
+} neighbours[MAXNEIGHBOURS];
 int neighbour=0; //count of neighbours
 
 static void gen_neighbour()
@@ -55,8 +58,14 @@ static void gen_neighbour()
                 neighbours[neighbour].dx=dx; neighbours[neighbour].dy=dy; neighbours[neighbour].dz=dz;
                 neighbours[neighbour].d=d;
                 neighbour++;
+
+                if (neighbour>MAXNEIGHBOURS) // bounds check
+                {
+                    fprintf(stderr,"Run out of space for the neighbour list with %d neighbours. FAILING TO EXIT!\n\n", neighbour);
+                    exit(-1);
+                }
             }
-    fprintf(stderr,"Neighbour list generated: %d neighbours with %d DipoleCutOff.\n",neighbour,DipoleCutOff);
+    fprintf(stderr,"\nNeighbour list generated: %d neighbours with %d DipoleCutOff.\n",neighbour,DipoleCutOff);
 }
 
 static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole)
