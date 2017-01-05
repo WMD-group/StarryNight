@@ -68,6 +68,8 @@ static void gen_neighbour()
     fprintf(stderr,"\nNeighbour list generated: %d neighbours with %d DipoleCutOff.\n",neighbour,DipoleCutOff);
 }
 
+
+// Calculate change in site energy of changing from olddipole -> newdipole
 static double site_energy(int x, int y, int z, struct dipole *newdipole, struct dipole *olddipole)
 {
     int dx,dy,dz=0;
