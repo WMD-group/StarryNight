@@ -24,10 +24,99 @@ static int rand_int(int SPAN);
 #include "starrynight-analysis.c" //Analysis functions, and output routines
 #include "starrynight-montecarlo-core.c" // Core simulation
 
+void analysis_initial()
+{
+    if(CalculateEfield) lattice_Efield_XYZ("initial_lattice_efield.xyz");
+    if(CalculateEfield) lattice_Efieldoffset_XYZ("initial_lattice_efieldoffset.xyz");
+    if(CalculatePotential) lattice_potential_XYZ("initial_lattice_potential.xyz"); // potential distro
+    if(SaveDipolesSVG) outputlattice_svg("initial-SVG.svg");
+    if(CalculatePotential) outputpotential_png("initial_pot.png"); //"final_pot.png");
+    if(SaveDipolesXYZ) outputlattice_xyz("initial_dipoles.xyz");
+
+    if(CalculateRadialOrderParameter) radial_order_parameter();
+    // output initialised lattice - mainly for debugging
+    if(SaveDipolesPNG) outputlattice_ppm_hsv("initial.png");
+    if(CalculatePotential) outputpotential_png("initial_pot.png"); //"final_pot.png");
+    //outputlattice_xyz("initial_dipoles.xyz");
+    //outputlattice_xyz_overprint("initial_overprint.xyz");
+
+    if (DisplayDumbTerminal) outputlattice_dumb_terminal(); //Party like it's 1980
+    if (CalculateRecombination) recombination_calculator(stderr);
+}
+
+void analysis_midpoint(int MCstep, FILE *log)
+{
+    char name[100],prefix[100]; 
+    // Log some data... Nb: Slow as does a NxN summation of lattice energy
+    // contributions!
+    //        lattice_potential_log(log);
+    //fprintf(log,"%lu %f %f %f\n",ACCEPT+REJECT,lattice_energy(),Efield,Eangle); //FIXME: lattice_energy all broken, data worthless presently.
+    // TODO: some kind of dipole distribution? Would I have to bin it
+    // myself? (boring.)
+    // TODO: Split Energy into different contributions... would be nice to
+    // see polarisation delta.E spike when the field flips
+
+    // Log some pretty pictures...
+    //        sprintf(name,"MC-PNG_step_%.4d.png",i);
+    //        outputlattice_ppm_hsv(name);
+
+    //        sprintf(name,"MC-SVG_step_%.4d.svg",i);
+    //        outputlattice_svg(name);
+
+
+    // Update the (interactive) user what we're up to
+    //fprintf(stderr,".");
+    //fprintf(stderr,"\n");
+    if(DisplayDumbTerminal) outputlattice_dumb_terminal(); //Party like it's 1980
+    if(CalculateRecombination) recombination_calculator(log);
+    if(CalculateRadialOrderParameter) radial_order_parameter(); // outputs directly to Terminal
+
+    //fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
+    //            fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
+    //            fprintf(stdout,"Moves: %d CageStrain: %f T: %d Landau: %f\n",i*(MCMinorSteps/(X*Y*Z)),CageStrain,T,landau_order());
+    //fprintf(stderr,"\n");
+    //fprintf(stdout, "T: %d Efield: x %f Polar: %f\n",T,Efield.x,polarisation());
+    //fprintf(stderr,"\n");
+
+    sprintf(prefix,"T_%04d_i_%03d_CageStrain_%f",T,MCstep,CageStrain);
+
+    sprintf(name,"%s_lattice_efield.xyz",prefix);
+    if(CalculateEfield) lattice_Efield_XYZ(name);
+
+    sprintf(name,"%s_lattice_potential.xyz",prefix);
+    if(CalculatePotential) lattice_potential_XYZ(name); // potential distro
+
+    sprintf(name,"%s_MC-PNG_final.png",prefix);
+    if(SaveDipolesPNG) outputlattice_ppm_hsv(name);
+
+    sprintf(name,"%s_MC-SVG_final.svg",prefix);
+    if(SaveDipolesSVG) outputlattice_svg(name);
+
+    sprintf(name,"%s_potential.png",prefix);
+    if(CalculatePotential) outputpotential_png(name); //"final_pot.png");
+
+}
+
+void analysis_final()
+{
+    // Final data output / summaries.
+    //    outputlattice_ppm_hsv("MC-PNG_final.png");
+    //    outputlattice_svg("MC-SVG_final.svg");
+
+    //lattice_potential_log(log);
+    //lattice_angle_log(log);
+
+    //    lattice_potential_XY("final_pot_xy.dat");
+
+    //outputlattice_xyz("dipoles.xyz");
+    //outputlattice_xyz_overprint("overprint.xyz");
+    //outputlattice_pymol_cgo("dipoles.py");
+}
+
 int main(int argc, char *argv[])
 {
     int i,j,k, x,y; // for loop iterators
-    int tic,toc,goes;    // keep track of time for user interface; how many MC moves per second
+    int tic,toc,tac;    // keep track of time for user interface; how many MC moves per second
 
     char name[100],prefix[100]; 
     char const *LOGFILE = NULL; //for output filenames
@@ -76,23 +165,6 @@ int main(int argc, char *argv[])
     solid_solution(); //populate dipole strengths on top of this
     fprintf(stderr,"Solid solution formed...");
 
-    if(CalculateEfield) lattice_Efield_XYZ("initial_lattice_efield.xyz");
-    if(CalculateEfield) lattice_Efieldoffset_XYZ("initial_lattice_efieldoffset.xyz");
-    if(CalculatePotential) lattice_potential_XYZ("initial_lattice_potential.xyz"); // potential distro
-    if(SaveDipolesSVG) outputlattice_svg("initial-SVG.svg");
-    if(CalculatePotential) outputpotential_png("initial_pot.png"); //"final_pot.png");
-    if(SaveDipolesXYZ) outputlattice_xyz("initial_dipoles.xyz");
-
-    if(CalculateRadialOrderParameter) radial_order_parameter();
-    // output initialised lattice - mainly for debugging
-    if(SaveDipolesPNG) outputlattice_ppm_hsv("initial.png");
-    if(CalculatePotential) outputpotential_png("initial_pot.png"); //"final_pot.png");
-    //outputlattice_xyz("initial_dipoles.xyz");
-    //outputlattice_xyz_overprint("initial_overprint.xyz");
-
-    if (DisplayDumbTerminal) outputlattice_dumb_terminal(); //Party like it's 1980
-    if (CalculateRecombination) recombination_calculator(stderr);
-
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
     fprintf(stderr,"'.' is %e MC moves attempted.\n",(double)MCMinorSteps);
@@ -121,87 +193,20 @@ int main(int argc, char *argv[])
         beta=1/((float)T/300.0); // recalculate beta (used internally) based
         //        on T-dep forloop
 
+        // Do some MC moves!
         for (i=0;i<MCMegaSteps;i++)
         {
-            /*
-            // Crazy code to iterate through temperatures; dep on i, with good coverage of
-            //  range
-            // Alright, this is the plan
-            // First we take our variable
-            // Then we bit reverse it as binary
-            // Pretty confusing, but means it will fill in the temperature
-            // range with maximum coverage, rather than linear ramping
-            unsigned char r=i;
-            r=(r&0xF0)>>4 | (r&0x0F)<<4;
-            r=(r&0xCC)>>2 | (r&0x33)<<2;
-            r=(r&0xAA)>>1 | (r&0x55)<<1;
-
-            T=r*2;
-            beta=1/((float)T/300.0);  
-            */  
-
-            // Do some MC moves!
-
             //            initialise_lattice(); // RESET LATTICE!
             tic=clock(); // measured in CLOCKS_PER_SECs of a second
             MC_moves(MCMinorSteps);
             toc=clock();
 
-            //            fprintf(stderr,"Clocks: tic: %d toc: %d\n",tic,toc);
-
-            // Log some data... Nb: Slow as does a NxN summation of lattice energy
-            // contributions!
-            //        lattice_potential_log(log);
-            //fprintf(log,"%lu %f %f %f\n",ACCEPT+REJECT,lattice_energy(),Efield,Eangle); //FIXME: lattice_energy all broken, data worthless presently.
-            // TODO: some kind of dipole distribution? Would I have to bin it
-            // myself? (boring.)
-            // TODO: Split Energy into different contributions... would be nice to
-            // see polarisation delta.E spike when the field flips
-
-            // Log some pretty pictures...
-            //        sprintf(name,"MC-PNG_step_%.4d.png",i);
-            //        outputlattice_ppm_hsv(name);
-
-            //        sprintf(name,"MC-SVG_step_%.4d.svg",i);
-            //        outputlattice_svg(name);
-
-
-            // Update the (interactive) user what we're up to
-            //fprintf(stderr,".");
-            //fprintf(stderr,"\n");
-            if(DisplayDumbTerminal) outputlattice_dumb_terminal(); //Party like it's 1980
-            if(CalculateRecombination) recombination_calculator(log);
-            if(CalculateRadialOrderParameter) radial_order_parameter(); // outputs directly to Terminal
-
-            //fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
-            //            fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
-            //            fprintf(stdout,"Moves: %d CageStrain: %f T: %d Landau: %f\n",i*(MCMinorSteps/(X*Y*Z)),CageStrain,T,landau_order());
-            //fprintf(stderr,"\n");
-            //fprintf(stdout, "T: %d Efield: x %f Polar: %f\n",T,Efield.x,polarisation());
-            //fprintf(stderr,"\n");
+            analysis_midpoint(i,log);
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
 
-
-            sprintf(prefix,"T_%04d_i_%03d_CageStrain_%f",T,i,CageStrain);
-
-            sprintf(name,"%s_lattice_efield.xyz",prefix);
-            if(CalculateEfield) lattice_Efield_XYZ(name);
-
-            sprintf(name,"%s_lattice_potential.xyz",prefix);
-            if(CalculatePotential) lattice_potential_XYZ(name); // potential distro
-
-            sprintf(name,"%s_MC-PNG_final.png",prefix);
-            if(SaveDipolesPNG) outputlattice_ppm_hsv(name);
-
-            sprintf(name,"%s_MC-SVG_final.svg",prefix);
-            if(SaveDipolesSVG) outputlattice_svg(name);
-
-            sprintf(name,"%s_potential.png",prefix);
-            if(CalculatePotential) outputpotential_png(name); //"final_pot.png");
-            
-            goes=clock();
+            tac=clock();
             fprintf(stderr,"MC Moves (per second): %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic)*(double)CLOCKS_PER_SEC);
-            fprintf(stderr,"Output routines: %f s ; Efficiency of MC moves vs. analysis %.2f\%%\n",(double)(goes-toc)/(double)CLOCKS_PER_SEC,100.0*(double)(toc-tic)/(double)(goes-tic));
+            fprintf(stderr,"Output routines: %f s ; Efficiency of MC moves vs. analysis %.2f\%%\n",(double)(tac-toc)/(double)CLOCKS_PER_SEC,100.0*(double)(toc-tic)/(double)(tac-tic));
 
             // Manipulate the run conditions depending on simulation time
             //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
@@ -213,18 +218,7 @@ int main(int argc, char *argv[])
 
     fprintf(stderr,"\n");
 
-    // Final data output / summaries.
-    //    outputlattice_ppm_hsv("MC-PNG_final.png");
-    //    outputlattice_svg("MC-SVG_final.svg");
-
-    //lattice_potential_log(log);
-    //lattice_angle_log(log);
-
-    //    lattice_potential_XY("final_pot_xy.dat");
-
-    //outputlattice_xyz("dipoles.xyz");
-    //outputlattice_xyz_overprint("overprint.xyz");
-    //outputlattice_pymol_cgo("dipoles.py");
+    analysis_final();
 
     fprintf(stderr,"Monte Carlo moves - ACCEPT: %lu REJECT: %lu ratio: %f\n",ACCEPT,REJECT,(float)ACCEPT/(float)(REJECT+ACCEPT));
     fprintf(stderr," For us, there is only the trying. The rest is not our business. ~T.S.Eliot\n\n");
