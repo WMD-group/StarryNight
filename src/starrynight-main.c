@@ -69,7 +69,8 @@ void analysis_midpoint(int MCstep, FILE *log)
     //fprintf(stderr,"\n");
     if(DisplayDumbTerminal) outputlattice_dumb_terminal(); //Party like it's 1980
     if(CalculateRecombination) recombination_calculator(log);
-    if(CalculateRadialOrderParameter) radial_order_parameter("rdf.dat"); // appends to file 
+    sprintf(name,"RDF-%.4d.dat",T);
+    if(CalculateRadialOrderParameter) radial_order_parameter(name); // appends to file 
 
     //fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
     //            fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());
@@ -148,9 +149,12 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Log file '%s' opened. ",LOGFILE);
 
     //Fire up the twister!
-    init_genrand(0xDEADBEEF); //314159265);  // reproducible data :)
+    int SEED=0xDEADBEEF + T; // By adding T to the SEED, the different temperature ensembles have a different starting config
+    // or time(NULL)
+    init_genrand(SEED); //314159265);  // reproducible data :)
     //init_genrand(time(NULL)); // seeded with current time
-    fprintf(stderr,"Mersenne Twister initialised...\t");
+    fprintf(stderr,"Mersenne Twister initialised... seed: %X\t",SEED);
+    fprintf(log,"# Starrynight - simulation run on time(NULL)= %ld\n# Mersenne Twister Seed: %X\n",time(NULL),SEED);
 
     gen_neighbour(); //generate neighbour list for fast iteration in energy calculator
     fprintf(stderr,"Neighbour list generated...\t");
