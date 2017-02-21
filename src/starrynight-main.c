@@ -33,7 +33,7 @@ void analysis_initial()
     if(CalculatePotential) outputpotential_png("initial_pot.png"); //"final_pot.png");
     if(SaveDipolesXYZ) outputlattice_xyz("initial_dipoles.xyz");
 
-    if(CalculateRadialOrderParameter) radial_order_parameter();
+    if(CalculateRadialOrderParameter) radial_order_parameter("rdf.dat");
     // output initialised lattice - mainly for debugging
     if(SaveDipolesPNG) outputlattice_ppm_hsv("initial.png");
     if(CalculatePotential) outputpotential_png("initial_pot.png"); //"final_pot.png");
@@ -69,7 +69,7 @@ void analysis_midpoint(int MCstep, FILE *log)
     //fprintf(stderr,"\n");
     if(DisplayDumbTerminal) outputlattice_dumb_terminal(); //Party like it's 1980
     if(CalculateRecombination) recombination_calculator(log);
-    if(CalculateRadialOrderParameter) radial_order_parameter(); // outputs directly to Terminal
+    if(CalculateRadialOrderParameter) radial_order_parameter("rdf.dat"); // appends to file 
 
     //fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
     //            fprintf(stderr,"dipole_fraction: %f T: %d Landau: %f\n",dipole_fraction,T,landau_order());

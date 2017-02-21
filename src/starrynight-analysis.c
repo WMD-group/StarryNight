@@ -18,7 +18,7 @@ void lattice_potential_XY(char * filename);
 void lattice_potential_XYZ(char * filename);
 static double lattice_energy_log(FILE *log);
 double landau_order();
-double radial_order_parameter();
+double radial_order_parameter(char * filename);
 
 void outputpotential_png(char * filename);
 void outputlattice_pnm(char * filename);
@@ -492,7 +492,7 @@ double landau_order()
     return(landau);
 }
 
-double radial_order_parameter()
+double radial_order_parameter(char * filename)
 {
     int x,y,z;
     int dx,dy,dz;
@@ -501,6 +501,9 @@ double radial_order_parameter()
     int distance_squared;
     float FE_correlation,AFE_correlation;
  
+    FILE *fo;
+    fo=fopen(filename,"a"); // Open in append mode. If filename doesn't exist, it is created.
+
     const int CUTOFF=9;
 
     struct dipole n;
@@ -540,17 +543,17 @@ double radial_order_parameter()
                         }
 
     // Weight counts into a RDF
-    printf("# r^2 r orientational_FE_correlation[r^2] orientational_AFE_correlation[r^2] orientational_count[r^2] T\n");
+    fprintf(fo,"# r^2 r orientational_FE_correlation[r^2] orientational_AFE_correlation[r^2] orientational_count[r^2] T\n");
     for (i=0;i<CUTOFF*CUTOFF;i++)
     {   
         if (orientational_count[i]>0)
         {
             orientational_FE_correlation[i]/=(float)orientational_count[i];
             orientational_AFE_correlation[i]/=(float)orientational_count[i]; // Currently this really doesn't add anything... Not a very good metric?
-            printf("%d %f %f %f %d %d\n",i,sqrt(i),orientational_FE_correlation[i],orientational_AFE_correlation[i],orientational_count[i],T);
+            fprintf(fo,"%d %f %f %f %d %d\n",i,sqrt(i),orientational_FE_correlation[i],orientational_AFE_correlation[i],orientational_count[i],T);
         }
     }
-    printf("\n"); //starts as new dataset in GNUPLOT --> discontinuous lines
+    fprintf(fo,"\n"); //starts as new dataset in GNUPLOT --> discontinuous lines
     
     return(0.0); //Ummm
 }
