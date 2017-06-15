@@ -526,11 +526,12 @@ double radial_order_parameter(char * filename)
                             distance_squared=dx*dx + dy*dy + dz*dz; 
                             if (distance_squared>CUTOFF*CUTOFF) continue; // skip ones that exceed spherical limit of CUTOFF
 
-                            // Correlation function - present just simple dot
-                            // product (not dipole like)
+                            // Ferroelectric Correlation - a simple dot product
                             FE_correlation=dot(& lattice[x][y][z],& lattice[(x+dx+X)%X][(y+dy+Y)%Y][(z+dz+Z)%Z]); //complicated modulus arithmatic deals with PBCs
 
-                            // Dipole like...
+                            // Anti-ferroelectric correlation - Dipole like,
+                            // for a fully AFE ^v^v^v alignment, should give
+                            // you 100% correlation
                             d=sqrt((float) dx*dx + dy*dy + dz*dz);
                             if(d==0) d=1; // fudge to stop NaN when n-->zero vector
                             n.x=(float)dx/d; n.y=(float)dy/d; n.z=(float)dz/d; //normalised diff. vector
@@ -554,7 +555,9 @@ double radial_order_parameter(char * filename)
         }
     }
     fprintf(fo,"\n"); //starts as new dataset in GNUPLOT --> discontinuous lines
-    
+   
+    fclose(fo); // CLOSE FILE
+
     return(0.0); //Ummm
 }
 

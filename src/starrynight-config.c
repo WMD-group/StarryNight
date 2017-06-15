@@ -9,9 +9,9 @@
 
 #include <stdbool.h>
 
-#define X 20 // Malloc is for losers.
-#define Y 20 
-#define Z 20 
+#define X 40 // Malloc is for losers.
+#define Y 40 
+#define Z 40 
 
 int DIM=3; // if DIM==2, the dipoles are constrained to the XY plane
 // i.e. a model for dipoles in the Tetragonal phase of MAPI near the
@@ -152,9 +152,6 @@ void load_config()
     // at some point?
 
     config_lookup_bool(cf,"ConstrainToX",&ConstrainToX);
-
-//    config_lookup_float(cf,"DipoleFraction",&dipole_fraction); DEPRECATED
-//    - now done with Dipoles above
 
     config_lookup_int(cf,"DipoleCutOff",&DipoleCutOff);
 
