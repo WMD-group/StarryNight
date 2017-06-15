@@ -17,7 +17,11 @@ profile: ${SRCs}
 all: starrynight
 
 clean:
-	rm starrynight *.pnm *.jpg *.gif *.avi *.svg *.png
+	rm starrynight *.pnm *.jpg *.gif *.avi *.svg 
+	rm *.png 
+	rm *.log 
+	rm *.dat 
+	rm *.xyz
 # Make file magics to assist running jobs 
 
 parallel: starrynight
@@ -34,5 +38,4 @@ parallel-CageStrain: starrynight
 	seq 0 0.5 3.0 | caffeinate parallel ./starrynight {} > landau.dat
 
 parallel-T: starrynight
-	seq 0 75 600 | parallel ./starrynight {} > starrynight-parallel-T.log
-
+	seq 75 75 600 | parallel ./starrynight {} > starrynight-parallel-T.log
