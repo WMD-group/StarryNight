@@ -24,6 +24,11 @@ clean:
 	rm *.xyz
 # Make file magics to assist running jobs 
 
+cx1:
+	    # Local version of libconfig, within starrynight directory
+	    gcc -Llibconfig-1.5/lib -Ilibconfig-1.5/lib \
+			-O4 -lm -o starrynight src/starrynight-main.c libconfig-1.5/lib/.libs/libconfig.a
+
 parallel: starrynight
 	seq 0 10 1000 | parallel  ./starrynight {}  
 
