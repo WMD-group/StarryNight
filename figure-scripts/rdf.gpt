@@ -1,1 +1,3 @@
-p "rdf.dat" u 2:3 w lp
+load "figure-scripts/moreland.pal"
+
+p "rdf.dat" u 2:3:6 w lp palette
