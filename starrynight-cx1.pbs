@@ -1,0 +1,20 @@
+#!/bin/sh
+
+#PBS -N StarryStarryNight 
+#PBS -l walltime=71:58:00
+#PBS -l select=1:ncpus=24:mem=48GB
+
+#PBS -q pqawalsh
+
+##load application module
+module load intel-suite 
+
+##copy over
+cp $PBS_O_WORKDIR/starrynight.cfg $TMPDIR
+
+seq 0 10 1000 | parallel -j ${NCPUS} /home/jmf02/jmf02/2017-06-Starrynight/StarryNight/starrynight {} > starrynight-paralle.dat
+
+##copy files home 
+cp $TMPDIR/* $PBS_O_WORKDIR
+
+echo "For us, there is only the trying. The rest is not our business. ~T.S.Eliot"
