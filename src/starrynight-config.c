@@ -160,7 +160,7 @@ void load_config()
     config_lookup_int(cf,"MCMegaSteps",&MCMegaSteps); 
     config_lookup_float(cf,"MCMoves",&MCMegaMultiplier);
 
-    MCMinorSteps=(int)((float)X*(float)Y*(float)Z*MCMegaMultiplier);
+    MCMinorSteps=(long long int)((float)X*(float)Y*(float)Z*MCMegaMultiplier);
 
 // Simulation display / calculation flags
     config_lookup_bool(cf,"DisplayDumbTerminal",&DisplayDumbTerminal);
