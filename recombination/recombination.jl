@@ -60,7 +60,7 @@ function calc_recombination(N,pot,kernel)
     # Factors of N make these values independent of number of elements in the
     # potential, self-consistent, and equal to R=1 for a flat potential.
     @printf STDERR "R=N*N/(Zh*Ze): %e\t" N*N/(Zh*Ze)
-    @printf STDERR "R=N*sum(ρe.*ρh): %e" N*sum(ρh.*ρe)
+    @printf STDERR "R=N*sum(ρe.*ρh): %e\n" N*sum(ρh.*ρe)
     return N*sum(ρh.*ρe)
 end
 

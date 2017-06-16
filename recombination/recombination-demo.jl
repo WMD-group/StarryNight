@@ -25,7 +25,7 @@ end
 potential_statistics(N,pot)
 
 using Images
-n=20 # Terrible hard-wired hack
+n=40 # Terrible hard-wired hack
 pot=reshape(pot,n,n,n)
 #print(pot)
 
@@ -38,6 +38,6 @@ pot=reshape(pot,n,n,n)
 #print(pot)
 for i=0:0.05:10
     println(STDERR,"Gaussian filter with Sigma=$i")
-    R=recombination.calc_recombination(N,imfilter_gaussian(pot,[i,i,i]), En -> 1./(exp(β*(En+1.0)) + 1.0) )
+    R=recombination.calc_recombination(N,imfilter(pot,Kernel.gaussian([i,i,i])), En -> 1./(exp(β*(En+1.0)) + 1.0) )
     println("$i $R")
 end
