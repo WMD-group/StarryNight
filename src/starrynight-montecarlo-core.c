@@ -26,7 +26,7 @@ static int rand_int(int SPAN) // TODO: profile this to make sure it runs at an O
 // + 'ifs' during Monte Carlo; instead you just pull the deltas from the lookup
 // table
 
-const int MAXNEIGHBOURS=10000;
+enum {MAXNEIGHBOURS=10000};
 struct {
     int dx;
     int dy;
