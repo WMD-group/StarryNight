@@ -1,3 +1,14 @@
 load "figure-scripts/moreland.pal"
 
+set ylabel "Correlation"
+set xlabel "Distance (Unit cells)"
+
+unset key
+
 p "rdf.dat" u 2:3:6 w lp palette
+
+set terminal postscript color enhanced font 'Verdana,20'
+set output "rdf.eps"
+replot
+
+
