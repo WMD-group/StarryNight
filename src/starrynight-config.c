@@ -9,9 +9,9 @@
 
 #include <stdbool.h>
 
-#define X 20 // Malloc is for losers.
-#define Y 20 
-#define Z 20 
+int X=20; // Malloc is for winners.
+int Y=20; 
+int Z=20; 
 
 int DIM=3; // if DIM==2, the dipoles are constrained to the XY plane
 // i.e. a model for dipoles in the Tetragonal phase of MAPI near the
@@ -31,9 +31,11 @@ struct dipole
 {
     float x,y,z;
     float length; //length of dipole, to allow for solid state mixture (MA, FA, Ammonia, etc.)
-} lattice[X][Y][Z];
-// Nb: would be trivial to make this a runtime option with memory allocation;
-// BUT - this way the X,Y,Z are constants and can be inspected
+} ***lattice;
+//old compile-time way of allocating on heap: lattice[X][Y][Z];
+// Nb: 2017-09-08, moved to malloc'ing an array of pointers to pointers etc.
+// Can now fully specify lattice size at runtime with .cfg file, like any
+// sensible program :^) 
 
 struct mixture
 {
@@ -120,6 +122,11 @@ void load_config()
     config_lookup_string(cf,"LOGFILE",&LOGFILE); //library does its own dynamic allocation
 
     config_lookup_int(cf,"T",&T);
+
+    // Size of lattice; now used to Malloc lattice object
+    config_lookup_int(cf,"X",&X);
+    config_lookup_int(cf,"Y",&Y);
+    config_lookup_int(cf,"Z",&Z);
 
     config_lookup_float(cf,"Efield.x",&tmp);  Efield.x=(float)tmp;
     config_lookup_float(cf,"Efield.y",&tmp);  Efield.y=(float)tmp;

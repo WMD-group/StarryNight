@@ -142,6 +142,17 @@ int main(int argc, char *argv[])
         fprintf(stderr,"Command Line CageStrain: CageStrain = %lf\n",CageStrain);
     }
 
+    // Allocate lattice; which is made up of 'dipole' structs
+    fprintf(stderr,"Memory allocation for lattice with X=%d Y=%d Z=%d\n",X,Y,Z);
+    lattice = (struct dipole ***)malloc(sizeof(struct dipole **)*X);
+    for (x=0;x<X;x++) 
+    {
+        lattice[x]=(struct dipole **)malloc(sizeof(struct dipole *)*Y);
+        for (y=0;y<Y;y++)
+            lattice[x][y]=(struct dipole *)malloc(sizeof(struct dipole)*Z);
+    } 
+    fprintf(stderr,"Lattice allocated");
+
     // LOGFILE -- If we're going to do some actual science, we better have one...
     sprintf(name,"Recombination_T_%04d_CageStrain_%f.log",T,CageStrain);
     FILE *log;
