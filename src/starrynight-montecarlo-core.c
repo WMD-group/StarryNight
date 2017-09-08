@@ -65,7 +65,7 @@ static void gen_neighbour()
                     exit(-1);
                 }
             }
-    fprintf(stderr,"\nNeighbour list generated: %d neighbours with %d DipoleCutOff.\n",neighbour,DipoleCutOff);
+    fprintf(stderr,"\nNeighbour list generated: %d neighbours found with DipoleCutOff=%d.\n",neighbour,DipoleCutOff);
 }
 
 
@@ -83,7 +83,7 @@ static double site_energy(int x, int y, int z, struct dipole *newdipole, struct 
 
     // Sum over near neighbours for dipole-dipole interaction
     int i;
-#pragma omp parallel for private(dx,dy,dz,d,n) reduction(+:dE) schedule(static,1)
+//#pragma omp parallel for private(dx,dy,dz,d,n) reduction(+:dE) schedule(static,1)
     // NB: Works, but only modest speed gains!
     for (i=0;i<neighbour;i++)
     {

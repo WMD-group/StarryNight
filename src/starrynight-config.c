@@ -9,9 +9,9 @@
 
 #include <stdbool.h>
 
-#define X 40 // Malloc is for losers.
-#define Y 40 
-#define Z 40 
+#define X 20 // Malloc is for losers.
+#define Y 20 
+#define Z 20 
 
 int DIM=3; // if DIM==2, the dipoles are constrained to the XY plane
 // i.e. a model for dipoles in the Tetragonal phase of MAPI near the
@@ -132,7 +132,7 @@ void load_config()
     config_lookup_float(cf,"K",&K);
 //    config_lookup_float(cf,"Dipole",&Dipole); DEPRECATED - see below for list
     config_lookup_float(cf,"CageStrain",&CageStrain);
-
+    fprintf(stderr,"CageStrain: %f\n",CageStrain);
     
     // read in list of dipoles + prevalence for solid mixture
     setting = config_lookup(cf, "Dipoles");
@@ -174,7 +174,7 @@ void load_config()
     config_lookup_bool(cf,"SaveDipolesPNG",&SaveDipolesPNG);
     config_lookup_bool(cf,"SaveDipolesXYZ",&SaveDipolesXYZ);
 
-    fprintf(stderr,"Config loaded. \n");
+    fprintf(stderr,"Finished loading config file. \n");
 }
 
 // 3-Vector dot-product... hand coded, should probably validate against

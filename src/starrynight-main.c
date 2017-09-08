@@ -128,6 +128,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Loading config...\n");
     load_config();
 
+    fprintf(stderr,"Checking %d command line options for config file overrides...\n",argc-1);
     // Now override with command line options if supplied...
     //  This enables simple parallel via the Makefile and 'GNU Parallel'
     if (argc>1)
@@ -157,7 +158,6 @@ int main(int argc, char *argv[])
     fprintf(log,"# Starrynight - simulation run on time(NULL)= %ld\n# Mersenne Twister Seed: %X\n",time(NULL),SEED);
 
     gen_neighbour(); //generate neighbour list for fast iteration in energy calculator
-    fprintf(stderr,"Neighbour list generated...\t");
 
     void (*initialise_lattice)() =  & initialise_lattice_random ; // C-function pointer to chosen initial lattice
     // FIXME: C Foo might confuse people? Explain more? Turn into a config
