@@ -2,8 +2,8 @@
 
 Monte Carlo codes to simulate dipole-dipole interactions and ferroelectric domains in a hybrid organic-inorganic perovskite solar cell.
 
-Master has now been moved to the Icarius branch, the 2014-2015 extension to 3D, solid solutions, many further analysis tools, electrostatic
-potentials, Fermi-Dirac/Boltzmann hole/electron populations.
+We have started to work on a more complete description and documentation,
+available online: (https://wmd-group.github.io/StarryNight/)
 
 ![Dipole Domains](dipole-domains.png)
 
@@ -15,6 +15,9 @@ Publications
 
 Development Notes
 -----------------
+
+2016 - Extended to 3D, solid solutions, many further analysis tools, electrostatic
+potentials, Fermi-Dirac/Boltzmann hole/electron populations.
 
 2014-05-31 - Started work on Icarius
 
