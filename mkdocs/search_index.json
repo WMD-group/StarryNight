@@ -1,0 +1,24 @@
+{
+    "docs": [
+        {
+            "location": "/", 
+            "text": "StarryNight Documentation\n\n\nStarryNight are Monte Carlo codes to simulate dipole-dipole interactions and ferroelectric domains in a hybrid organic-inorganic perovskite solar cell.\n\n\n\n\nPublications\n\n\n\n\nMolecular ferroelectric contributions to anomalous hysteresis in hybrid perovskite solar cells\n APL Materials (2014)\n\n\nThe dynamics of methylammonium ions in hybrid organic\u2013inorganic perovskite solar cells\n Nature Communications (2015)\n\n\nRole of microstructure in the electron\u2013hole interaction of hybrid lead halide perovskites\n Nature Photonics (2015)\n\n\n\n\nDevelopment Notes\n\n\n2016 - Master has now been moved to the Icarius branch, the 2014-2015 extension\nto 3D, solid solutions, many further analysis tools, electrostatic potentials,\nFermi-Dirac/Boltzmann hole/electron populations.\n\n\n2014-05-31 - Started work on Icarius\n\n\n2014-01-29\nAdded dependency on libconfig for lightweight config file parsing.\nMac OSX: \nbrew install libconfig\n\nDebian: \nsudo apt-get install libconfig-dev", 
+            "title": "Home"
+        }, 
+        {
+            "location": "/#starrynight-documentation", 
+            "text": "StarryNight are Monte Carlo codes to simulate dipole-dipole interactions and ferroelectric domains in a hybrid organic-inorganic perovskite solar cell.", 
+            "title": "StarryNight Documentation"
+        }, 
+        {
+            "location": "/#publications", 
+            "text": "Molecular ferroelectric contributions to anomalous hysteresis in hybrid perovskite solar cells  APL Materials (2014)  The dynamics of methylammonium ions in hybrid organic\u2013inorganic perovskite solar cells  Nature Communications (2015)  Role of microstructure in the electron\u2013hole interaction of hybrid lead halide perovskites  Nature Photonics (2015)", 
+            "title": "Publications"
+        }, 
+        {
+            "location": "/#development-notes", 
+            "text": "2016 - Master has now been moved to the Icarius branch, the 2014-2015 extension\nto 3D, solid solutions, many further analysis tools, electrostatic potentials,\nFermi-Dirac/Boltzmann hole/electron populations.  2014-05-31 - Started work on Icarius  2014-01-29\nAdded dependency on libconfig for lightweight config file parsing.\nMac OSX:  brew install libconfig \nDebian:  sudo apt-get install libconfig-dev", 
+            "title": "Development Notes"
+        }
+    ]
+}
