@@ -1,5 +1,11 @@
 This StarryNight documentation is being built with mkdocs.
 
+* `mkdocs gh-deploy` - should build and deploy any changes in docs to gh-pages
+  branch, https://wmd-group.github.io/StarryNight/ .
+
+* `mkdocs serve` - use this to live-serve the documentation locally while you
+  are making changes.
+
 # Welcome to MkDocs
 
 For full documentation visit [mkdocs.org](http://mkdocs.org).
