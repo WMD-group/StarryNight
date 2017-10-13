@@ -1,9 +1,25 @@
 # StarryNight Documentation 
 
+StarryNight are Monte Carlo codes to simulate dipole-dipole interactions and
+(anti-)ferroelectric domains in a hybrid organic-inorganic perovskite solar cell.
 
-StarryNight are Monte Carlo codes to simulate dipole-dipole interactions and ferroelectric domains in a hybrid organic-inorganic perovskite solar cell.
+This is (currently) achieved with the Metropolish algorithm. The simulation
+volume is represented as a 3D lattice with individual sites posessing dipoles. 
+The Hamiltonian for the system is then the dipole-dipole interaction (summed to
+a cut-off); a local 'cage strain' evaluated with the nearest neighbours
+(motivated by ab-initio DFT calculations); and an applied field. 
+Random mixtures of dipoles of use specification can be used. 
 
-![Dipole Domains](dipole-domains.png)
+Though motivated by a mechanistic model of fixed methylammonium dipoles
+rotating in 3D space, the same physics is produced by interacting dipoles of
+e.g. Jahn-Teller distorted octahedra. 
+
+From the finite temperature Metropolis simulation, an electrostatic potential
+can be reconstructed. This can then be used to infer device behaviour
+(particularly, recombination and mobility).
+
+The codes are written in C. They currently use a Mersenne-Twister
+Pseudo-Random-Number-Generator to power the Metropolis algorithm.
 
 ## Publications
 
