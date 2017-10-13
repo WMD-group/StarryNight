@@ -69,3 +69,6 @@ Session.vim
 tags
 
 # End of https://www.gitignore.io/api/c,vim
+# Ignore mkdocs site file (raw HTML)
+
+docs/site
