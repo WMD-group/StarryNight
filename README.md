@@ -3,7 +3,7 @@
 Monte Carlo codes to simulate dipole-dipole interactions and ferroelectric domains in a hybrid organic-inorganic perovskite solar cell.
 
 We have started to work on a more complete description and documentation,
-available online: (https://wmd-group.github.io/StarryNight/)
+available online: [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://wmd-group.github.io/StarryNight/)
 
 ![Dipole Domains](dipole-domains.png)
 
