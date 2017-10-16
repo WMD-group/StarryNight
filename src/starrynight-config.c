@@ -27,16 +27,21 @@ unsigned long ACCEPT=0; //counters for MC moves
 unsigned long REJECT=0;
 
 // CUSTOM STRUCTURES
+// This is used to build the lattice of dipoles. Note that we use 32bit floats
+// for a compact (in memory) representation, that can fit in the cache.
 struct dipole
 {
     float x,y,z;
     float length; //length of dipole, to allow for solid state mixture (MA, FA, Ammonia, etc.)
 } ***lattice;
-//old compile-time way of allocating on heap: lattice[X][Y][Z];
-// Nb: 2017-09-08, moved to malloc'ing an array of pointers to pointers etc.
-// Can now fully specify lattice size at runtime with .cfg file, like any
+// old compile-time way of static-allocation on the stack: 
+//      lattice[X][Y][Z];
+// Nb: 2017-09-08, moved to malloc'ing an array of pointers to pointers etc. on
+// the heap. This may have a performance penalty. 
+// But we can now fully specify lattice size at runtime with .cfg file, like any
 // sensible program :^) 
 
+// Structure to store solid-solution of different 'dipoles'
 struct mixture
 {
     float length;
@@ -44,7 +49,7 @@ struct mixture
 } dipoles[10];
 int dipolecount=0;
 
-// Prototypes...
+// Prototypes for functions below
 static float dot(struct dipole *a, struct dipole *b);
 static void random_sphere_point(struct dipole *p);
 static void random_X_point(struct dipole *p);
@@ -145,19 +150,15 @@ void load_config()
     setting = config_lookup(cf, "Dipoles");
     dipolecount   = config_setting_length(setting);
     for (i=0;i<dipolecount;i++)
-    dipoles[i].length=config_setting_get_float_elem(setting,i);
+        dipoles[i].length=config_setting_get_float_elem(setting,i);
     setting = config_lookup(cf, "Prevalence");
     dipolecount   = config_setting_length(setting);
     for (i=0;i<dipolecount;i++)
-    dipoles[i].prevalence=config_setting_get_float_elem(setting,i);
-
-    // stderr printf to check we read correctly
+        dipoles[i].prevalence=config_setting_get_float_elem(setting,i);
+    // echo via stderr printf to check we read correctly
     for (i=0;i<dipolecount;i++)
-    fprintf(stderr,"Dipole: %d Length: %f Prevalence: %f\n",i,dipoles[i].length, dipoles[i].prevalence);
+        fprintf(stderr,"Dipole: %d Length: %f Prevalence: %f\n",i,dipoles[i].length, dipoles[i].prevalence);
     
-    // above doesn't do anything currently - not sure whether I lost the code
-    // at some point?
-
     config_lookup_bool(cf,"ConstrainToX",&ConstrainToX);
 
     config_lookup_int(cf,"DipoleCutOff",&DipoleCutOff);
@@ -184,8 +185,10 @@ void load_config()
     fprintf(stderr,"Finished loading config file. \n");
 }
 
-// 3-Vector dot-product... hand coded, should probably validate against
-// a proper linear albegra library
+// 3-Vector dot-product 
+// This was hand-coded by Jarv.
+// We should should probably validate against a proper linear albegra library
+// to look for weird edge cases
 // + also check generated machine code that it unrolls nicely + etc.
 static float dot(struct dipole *a, struct dipole *b)
 {
@@ -199,6 +202,8 @@ static float dot(struct dipole *a, struct dipole *b)
     return(sum);
 }
 
+// Picks a random point on a sphere (Length = Euclidian norm = 1), which it
+// writes into the memory of the passed dipole pointer.
 static void random_sphere_point(struct dipole *p)
 {
     int i;
@@ -233,7 +238,7 @@ static void random_X_point(struct dipole *p)
 
     i=rand_int(6);
 
-    switch(i)
+    switch(i) // This is a bit coarse, perhaps other ways are more sophisticant
     {
         case 0:
             x=1;

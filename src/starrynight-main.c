@@ -24,6 +24,7 @@ static int rand_int(int SPAN);
 #include "starrynight-analysis.c" //Analysis functions, and output routines
 #include "starrynight-montecarlo-core.c" // Core simulation
 
+// this analysis function run before MC moves start.
 void analysis_initial()
 {
     if(CalculateEfield) lattice_Efield_XYZ("initial_lattice_efield.xyz");
@@ -44,9 +45,14 @@ void analysis_initial()
     if (CalculateRecombination) recombination_calculator(stderr);
 }
 
+// this analysis function run every MEGASTEPS, for intermediate data collection
 void analysis_midpoint(int MCstep, FILE *log)
 {
     char name[100],prefix[100]; 
+
+    // FIXME: JMF 2017-10 - this commented out code should either be made .cfg
+    // options, or deleted.
+
     // Log some data... Nb: Slow as does a NxN summation of lattice energy
     // contributions!
     //        lattice_potential_log(log);
@@ -98,8 +104,11 @@ void analysis_midpoint(int MCstep, FILE *log)
 
 }
 
+// this analysis function runs at simulation end
 void analysis_final()
 {
+    // FIXME: JMF 2017-10 - Either delete commented code or make a config option!
+
     // Final data output / summaries.
     //    outputlattice_ppm_hsv("MC-PNG_final.png");
     //    outputlattice_svg("MC-SVG_final.svg");
@@ -113,6 +122,7 @@ void analysis_final()
     //outputlattice_xyz_overprint("overprint.xyz");
     //outputlattice_pymol_cgo("dipoles.py");
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -142,7 +152,7 @@ int main(int argc, char *argv[])
         fprintf(stderr,"Command Line CageStrain: CageStrain = %lf\n",CageStrain);
     }
 
-    // Allocate lattice; which is made up of 'dipole' structs
+    // Allocate lattice on the heap; which is made up of 'dipole' structs
     fprintf(stderr,"Memory allocation for lattice with X=%d Y=%d Z=%d\n",X,Y,Z);
     lattice = (struct dipole ***)malloc(sizeof(struct dipole **)*X);
     for (x=0;x<X;x++) 
@@ -161,16 +171,18 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Log file '%s' opened. ",LOGFILE);
 
     //Fire up the twister!
-    int SEED=0xDEADBEEF + T; // By adding T to the SEED, the different temperature ensembles have a different starting config
-    // or time(NULL)
-    init_genrand(SEED); //314159265);  // reproducible data :)
-    //init_genrand(time(NULL)); // seeded with current time
+    int SEED=0xDEADBEEF + T; 
+    // By adding T to the SEED, the different temperature ensembles have
+    // a different starting config, while still being reproducible 
+    // Consider time(NULL), for independent runs.
+    init_genrand(SEED);  // reproducible data :)
     fprintf(stderr,"Mersenne Twister initialised... seed: %X\t",SEED);
     fprintf(log,"# Starrynight - simulation run on time(NULL)= %ld\n# Mersenne Twister Seed: %X\n",time(NULL),SEED);
 
-    gen_neighbour(); //generate neighbour list for fast iteration in energy calculator
+    gen_neighbour(); //generate neighbour list (out to dipole cut-off) for fast iteration in energy calculator
 
-    void (*initialise_lattice)() =  & initialise_lattice_random ; // C-function pointer to chosen initial lattice
+    void (*initialise_lattice)() =  & initialise_lattice_random ; 
+        // C-function pointer to chosen initial lattice
     // FIXME: C Foo might confuse people? Explain more? Turn into a config
     // option?
 
@@ -198,6 +210,9 @@ int main(int argc, char *argv[])
     if(SaveDipolesSVG)   outputlattice_svg("equilib-SVG.svg");
     if(CalculatePotential) outputpotential_png("equilib_pot.png"); //"final_pot.png");
 
+    // FIXME: This commented code applies a time-varying field. Either delete
+    // or make a config option.
+
     //    double AMP; double PHASE;
     //    for (AMP=0.01; AMP<=0.05; AMP+=0.01)
     //        for (PHASE=0; PHASE<=2*M_PI; PHASE+=M_PI/16) // DOESN'T SAW TOOTH CURRENTLY!
@@ -205,10 +220,11 @@ int main(int argc, char *argv[])
     {
         //        Efield.x=AMP*sin(PHASE);
 
-        beta=1/((float)T/300.0); // recalculate beta (used internally) based
-        //        on T-dep forloop
+        beta=1/((float)T/300.0); 
+        // recalculate thermodynamic Beta (used internally), in case T has changed (for loop)
 
         // Do some MC moves!
+        // THIS IS THE SIMULATION CORE / HOT LOOP.
         for (i=0;i<MCMegaSteps;i++)
         {
             //            initialise_lattice(); // RESET LATTICE!
@@ -220,8 +236,11 @@ int main(int argc, char *argv[])
             fflush(stdout); // flush the output buffer, so we can live-graph / it's saved if we interupt
 
             tac=clock();
-            fprintf(stderr,"MC Moves (per second): %f MHz\n",1e-6*(double)(MCMinorSteps)/(double)(toc-tic)*(double)CLOCKS_PER_SEC);
-            fprintf(stderr,"Output routines: %f s ; Efficiency of MC moves vs. analysis %.2f\%%\n",(double)(tac-toc)/(double)CLOCKS_PER_SEC,100.0*(double)(toc-tic)/(double)(tac-tic));
+            fprintf(stderr,"MC Moves (per second): %f MHz\n",
+                    1e-6*(double)(MCMinorSteps)/(double)(toc-tic)*(double)CLOCKS_PER_SEC);
+            fprintf(stderr,"Output routines: %f s ; Efficiency of MC moves vs. analysis %.2f\%%\n",
+                    (double)(tac-toc)/(double)CLOCKS_PER_SEC,
+                    100.0*(double)(toc-tic)/(double)(tac-tic));
 
             // Manipulate the run conditions depending on simulation time
             //        if (i==100) { DIM=3;}  // ESCAPE FROM FLATLAND
