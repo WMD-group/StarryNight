@@ -11,6 +11,7 @@
 #include <limits.h>
 #include <time.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <libconfig.h>
 
@@ -181,16 +182,33 @@ int main(int argc, char *argv[])
 
     gen_neighbour(); //generate neighbour list (out to dipole cut-off) for fast iteration in energy calculator
 
-    void (*initialise_lattice)() =  & initialise_lattice_random ; 
-        // C-function pointer to chosen initial lattice
-    // FIXME: C Foo might confuse people? Explain more? Turn into a config
-    // option?
+//    { random, ferroelectric, buckled, antiferro_wall, ferro_wall, antiferro_slip, spectrum, slab_delete}; 
+    // C-function pointer to chosen initial lattice
+    void (*initialise_lattice)();
+    initialise_lattice= & initialise_lattice_random; // default
+    if (strcmp(InitialLattice,"random")==0)
+        {initialise_lattice =  & initialise_lattice_random;}
+    if (strcmp(InitialLattice,"buckled")==0)
+        {initialise_lattice =  & initialise_lattice_buckled;}
+    if (strcmp(InitialLattice,"ferroelectric")==0)
+        {initialise_lattice =  & initialise_lattice_ferroelectric;} 
+    if (strcmp(InitialLattice,"antiferro_wall")==0)
+        {initialise_lattice =  & initialise_lattice_antiferro_wall;} 
+    if (strcmp(InitialLattice,"ferro_wall")==0)
+        {initialise_lattice =  & initialise_lattice_ferro_wall;} 
+    if (strcmp(InitialLattice,"antiferro_slip")==0)
+        {initialise_lattice =  & initialise_lattice_antiferro_slip;}
+    if (strcmp(InitialLattice,"spectrum")==0)
+        {initialise_lattice =  & initialise_lattice_spectrum;} 
+    if (strcmp(InitialLattice,"slab_delete")==0)
+        {initialise_lattice =  & initialise_lattice_slab_delete;} 
 
     initialise_lattice(); //populate with random dipoles
     fprintf(stderr,"Lattice initialised...");
-
     solid_solution(); //populate dipole strengths on top of this
-    fprintf(stderr,"Solid solution formed...");
+    fprintf(stderr,"Solid solution formed...\n");
+
+    if(DisplayDumbTerminal) outputlattice_dumb_terminal(); 
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 

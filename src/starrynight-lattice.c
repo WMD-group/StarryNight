@@ -34,13 +34,6 @@ void initialise_lattice_random()
             {
                 random_sphere_point(& lattice[x][y][z]);
             }
-    //Print lattice
-    /*
-       for (i=0;i<X;i++)
-       for (k=0;k<Y;k++)
-       printf("\n %f %f %f %f",lattice[i][k].x,lattice[i][k].y,lattice[i][k].z,
-       dot(&lattice[i][k],&lattice[i][k]));
-       */  
 }
 
 void initialise_lattice_ferroelectric()

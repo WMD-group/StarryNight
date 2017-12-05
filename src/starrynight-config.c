@@ -34,12 +34,6 @@ struct dipole
     float x,y,z;
     float length; //length of dipole, to allow for solid state mixture (MA, FA, Ammonia, etc.)
 } ***lattice;
-// old compile-time way of static-allocation on the stack: 
-//      lattice[X][Y][Z];
-// Nb: 2017-09-08, moved to malloc'ing an array of pointers to pointers etc. on
-// the heap. This may have a performance penalty. 
-// But we can now fully specify lattice size at runtime with .cfg file, like any
-// sensible program :^) 
 
 // Structure to store solid-solution of different 'dipoles'
 struct mixture
@@ -60,19 +54,20 @@ void initialise_lattice_spectrum();
 void initialise_lattice_buckled();
 void initialise_lattice_slab_delete();
 
+char const *InitialLattice = NULL; 
+
 // SIMULATION PARAMETERS
 // NB: These are defaults - most are now read from config file
 
 double beta=1.0;  // beta=1/T  T=temperature of the lattice, in units of k_B
 
-struct dipole Efield; //now a vector, still k_B.T units per lattice unit
+struct dipole Efield; //now a vector, units are k_B.T~=25 meV (energy), per lattice unit
 
 double K=1.0; //elastic coupling constant for dipole moving within cage
-//double Dipole=1.0; //units of k_B.T for spacing = 1 lattice unit
+
 double CageStrain=1.0; // as above
 
-//double dipole_fraction=1.0; //fraction of sites to be occupied by dipoles
-int DipoleCutOff=3;
+int DipoleCutOff=3; // Cutoff for dipole energy summation
 
 // These variables control the number of loops
 int MCMegaSteps=400;
@@ -139,10 +134,7 @@ void load_config()
 
     fprintf(stderr,"Efield: x %f y %f z %f\n",Efield.x,Efield.y,Efield.z);
 
-    //    config_lookup_float(cf,"Eangle",&Eangle);
-
     config_lookup_float(cf,"K",&K);
-//    config_lookup_float(cf,"Dipole",&Dipole); DEPRECATED - see below for list
     config_lookup_float(cf,"CageStrain",&CageStrain);
     fprintf(stderr,"CageStrain: %f\n",CageStrain);
     
@@ -160,14 +152,16 @@ void load_config()
         fprintf(stderr,"Dipole: %d Length: %f Prevalence: %f\n",i,dipoles[i].length, dipoles[i].prevalence);
     
     config_lookup_bool(cf,"ConstrainToX",&ConstrainToX);
-
     config_lookup_int(cf,"DipoleCutOff",&DipoleCutOff);
 
-    config_lookup_int(cf,"MCEqmSteps",&MCEqmSteps);
+    // read in choice of starting lattice; stored as a string and processed in
+    // -main
+    config_lookup_string(cf,"InitialLattice",&InitialLattice);
 
+    config_lookup_int(cf,"MCEqmSteps",&MCEqmSteps);
     config_lookup_int(cf,"MCMegaSteps",&MCMegaSteps); 
     config_lookup_float(cf,"MCMoves",&MCMegaMultiplier);
-
+// Multiply together MC sweeps for core loop
     MCMinorSteps=(long long int)((float)X*(float)Y*(float)Z*MCMegaMultiplier);
 
 // Simulation display / calculation flags
