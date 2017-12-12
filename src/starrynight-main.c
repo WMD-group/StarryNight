@@ -63,14 +63,6 @@ void analysis_midpoint(int MCstep, FILE *log)
     // TODO: Split Energy into different contributions... would be nice to
     // see polarisation delta.E spike when the field flips
 
-    // Log some pretty pictures...
-    //        sprintf(name,"MC-PNG_step_%.4d.png",i);
-    //        outputlattice_ppm_hsv(name);
-
-    //        sprintf(name,"MC-SVG_step_%.4d.svg",i);
-    //        outputlattice_svg(name);
-
-
     // Update the (interactive) user what we're up to
     //fprintf(stderr,".");
     //fprintf(stderr,"\n");
@@ -86,22 +78,22 @@ void analysis_midpoint(int MCstep, FILE *log)
     //fprintf(stdout, "T: %d Efield: x %f Polar: %f\n",T,Efield.x,polarisation());
     //fprintf(stderr,"\n");
 
-    sprintf(prefix,"T_%04d_i_%03d_CageStrain_%f",T,MCstep,CageStrain);
+    sprintf(prefix,"T_%04d_i_%03d",T,MCstep); // ie. T_0300_t_002 - for batch runs
 
-    sprintf(name,"%s_lattice_efield.xyz",prefix);
+    sprintf(name,"%s_efield.xyz",prefix);
     if(CalculateEfield) lattice_Efield_XYZ(name);
 
-    sprintf(name,"%s_lattice_potential.xyz",prefix);
-    if(CalculatePotential) lattice_potential_XYZ(name); // potential distro
-
-    sprintf(name,"%s_MC-PNG_final.png",prefix);
-    if(SaveDipolesPNG) outputlattice_ppm_hsv(name);
-
-    sprintf(name,"%s_MC-SVG_final.svg",prefix);
-    if(SaveDipolesSVG) outputlattice_svg(name);
+    sprintf(name,"%s_potential.xyz",prefix);
+    if(CalculatePotential) lattice_potential_XYZ(name); // potential distro; text format (3D)
 
     sprintf(name,"%s_potential.png",prefix);
-    if(CalculatePotential) outputpotential_png(name); //"final_pot.png");
+    if(CalculatePotential) outputpotential_png(name); // 'surface of the moon' picture (2D)
+
+    sprintf(name,"%s_MC-PNG_final.png",prefix); 
+    if(SaveDipolesPNG) outputlattice_ppm_hsv(name); // coloured squares (2D)
+
+    sprintf(name,"%s_MC-SVG_final.svg",prefix);
+    if(SaveDipolesSVG) outputlattice_svg(name); // arrows (2D)
 
 }
 
@@ -165,7 +157,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Lattice allocated");
 
     // LOGFILE -- If we're going to do some actual science, we better have one...
-    sprintf(name,"Recombination_T_%04d_CageStrain_%f.log",T,CageStrain);
+    sprintf(name,"Recombination_T_%04d.log",T);
     FILE *log;
     LOGFILE=name;
     log=fopen(LOGFILE,"w");
