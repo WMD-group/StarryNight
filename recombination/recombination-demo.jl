@@ -14,18 +14,20 @@ N,pot = recombination.starrynight_read_potential(ARGS[1])
 
 function potential_statistics(N,pot)
     println("Boltzmann statistics...")
-    recombination.calc_recombination(N, pot, En -> exp(-β*En) )
+    recombination.calc_recombination(N, pot, En -> exp.(-β*En) )
     println("Fermi-Dirac statistics...")
-    recombination.calc_recombination(N, pot, En -> 1./(exp(β*En) + 1.0) )
+    recombination.calc_recombination(N, pot, En -> 1./(exp.(β*En) + 1.0) )
     println("Fermi-Dirac, chem pot = 1.0 eV...")
-    recombination.calc_recombination(N, pot, En -> 1./(exp(β*(En+1.0)) + 1.0) )
+    recombination.calc_recombination(N, pot, En -> 1./(exp.(β*(En+1.0)) + 1.0) )
     recombination.calc_mobility(N,pot)
 end
 
 potential_statistics(N,pot)
 
+# Apply knowledge of polaron Gaussian wavefunction by Gaussian blurring the underlying potential
+
 using Images
-n=40 # Terrible hard-wired hack
+n=100 # Terrible hard-wired hack
 pot=reshape(pot,n,n,n)
 #print(pot)
 
@@ -38,6 +40,6 @@ pot=reshape(pot,n,n,n)
 #print(pot)
 for i=0:0.05:10
     println(STDERR,"Gaussian filter with Sigma=$i")
-    R=recombination.calc_recombination(N,imfilter(pot,Kernel.gaussian([i,i,i])), En -> 1./(exp(β*(En+1.0)) + 1.0) )
-    println("$i $R")
+    R=recombination.calc_recombination(N,imfilter(pot,Kernel.gaussian([i,i,i])), En -> 1./(exp.(β*(En+1.0)) + 1.0) )
+    println("$i $R") # STDOUT, for later printing.
 end

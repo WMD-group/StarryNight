@@ -37,7 +37,7 @@ function starrynight_read_potential(filename)
     N=length(pot) # number of elements
 
     @printf STDERR "OK; data loaded and converted to Volts. Variance: %e SD: %e\n\n" var(pot) std(pot)
-    print(hist(pot,50))
+#    print(hist(pot,50)) # I think this used to make a nice little histogram; API has changed
 
     describe(pot)
 
