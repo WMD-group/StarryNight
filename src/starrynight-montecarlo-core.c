@@ -41,11 +41,12 @@ static void gen_neighbour()
     int dx,dy,dz=0;
     float d;
 
+    int ZCutOff=DipoleCutOff;
+    if (Z==1) ZCutOff=0;
+
     for (dx=-DipoleCutOff;dx<=DipoleCutOff;dx++)
         for (dy=-DipoleCutOff;dy<=DipoleCutOff;dy++)
-#if(Z>1) //i.e. 3D in Z
-            for (dz=-DipoleCutOff;dz<=DipoleCutOff;dz++) //NB: conditional zDipoleCutOff to allow for 2D version
-#endif
+            for (dz=-ZCutOff;dz<=ZCutOff;dz++) //NB: conditional zDipoleCutOff to allow for 2D version
             {
                 if (dx==0 && dy==0 && dz==0)
                     continue; //no infinities / self interactions please!
@@ -58,6 +59,8 @@ static void gen_neighbour()
                 neighbours[neighbour].dx=dx; neighbours[neighbour].dy=dy; neighbours[neighbour].dz=dz;
                 neighbours[neighbour].d=d;
                 neighbour++;
+
+                fprintf(stderr,"Neighbour: %d %d %d\n",dx,dy,dz);
 
                 if (neighbour>MAXNEIGHBOURS) // bounds check
                 {

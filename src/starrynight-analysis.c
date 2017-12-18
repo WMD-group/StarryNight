@@ -71,9 +71,9 @@ static double dipole_potential(int x, int y, int z)
 
     for (dx=-MAX;dx<=MAX;dx++)
         for (dy=-MAX;dy<=MAX;dy++)
-#if(Z>1) //i.e. 3D in Z
+//#if(Z>1) //i.e. 3D in Z // broken by dynamic lattice allocation. FIXME for 2D
             for (dz=-MAX;dz<=MAX;dz++)
-#endif
+//#endif
             {
                 if (dx==0 && dy==0 && dz==0)
                     continue; //no infinities / self interactions please!
@@ -287,9 +287,9 @@ static double dipole_electricfieldoffset(int CUTOFF, int x, int y, int z)
 
     for (dx=-CUTOFF-1;dx<CUTOFF;dx++)
         for (dy=-CUTOFF-1;dy<CUTOFF;dy++)
-#if(Z>1) //i.e. 3D in Z
+//#if(Z>1) //i.e. 3D in Z // broken by dynamic lattice allocation. FIXME FOR 2D!
             for (dz=-CUTOFF-1;dz<CUTOFF;dz++)
-#endif
+//#endif
             {
 //                if (dx==0 && dy==0 && dz==0)
 //                    continue; //no infinities / self interactions please!
@@ -370,9 +370,9 @@ static double dipole_electricfield(int CUTOFF, int x, int y, int z)
 
     for (dx=-CUTOFF;dx<=CUTOFF;dx++)
         for (dy=-CUTOFF;dy<=CUTOFF;dy++)
-#if(Z>1) //i.e. 3D in Z
+//#if(Z>1) //i.e. 3D in Z // apparently broken by dynamic allocation of lattice.
             for (dz=-CUTOFF;dz<=CUTOFF;dz++)
-#endif
+//#endif
             {
                 if (dx==0 && dy==0 && dz==0)
                     continue; //no infinities / self interactions please!
@@ -523,11 +523,15 @@ double radial_order_parameter(char * filename)
                     for (dy=-CUTOFF;dy<=CUTOFF;dy++)
                        for (dz=-CUTOFF;dz<=CUTOFF;dz++)
                         {
+//                            dz=0;
                             distance_squared=dx*dx + dy*dy + dz*dz; 
                             if (distance_squared>CUTOFF*CUTOFF) continue; // skip ones that exceed spherical limit of CUTOFF
 
                             // Ferroelectric Correlation - a simple dot product
-                            FE_correlation=dot(& lattice[x][y][z],& lattice[(x+dx+X)%X][(y+dy+Y)%Y][(z+dz+Z)%Z]); //complicated modulus arithmatic deals with PBCs
+                            FE_correlation=dot(& lattice[x][y][z],
+                                & lattice[(x+dx+X)%X][(y+dy+Y)%Y][(z+dz+Z)%Z]); //complicated modulus arithmatic deals with PBCs
+                            FE_correlation=fabsf(FE_correlation);
+//                            fprintf(stderr,"x: %d y: %d z: %d lattice(x,y,z).x:%f FE_correlation: %f\n",x,y,z,lattice[x][y][z].x,FE_correlation);
 
                             // Anti-ferroelectric correlation - Dipole like,
                             // for a fully AFE ^v^v^v alignment, should give
@@ -551,7 +555,8 @@ double radial_order_parameter(char * filename)
         {
             orientational_FE_correlation[i]/=(float)orientational_count[i];
             orientational_AFE_correlation[i]/=(float)orientational_count[i]; // Currently this really doesn't add anything... Not a very good metric?
-            fprintf(fo,"%d %f %f %f %d %d\n",i,sqrt(i),orientational_FE_correlation[i],orientational_AFE_correlation[i],orientational_count[i],T);
+            fprintf(fo,"%d %f %f %f %d %d\n",i,sqrt(i),
+                    orientational_FE_correlation[i],orientational_AFE_correlation[i],orientational_count[i],T);
         }
     }
     fprintf(fo,"\n"); //starts as new dataset in GNUPLOT --> discontinuous lines
@@ -786,7 +791,7 @@ void outputlattice_dumb_terminal()
     const char * arrows="-\\|/-\\|/"; // "Dancing at angles"
     int x,y;
     float a;
-    int z=0;
+    int z=0; // Display *this* slice in Z
     
     float new_DMAX=0.0; //used to calibrate next colour scale, based on present maxima of data
     float potential;
