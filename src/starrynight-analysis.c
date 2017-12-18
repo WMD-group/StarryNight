@@ -530,8 +530,6 @@ double radial_order_parameter(char * filename)
                             // Ferroelectric Correlation - a simple dot product
                             FE_correlation=dot(& lattice[x][y][z],
                                 & lattice[(x+dx+X)%X][(y+dy+Y)%Y][(z+dz+Z)%Z]); //complicated modulus arithmatic deals with PBCs
-                            FE_correlation=fabsf(FE_correlation);
-//                            fprintf(stderr,"x: %d y: %d z: %d lattice(x,y,z).x:%f FE_correlation: %f\n",x,y,z,lattice[x][y][z].x,FE_correlation);
 
                             // Anti-ferroelectric correlation - Dipole like,
                             // for a fully AFE ^v^v^v alignment, should give
