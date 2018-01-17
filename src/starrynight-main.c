@@ -201,6 +201,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Solid solution formed...\n");
 
     if(DisplayDumbTerminal) outputlattice_dumb_terminal(); 
+    analysis_initial(); // output initial lattice analysis
 
     fprintf(stderr,"\n\tMC startup. 'Do I dare disturb the universe?'\n");
 
