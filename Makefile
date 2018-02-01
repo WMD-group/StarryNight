@@ -1,5 +1,9 @@
-SRCs= src/mt19937ar-cok.c                src/starrynight-config.c           src/starrynight-main.c             src/xorshift1024star.c \
-	  src/starrynight-analysis.c         src/starrynight-lattice.c          src/starrynight-montecarlo-core.c  src/xorshift128plus.c
+SRCs= src/mt19937ar-cok.c src/starrynight-config.c src/starrynight-main.c \
+	  src/xorshift1024star.c src/starrynight-analysis.c \
+	  src/starrynight-lattice.c src/starrynight-montecarlo-core.c  src/xorshift128plus.c
+
+# default
+all: starrynight
 
 # Code compilation
 starrynight: $(SRCs) 
@@ -14,25 +18,30 @@ starrynight-mac-openmp: ${SRCs}
 profile: ${SRCs} 
 	gcc -lm -lconfig -o starrynight src/starrynight-main.c -pg
 
-all: starrynight
+test: # basic test for Travis
+	./starrynight
 
+# clean up run data
 clean:
 	rm starrynight *.pnm *.jpg *.gif *.avi *.svg 
 	rm *.png 
 	rm *.log 
 	rm *.dat 
 	rm *.xyz
-# Make file magics to assist running jobs 
 
+# Imperial's CX1 cluster
 cx1:
 	    # Local version of libconfig, within starrynight directory
 	    gcc -Llibconfig-1.5/lib -Ilibconfig-1.5/lib \
 			-O4 -lm -o starrynight src/starrynight-main.c libconfig-1.5/lib/.libs/libconfig.a
+
+# Intelsuite requires this in the shell for compile:
 # module load intel-suite
 cx1-icc: 
 	icc -Llibconfig-1.5/lib -Ilibconfig-1.5/lib \
 	-O4 -o starrynight src/starrynight-main.c libconfig-1.5/lib/.libs/libconfig.a -lm
 
+# Make file magics to assist running jobs 
 parallel: starrynight
 	seq 0 10 1000 | parallel  ./starrynight {}  
 
