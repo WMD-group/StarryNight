@@ -31,6 +31,7 @@ void analysis_initial()
     if(CalculateEfield) lattice_Efield_XYZ("initial_lattice_efield.xyz");
     if(CalculateEfield) lattice_Efieldoffset_XYZ("initial_lattice_efieldoffset.xyz");
     if(CalculatePotential) lattice_potential_XYZ("initial_lattice_potential.xyz"); // potential distro
+    if(SavePotentialCube) lattice_potential_cube("initial_lattice_potential.cube");
     if(SaveDipolesSVG) outputlattice_svg("initial-SVG.svg");
     if(CalculatePotential) outputpotential_png("initial_pot.png"); //"final_pot.png");
     if(SaveDipolesXYZ) outputlattice_xyz("initial_dipoles.xyz");
@@ -86,6 +87,9 @@ void analysis_midpoint(int MCstep, FILE *log)
     sprintf(name,"%s_potential.xyz",prefix);
     if(CalculatePotential) lattice_potential_XYZ(name); // potential distro; text format (3D)
 
+    sprintf(name,"%s_potential.cube",prefix);
+    if(SavePotentialCube) lattice_potential_cube(name);
+ 
     sprintf(name,"%s_potential.png",prefix);
     if(CalculatePotential) outputpotential_png(name); // 'surface of the moon' picture (2D)
 

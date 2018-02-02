@@ -18,6 +18,9 @@ starrynight-mac-openmp: ${SRCs}
 profile: ${SRCs} 
 	gcc -lm -lconfig -o starrynight src/starrynight-main.c -pg
 
+debug: $(SRCs)
+	gcc -g -O4 -lm -lconfig -o starrynight src/starrynight-main.c
+
 test: # basic test for Travis
 	./starrynight
 

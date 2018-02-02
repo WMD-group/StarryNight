@@ -16,6 +16,7 @@ static double dipole_electricfield(int CUTOFF, int x, int y, int z);
 static void lattice_potential_log(FILE *log);
 void lattice_potential_XY(char * filename);
 void lattice_potential_XYZ(char * filename);
+void lattice_potential_cube(char * filename);
 static double lattice_energy_log(FILE *log);
 double landau_order();
 double radial_order_parameter(char * filename);
@@ -272,6 +273,38 @@ void lattice_potential_XYZ(char * filename)
             for (z=0;z<Z;z++)
                 fprintf(fo,"%d %d %d %f\n",x,y,z,dipole_potential(x,y,z));
     fclose(fo);
+}
+
+//Output lattice potential, cube file
+// Spec from http://paulbourke.net/dataformats/cube/
+void lattice_potential_cube(char * filename)
+{
+    int x,y,z;
+    double pot;
+    FILE *fo;
+    fo=fopen(filename,"w");
+
+    fprintf(fo,"Starrynight Cube file: %d %d %d\n\n",X,Y,Z); // header
+    fprintf(fo,"1 0.0 0.0 0.0\n"); //number of atoms; origin of cube
+    fprintf(fo,"%d 1.0 0.0 0.0\n",X); //X voxels
+    fprintf(fo,"%d 0.0 1.0 0.0\n",Y); //Y voxels
+    fprintf(fo,"%d 0.0 0.0 1.0\n",Z); //Z voxels
+    fprintf(fo,"1 0.0 0.0 0.0 0.0 0.0\n"); // one hydrogen sitting at origin
+    // no atoms
+
+    // volumetric data
+    for (x=0;x<X;x++)
+        for (y=0;y<Y;y++)
+        {
+            for (z=0;z<Z;z++)
+            {
+                fprintf(fo,"%g ",dipole_potential(x,y,z));
+                if (z%6==5) fprintf(fo,"\n");
+            }
+        fprintf(fo,"\n");
+        }
+    fclose(fo);
+
 }
 
 static double dipole_electricfieldoffset(int CUTOFF, int x, int y, int z)

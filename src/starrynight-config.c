@@ -90,6 +90,7 @@ int CalculateEfield=false;
 int SaveDipolesXYZ=false;
 int SaveDipolesPNG=false;
 int SaveDipolesSVG=false;
+int SavePotentialCube=false;
 
 //END OF SIMULATION PARAMETERS
 // {{ Except for the ones hardcoded into the algorithm :^) }}
@@ -175,6 +176,7 @@ void load_config()
     config_lookup_bool(cf,"SaveDipolesSVG",&SaveDipolesSVG);
     config_lookup_bool(cf,"SaveDipolesPNG",&SaveDipolesPNG);
     config_lookup_bool(cf,"SaveDipolesXYZ",&SaveDipolesXYZ);
+    config_lookup_bool(cf,"SavePotentialCube",&SavePotentialCube);
 
     fprintf(stderr,"Finished loading config file. \n");
 }
