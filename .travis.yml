@@ -1,2 +1,12 @@
 language: c
 script: make && make test
+
+compiler: 
+  - clang
+  - gcc
+
+addons:
+        apt:
+                packages:
+                        - clang
+                        - libconfig-dev
