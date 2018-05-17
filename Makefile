@@ -7,7 +7,7 @@ all: starrynight
 
 # Code compilation
 starrynight: $(SRCs) 
-	gcc -O4 -lm -lconfig -o starrynight src/starrynight-main.c
+	gcc -O4 -o starrynight src/starrynight-main.c -lm -lconfig
 
 starrynight-openmp: ${SRCs} 
 	gcc -O4 -lm -lconfig -fopenmp -o starrynight src/starrynight-main.c
