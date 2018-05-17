@@ -1,3 +1,7 @@
+[![DOI](https://zenodo.org/badge/16991744.svg)](https://zenodo.org/badge/latestdoi/16991744)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://travis-ci.org/WMD-group/StarryNight.svg?branch=master)](https://travis-ci.org/WMD-group/StarryNight)
+
 # Starry Night
 
 Monte Carlo codes to simulate dipole-dipole interactions and ferroelectric domains in a hybrid organic-inorganic perovskite solar cell.
