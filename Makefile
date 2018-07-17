@@ -49,7 +49,7 @@ parallel: starrynight
 	seq 0 10 1000 | parallel  ./starrynight {}  
 
 superparallel: starrynight
-	awk 'BEGIN{for (i=0;i<1000;i=i+20) { for (j=0.0;j<=4.0;j=j+1.0) printf ("%f %f\n",i,j); }}' \
+	awk 'BEGIN{for (T=0;T<1000;T=T+20) { for (CageStrain=0.0;CageStrain<=5.0;CageStrain=CageStrain+1.0) printf ("%f %f\n",T,CageStrain); }}' \
 		| parallel --colsep ' ' ./starrynight {1} {2}  > aggregate.dat
 
 parallel-annamaria: starrynight
@@ -60,3 +60,4 @@ parallel-CageStrain: starrynight
 
 parallel-T: starrynight
 	seq 75 75 600 | parallel ./starrynight {} > starrynight-parallel-T.log
+

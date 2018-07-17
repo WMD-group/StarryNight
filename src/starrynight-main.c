@@ -55,6 +55,8 @@ void analysis_midpoint(int MCstep, FILE *log)
     // FIXME: JMF 2017-10 - this commented out code should either be made .cfg
     // options, or deleted.
 
+    sprintf(prefix,"T_%04d_%d_%03d",T,(int) CageStrain,MCstep); // ie. T_0300_2_002 - for batch runs
+
     // Log some data... Nb: Slow as does a NxN summation of lattice energy
     // contributions!
     //        lattice_potential_log(log);
@@ -69,7 +71,8 @@ void analysis_midpoint(int MCstep, FILE *log)
     //fprintf(stderr,"\n");
     if(DisplayDumbTerminal) outputlattice_dumb_terminal(); //Party like it's 1980
     if(CalculateRecombination) recombination_calculator(log);
-    sprintf(name,"RDF-%.4d.dat",T);
+    
+    sprintf(name,"%s-RDF.dat",prefix);
     if(CalculateRadialOrderParameter) radial_order_parameter(name); // appends to file 
 
     //fprintf(stderr,"Efield: x %f y %f z %f | Dipole %f CageStrain %f K %f\n",Efield.x,Efield.y,Efield.z,Dipole,CageStrain,K);
@@ -78,8 +81,6 @@ void analysis_midpoint(int MCstep, FILE *log)
     //fprintf(stderr,"\n");
     //fprintf(stdout, "T: %d Efield: x %f Polar: %f\n",T,Efield.x,polarisation());
     //fprintf(stderr,"\n");
-
-    sprintf(prefix,"T_%04d_i_%03d",T,MCstep); // ie. T_0300_t_002 - for batch runs
 
     sprintf(name,"%s_efield.xyz",prefix);
     if(CalculateEfield) lattice_Efield_XYZ(name);
@@ -93,10 +94,10 @@ void analysis_midpoint(int MCstep, FILE *log)
     sprintf(name,"%s_potential.png",prefix);
     if(CalculatePotential) outputpotential_png(name); // 'surface of the moon' picture (2D)
 
-    sprintf(name,"%s_MC-PNG_final.png",prefix); 
+    sprintf(name,"%s_MC-PNG.png",prefix); 
     if(SaveDipolesPNG) outputlattice_ppm_hsv(name); // coloured squares (2D)
 
-    sprintf(name,"%s_MC-SVG_final.svg",prefix);
+    sprintf(name,"%s_MC-SVG.svg",prefix);
     if(SaveDipolesSVG) outputlattice_svg(name); // arrows (2D)
 
 }
